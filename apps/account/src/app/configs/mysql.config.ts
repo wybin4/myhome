@@ -10,7 +10,6 @@ export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptio
   password: configService.get('MYSQL_PASSWORD'),
   database: configService.get('MYSQL_DATABASE'),
   synchronize: true,
-  // entities: [Admins, Owners, ManagementCompanies],
-  entities: [Users],
+  entities: [Users, Admins, Owners, ManagementCompanies],
   autoLoadEntities: true
 });

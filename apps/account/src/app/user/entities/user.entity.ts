@@ -54,4 +54,12 @@ export class Owners extends Users { }
 export class ManagementCompanies extends Users {
   @Column({ nullable: true })
   checkingAccount: string;
+
+  public getPublicProfile() {
+    return {
+      email: this.email,
+      name: this.name,
+      checkingAccount: this.checkingAccount
+    }
+  }
 }

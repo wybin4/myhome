@@ -11,14 +11,10 @@ import { UserRepository } from './repositories/user.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Admins, Owners, ManagementCompanies]),
-  ], 
-  // imports: [
-  //   TypeOrmModule.forFeature([Users]),
-  // ],
-  // providers: [AdminRepository, OwnerRepository, ManagementCompanyRepository, UserService],
-  // // exports: [AdminRepository, OwnerRepository, ManagementCompanyRepository],
-  // exports: [UserRepository],
+    TypeOrmModule.forFeature([Users, Admins, Owners, ManagementCompanies]),
+  ],
+  providers: [UserRepository, AdminRepository, OwnerRepository, ManagementCompanyRepository, UserService],
+  exports: [UserRepository, AdminRepository, OwnerRepository, ManagementCompanyRepository],
   controllers: [UserCommands, UserQueries],
 })
 export class UserModule { }

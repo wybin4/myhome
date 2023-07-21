@@ -9,79 +9,79 @@ import { OwnerRepository } from '../user/repositories/owner.repository';
 
 @Injectable()
 export class AuthService {
-  // constructor(
-  //   private readonly adminRepository: AdminRepository,
-  //   private readonly ownerRepository: OwnerRepository,
-  //   private readonly managementCompanyRepository: ManagementCompanyRepository,
-  //   private readonly jwtService: JwtService
+  constructor(
+    private readonly adminRepository: AdminRepository,
+    private readonly ownerRepository: OwnerRepository,
+    private readonly managementCompanyRepository: ManagementCompanyRepository,
+    private readonly jwtService: JwtService
 
-  // ) { }
+  ) { }
 
-  // async register({ email, password, name, role }: AccountRegister.Request) {
-  //   const oldUser = (await this.adminRepository.findUser(email)) ||
-  //     (await this.ownerRepository.findUser(email)) ||
-  //     (await this.managementCompanyRepository.findUser(email));
-  //   if (oldUser) {
-  //     throw new Error('Такой пользователь уже зарегистрирован');
-  //   }
+  async register({ email, password, name, role }: AccountRegister.Request) {
+    const oldUser = (await this.adminRepository.findUser(email)) ||
+      (await this.ownerRepository.findUser(email)) ||
+      (await this.managementCompanyRepository.findUser(email));
+    if (oldUser) {
+      throw new Error('Такой пользователь уже зарегистрирован');
+    }
 
-  //   let newUserEntity: Users;
+    let newUserEntity: Users;
 
-  //   switch (role) {
-  //     case UserRole.Admin:
-  //       newUserEntity = await new Admins({ name, email, passwordHash: '' }).setPassword(password);
-  //       await this.adminRepository.createUser(newUserEntity);
-  //       break;
-  //     case UserRole.Owner:
-  //       newUserEntity = await new Owners({ name, email, passwordHash: '' }).setPassword(password);
-  //       await this.ownerRepository.createUser(newUserEntity);
-  //       break;
-  //     case UserRole.ManagementCompany:
-  //       newUserEntity = await new ManagementCompanies({ name, email, passwordHash: '' }).setPassword(password);
-  //       await this.managementCompanyRepository.createUser(newUserEntity);
-  //       break;
-  //     default:
-  //       throw new Error('Некорректная роль пользователя');
-  //   }
-  //   return { id: newUserEntity.id };
-  // }
+    switch (role) {
+      case UserRole.Admin:
+        newUserEntity = await new Admins({ name, email, passwordHash: '' }).setPassword(password);
+        await this.adminRepository.createUser(newUserEntity);
+        break;
+      case UserRole.Owner:
+        newUserEntity = await new Owners({ name, email, passwordHash: '' }).setPassword(password);
+        await this.ownerRepository.createUser(newUserEntity);
+        break;
+      case UserRole.ManagementCompany:
+        newUserEntity = await new ManagementCompanies({ name, email, passwordHash: '' }).setPassword(password);
+        await this.managementCompanyRepository.createUser(newUserEntity);
+        break;
+      default:
+        throw new Error('Некорректная роль пользователя');
+    }
+    return { id: newUserEntity.id };
+  }
 
-  // async validateUser(email: string, password: string, role: UserRole) {
-  //   const user =
-  //     (await this.adminRepository.findUser(email)) ||
-  //     (await this.ownerRepository.findUser(email)) ||
-  //     (await this.managementCompanyRepository.findUser(email));
+  async validateUser(email: string, password: string, role: UserRole) {
+    const user =
+      (await this.adminRepository.findUser(email)) ||
+      (await this.ownerRepository.findUser(email)) ||
+      (await this.managementCompanyRepository.findUser(email));
 
-  //   if (!user) {
-  //     throw new Error('Неверный логин или пароль');
-  //   }
+    if (!user) {
+      throw new Error('Неверный логин или пароль');
+    }
 
-  //   let userEntity: Users;
+    let userEntity: Users;
 
-  //   switch (role) {
-  //     case UserRole.Admin:
-  //       userEntity = new Admins(user);
-  //       break;
-  //     case UserRole.Owner:
-  //       userEntity = new Owners(user);
-  //       break;
-  //     case UserRole.ManagementCompany:
-  //       userEntity = new ManagementCompanies(user);
-  //       break;
-  //     default:
-  //       throw new Error('Некорректная роль пользователя');
-  //   }
+    switch (role) {
+      case UserRole.Admin:
+        userEntity = new Admins(user);
+        break;
+      case UserRole.Owner:
+        userEntity = new Owners(user);
+        break;
+      case UserRole.ManagementCompany:
+        userEntity = new ManagementCompanies(user);
+        break;
+      default:
+        throw new Error('Некорректная роль пользователя');
+    }
 
-  //   const isCorrectPassword = await userEntity.validatePassword(password);
-  //   if (!isCorrectPassword) {
-  //     throw new Error('Неверный логин или пароль');
-  //   }
+    const isCorrectPassword = await userEntity.validatePassword(password);
+    if (!isCorrectPassword) {
+      throw new Error('Неверный логин или пароль');
+    }
 
-  //   return { id: userEntity.id };
-  // }
-  // async login(id: number) {
-  //   return {
-  //     access_token: await this.jwtService.signAsync({ id }),
-  //   };
-  // }
+    return { id: userEntity.id };
+  }
+  async login(id: number) {
+    return {
+      access_token: await this.jwtService.signAsync({ id }),
+    };
+  }
 }

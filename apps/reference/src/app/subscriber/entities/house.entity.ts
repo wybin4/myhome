@@ -15,7 +15,7 @@ export class Houses implements IHouse {
     @Column({ nullable: false })
     street: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: false })
     houseNumber: string;
 
     constructor(data?: Partial<Houses>) {

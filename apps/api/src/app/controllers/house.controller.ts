@@ -1,4 +1,4 @@
-import { Body, Controller, NotFoundException, Post } from '@nestjs/common';
+import { Body, ConflictException, Controller, NotFoundException, Post } from '@nestjs/common';
 import { ReferenceAddHouse, ReferenceGetHouse, ReferenceUpdateHouse } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { GetHouseDto, AddHouseDto, UpdateHouseDto } from '../dtos/house.dto';
@@ -30,7 +30,7 @@ export class HouseController {
             >(ReferenceAddHouse.topic, dto);
         } catch (e) {
             if (e instanceof Error) {
-                throw new NotFoundException(e.message);
+                throw new ConflictException(e.message);
             }
         }
     }

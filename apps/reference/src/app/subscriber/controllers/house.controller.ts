@@ -32,8 +32,9 @@ export class HouseController {
 		if (!existedHouse) {
 			throw new Error('Такого дома не существует');
 		}
-		const userEntity = new Houses(existedHouse).updateHouse(managementCompanyId);
-		return this.updateHouse(await userEntity);
+		const houseEntity = new Houses(existedHouse).updateHouse(managementCompanyId);
+		return Promise.all([
+			this.houseRepository.updateHouse(await houseEntity),
+		]);
 	}
-
 }

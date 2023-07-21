@@ -1,4 +1,4 @@
-import { UserEntity } from '../entities/user.entity';
+import { Users } from '../entities/user.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,11 +6,11 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class UserRepository {
   constructor(
-    @InjectRepository(UserEntity)
-    private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(Users)
+    private readonly userRepository: Repository<Users>,
   ) { }
 
-  async createUser(user: UserEntity) {
+  async createUser(user: Users) {
     return this.userRepository.save(user);
   }
 
@@ -26,7 +26,7 @@ export class UserRepository {
     await this.userRepository.delete({ email });
   }
 
-  async updateUser(user: UserEntity) {
+  async updateUser(user: Users) {
     await this.userRepository.update(user.id, user);
     return this.findUserById(user.id);
   }

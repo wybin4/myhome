@@ -1,21 +1,36 @@
-import { IUser, UserRole } from '@myhome/interfaces';
+import { IUser, UserRole, UserRoleEnumTransformer } from '@myhome/interfaces';
 import { compare, genSalt, hash } from 'bcryptjs';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-export class UserEntity implements IUser {
-  id?: number;
+@Entity()
+export class Users implements IUser {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ nullable: true })
   name?: string;
-  email: string;
-  passwordHash: string;
-  role: UserRole;
-  checkingAcount?: string;
 
-  constructor(user: IUser) {
-    this.id = user.id;
-    this.passwordHash = user.passwordHash;
-    this.name = user.name;
-    this.email = user.email;
-    this.role = user.role;
-    this.checkingAcount = user.checkingAcount;
+  @Column({ nullable: false })
+  email: string;
+
+  @Column({ nullable: false })
+  passwordHash: string;
+
+  @Column({ nullable: true })
+  checkingAccount: string;
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.Owner,
+    transformer: UserRoleEnumTransformer,
+  })
+  role: UserRole;
+
+  constructor(data?: Partial<Users>) {
+    if (data) {
+      Object.assign(this, data);
+    }
   }
 
   public async setPassword(password: string) {

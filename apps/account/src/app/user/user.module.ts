@@ -4,11 +4,11 @@ import { UserCommands } from './user.commands';
 import { UserQueries } from './user.queries';
 import { UserService } from './user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEntity } from './entities/user.entity';
+import { Users } from './entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([Users]),
   ],
   providers: [UserRepository, UserService],
   exports: [UserRepository],

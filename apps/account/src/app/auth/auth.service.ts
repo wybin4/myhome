@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../user/repositories/user.repository';
-import { UserEntity } from '../user/entities/user.entity';
+import { Users } from '../user/entities/user.entity';
 import { UserRole } from '@myhome/interfaces';
 import { JwtService } from '@nestjs/jwt';
 import { AccountRegister } from '@myhome/contracts';
@@ -17,7 +17,7 @@ export class AuthService {
     if (oldUser) {
       throw new Error('Такой пользователь уже зарегистрирован');
     }
-    const newUserEntity = await new UserEntity({
+    const newUserEntity = await new Users({
       name,
       email,
       passwordHash: '',
@@ -32,7 +32,7 @@ export class AuthService {
     if (!user) {
       throw new Error('Неверный логин или пароль');
     }
-    const userEntity = new UserEntity(user);
+    const userEntity = new Users(user);
     const isCorrectPassword = await userEntity.validatePassword(password);
     if (!isCorrectPassword) {
       throw new Error('Неверный логин или пароль');

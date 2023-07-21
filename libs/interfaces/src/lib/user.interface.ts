@@ -1,3 +1,5 @@
+import { ValueTransformer } from 'typeorm';
+
 export enum UserRole {
   ManagementCompany = 'ManagementCompany',
   Owner = 'Owner',
@@ -11,3 +13,7 @@ export interface IUser {
   role: UserRole;
   checkingAcount?: string;
 }
+export const UserRoleEnumTransformer: ValueTransformer = {
+  from: (value: string) => UserRole[value as keyof typeof UserRole],
+  to: (value: UserRole) => value,
+};

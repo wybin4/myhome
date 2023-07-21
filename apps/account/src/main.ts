@@ -7,12 +7,13 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app/app.module';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const globalPrefix = 'api';
+  const globalPrefix = 'account';
   app.setGlobalPrefix(globalPrefix);
-  const port = 3300;
+  const port = new ConfigService().get('SERVICE_PORT');
   await app.listen(port);
   Logger.log(
     `🚀 Account is running on: http://localhost:${port}/${globalPrefix}`

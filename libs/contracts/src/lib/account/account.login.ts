@@ -1,3 +1,4 @@
+import { UserRole } from '@myhome/interfaces';
 import { IsEmail, IsString } from 'class-validator';
 
 export namespace AccountLogin {
@@ -9,6 +10,9 @@ export namespace AccountLogin {
 
     @IsString()
     password!: string;
+
+    @IsString()
+    role!: UserRole;
   }
 
   export class Response {

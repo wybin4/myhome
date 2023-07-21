@@ -1,8 +1,7 @@
-import { IUser, UserRole, UserRoleEnumTransformer } from '@myhome/interfaces';
+import { IUser } from '@myhome/interfaces';
 import { compare, genSalt, hash } from 'bcryptjs';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity()
 export class Users implements IUser {
   @PrimaryGeneratedColumn()
   id: number;
@@ -15,17 +14,6 @@ export class Users implements IUser {
 
   @Column({ nullable: false })
   passwordHash: string;
-
-  @Column({ nullable: true })
-  checkingAccount: string;
-
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.Owner,
-    transformer: UserRoleEnumTransformer,
-  })
-  role: UserRole;
 
   constructor(data?: Partial<Users>) {
     if (data) {
@@ -51,8 +39,19 @@ export class Users implements IUser {
   public getPublicProfile() {
     return {
       email: this.email,
-      role: this.role,
       name: this.name
     }
   }
+}
+
+@Entity()
+export class Admins extends Users { }
+
+@Entity()
+export class Owners extends Users { }
+
+@Entity()
+export class ManagementCompanies extends Users {
+  @Column({ nullable: true })
+  checkingAccount: string;
 }

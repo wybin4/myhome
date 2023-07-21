@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class UserRepository {
+export abstract class UserRepository {
   constructor(
     @InjectRepository(Users)
     private readonly userRepository: Repository<Users>,
@@ -31,3 +31,4 @@ export class UserRepository {
     return this.findUserById(user.id);
   }
 }
+

@@ -1,3 +1,4 @@
+import { UserRole } from '@myhome/interfaces';
 import { IsEmail, IsString } from 'class-validator';
 
 export class LoginDto {
@@ -6,4 +7,7 @@ export class LoginDto {
 
   @IsString()
   password: string;
+
+  @IsString()
+  role: UserRole;
 }

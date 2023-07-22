@@ -6,6 +6,7 @@ import { AccountRegister } from '@myhome/contracts';
 import { AdminRepository } from '../user/repositories/admin.repository';
 import { ManagementCompanyRepository } from '../user/repositories/management-company.repository';
 import { OwnerRepository } from '../user/repositories/owner.repository';
+import { INCORRECT_USER_ROLE } from '@myhome/constants';
 
 @Injectable()
 export class AuthService {
@@ -45,7 +46,7 @@ export class AuthService {
         await this.managementCompanyRepository.createUser(newUserEntity);
         break;
       default:
-        throw new Error('Некорректная роль пользователя');
+        throw new Error(INCORRECT_USER_ROLE);
     }
     return { id: newUserEntity.id };
   }
@@ -73,7 +74,7 @@ export class AuthService {
         userEntity = new ManagementCompanies(user);
         break;
       default:
-        throw new Error('Некорректная роль пользователя');
+        throw new Error(INCORRECT_USER_ROLE);
     }
 
     const isCorrectPassword = await userEntity.validatePassword(password);

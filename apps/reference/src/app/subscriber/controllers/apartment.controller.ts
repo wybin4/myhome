@@ -15,6 +15,9 @@ export class ApartmentController {
 	@RMQRoute(ReferenceGetApartment.topic)
 	async getApartment(@Body() { id }: ReferenceGetApartment.Request) {
 		const apartment = await this.apartmentRepository.findApartmentById(id);
+		if (!apartment) {
+			throw new NotFoundException('Такой квартиры не существует');
+		}
 		const gettedApartment = new Apartments(apartment).getApartment();
 		return { gettedApartment };
 	}

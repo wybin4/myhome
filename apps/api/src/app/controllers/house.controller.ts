@@ -1,4 +1,4 @@
-import { Body, ConflictException, Controller, NotFoundException, Post } from '@nestjs/common';
+import { Body, ConflictException, Controller, HttpCode, NotFoundException, Post } from '@nestjs/common';
 import { ReferenceAddHouse, ReferenceGetHouse, ReferenceUpdateHouse } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { GetHouseDto, AddHouseDto, UpdateHouseDto } from '../dtos/house.dto';
@@ -7,6 +7,7 @@ import { GetHouseDto, AddHouseDto, UpdateHouseDto } from '../dtos/house.dto';
 export class HouseController {
     constructor(private readonly rmqService: RMQService) { }
 
+    @HttpCode(200)
     @Post('get-house')
     async getHouse(@Body() dto: GetHouseDto) {
         try {
@@ -21,6 +22,7 @@ export class HouseController {
         }
     }
 
+    @HttpCode(201)
     @Post('add-house')
     async addHouse(@Body() dto: AddHouseDto) {
         try {
@@ -35,6 +37,7 @@ export class HouseController {
         }
     }
 
+    @HttpCode(200)
     @Post('update-house')
     async updateHouse(@Body() dto: UpdateHouseDto) {
         try {

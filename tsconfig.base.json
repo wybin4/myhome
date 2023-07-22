@@ -15,6 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@myhome/constants": ["libs/constants/src/index.ts"],
       "@myhome/contracts": ["libs/contracts/src/index.ts"],
       "@myhome/interfaces": ["libs/interfaces/src/index.ts"]
     }

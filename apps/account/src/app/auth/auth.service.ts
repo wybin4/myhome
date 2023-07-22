@@ -14,29 +14,33 @@ export class AuthService {
     private readonly ownerRepository: OwnerRepository,
     private readonly managementCompanyRepository: ManagementCompanyRepository,
     private readonly jwtService: JwtService
-
   ) { }
 
   async register({ email, password, name, role }: AccountRegister.Request) {
-    const oldUser = (await this.adminRepository.findUser(email)) ||
-      (await this.ownerRepository.findUser(email)) ||
-      (await this.managementCompanyRepository.findUser(email));
-    if (oldUser) {
-      throw new Error('Такой пользователь уже зарегистрирован');
-    }
-
-    let newUserEntity: Users;
+    let newUserEntity, oldUser;
 
     switch (role) {
       case UserRole.Admin:
+        oldUser = await this.adminRepository.findUser(email);
+        if (oldUser) {
+          throw new Error('Такой пользователь уже зарегистрирован');
+        }
         newUserEntity = await new Admins({ name, email, passwordHash: '' }).setPassword(password);
         await this.adminRepository.createUser(newUserEntity);
         break;
       case UserRole.Owner:
+        oldUser = await this.ownerRepository.findUser(email);
+        if (oldUser) {
+          throw new Error('Такой пользователь уже зарегистрирован');
+        }
         newUserEntity = await new Owners({ name, email, passwordHash: '' }).setPassword(password);
         await this.ownerRepository.createUser(newUserEntity);
         break;
       case UserRole.ManagementCompany:
+        oldUser = await this.managementCompanyRepository.findUser(email);
+        if (oldUser) {
+          throw new Error('Такой пользователь уже зарегистрирован');
+        }
         newUserEntity = await new ManagementCompanies({ name, email, passwordHash: '' }).setPassword(password);
         await this.managementCompanyRepository.createUser(newUserEntity);
         break;

@@ -1,8 +1,9 @@
-import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AccountLogin, AccountRegister } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { LoginDto } from '../dtos/login.dto';
 import { RegisterDto } from '../dtos/register.dto';
+import { CatchError } from '../error.filter';
 
 @Controller('auth')
 export class AuthController {
@@ -16,9 +17,7 @@ export class AuthController {
         AccountRegister.Response
       >(AccountRegister.topic, dto);
     } catch (e) {
-      if (e instanceof Error) {
-        throw new UnauthorizedException(e.message);
-      }
+      CatchError(e);
     }
   }
 
@@ -30,9 +29,7 @@ export class AuthController {
         AccountLogin.Response
       >(AccountLogin.topic, dto);
     } catch (e) {
-      if (e instanceof Error) {
-        throw new UnauthorizedException(e.message);
-      }
+      CatchError(e);
     }
   }
 }

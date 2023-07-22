@@ -8,3 +8,6 @@ export * from './lib/reference/reference.add-house';
 export * from './lib/reference/reference.update-house';
 export * from './lib/reference/reference.add-apartment';
 export * from './lib/reference/reference.get-apartment';
+export * from './lib/reference/reference.get-subscriber';
+export * from './lib/reference/reference.add-subscriber';
+export * from './lib/reference/reference.update-subscriber';

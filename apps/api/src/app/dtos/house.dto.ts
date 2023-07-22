@@ -2,9 +2,6 @@ import { IsNumber, IsString } from "class-validator";
 
 export class AddHouseDto {
     @IsNumber()
-    id?: number;
-
-    @IsNumber()
     managementCompanyId: number;
 
     @IsString()

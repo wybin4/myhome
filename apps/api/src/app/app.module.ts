@@ -9,6 +9,7 @@ import { PassportModule } from '@nestjs/passport';
 import { UserController } from './controllers/user.controller';
 import { HouseController } from './controllers/house.controller';
 import { ApartmentController } from './controllers/apartment.controller';
+import { SubscriberController } from './controllers/subscriber.controller';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { ApartmentController } from './controllers/apartment.controller';
     JwtModule.registerAsync(getJWTConfig()),
     PassportModule,
   ],
-  controllers: [AuthController, UserController, HouseController, ApartmentController],
+  controllers: [AuthController, UserController, HouseController, ApartmentController, SubscriberController],
 })
 export class AppModule { }

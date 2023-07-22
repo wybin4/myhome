@@ -1,10 +1,11 @@
-import { Body, Controller, NotFoundException } from '@nestjs/common';
-import { RMQRoute, RMQService, RMQValidate } from 'nestjs-rmq';
+import { Body, Controller, HttpStatus } from '@nestjs/common';
+import { RMQError, RMQRoute, RMQService, RMQValidate } from 'nestjs-rmq';
 import { AccountUserInfo, ReferenceAddHouse, ReferenceGetHouse, ReferenceUpdateHouse } from '@myhome/contracts';
 import { HouseRepository } from '../repositories/house.repository';
 import { Houses } from '../entities/house.entity';
 import { UserRole } from '@myhome/interfaces';
 import { HOME_NOT_EXIST, MANAG_COMP_NOT_EXIST } from '@myhome/constants';
+import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
 @Controller()
 export class HouseController {
@@ -18,7 +19,7 @@ export class HouseController {
 	async getHouse(@Body() { id }: ReferenceGetHouse.Request) {
 		const house = await this.houseRepository.findHouseById(id);
 		if (!house) {
-			throw new NotFoundException(HOME_NOT_EXIST);
+			throw new RMQError(HOME_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
 		}
 		const gettedHouse = new Houses(house).getHouse();
 		return { gettedHouse };
@@ -39,7 +40,7 @@ export class HouseController {
 		await this.checkManagementCompany(managementCompanyId);
 		const existedHouse = await this.houseRepository.findHouseById(id);
 		if (!existedHouse) {
-			throw new NotFoundException(HOME_NOT_EXIST);
+			throw new RMQError(HOME_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
 		}
 		const houseEntity = new Houses(existedHouse).updateHouse(managementCompanyId);
 		return Promise.all([
@@ -56,7 +57,7 @@ export class HouseController {
 				>
 				(AccountUserInfo.topic, { id: managementCompanyId, role: UserRole.ManagementCompany });
 		} catch (e) {
-			throw new NotFoundException(MANAG_COMP_NOT_EXIST);
+			throw new RMQError(MANAG_COMP_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
 		}
 	}
 }

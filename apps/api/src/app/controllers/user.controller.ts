@@ -1,8 +1,9 @@
-import { Body, Controller, HttpCode, NotFoundException, Post/*, UseGuards*/ } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post/*, UseGuards*/ } from '@nestjs/common';
 // import { JWTAuthGuard } from '../guards/jwt.guard';
 import { RMQService } from 'nestjs-rmq';
 import { AccountUserInfo } from '@myhome/contracts';
 import { UserInfoDto } from '../dtos/user.dto';
+import { CatchError } from '../error.filter';
 
 @Controller('user')
 export class UserController {
@@ -20,9 +21,7 @@ export class UserController {
         AccountUserInfo.Response
       >(AccountUserInfo.topic, dto);
     } catch (e) {
-      if (e instanceof Error) {
-        throw new NotFoundException(e.message);
-      }
+      CatchError(e);
     }
   }
 }

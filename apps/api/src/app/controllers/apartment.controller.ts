@@ -1,7 +1,8 @@
-import { Body, ConflictException, Controller, HttpCode, NotFoundException, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { ReferenceAddApartment, ReferenceGetApartment } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { GetApartmentDto, AddApartmentDto } from '../dtos/apartment.dto';
+import { CatchError } from '../error.filter';
 
 @Controller('apartment')
 export class ApartmentController {
@@ -16,9 +17,7 @@ export class ApartmentController {
                 ReferenceGetApartment.Response
             >(ReferenceGetApartment.topic, dto);
         } catch (e) {
-            if (e instanceof Error) {
-                throw new NotFoundException(e.message);
-            }
+            CatchError(e);
         }
     }
 
@@ -31,9 +30,7 @@ export class ApartmentController {
                 ReferenceAddApartment.Response
             >(ReferenceAddApartment.topic, dto);
         } catch (e) {
-            if (e instanceof Error) {
-                throw new ConflictException(e.message);
-            }
+            CatchError(e);
         }
     }
 

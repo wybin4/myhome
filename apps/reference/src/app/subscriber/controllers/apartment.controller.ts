@@ -1,9 +1,12 @@
-import { Body, ConflictException, Controller, NotFoundException } from '@nestjs/common';
-import { RMQRoute, RMQValidate } from 'nestjs-rmq';
+import { Body, Controller, HttpStatus } from '@nestjs/common';
+import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ReferenceAddApartment, ReferenceGetApartment } from '@myhome/contracts';
 import { ApartmentRepository } from '../repositories/apartment.repository';
 import { Apartments } from '../entities/apartment.entity';
 import { HouseRepository } from '../repositories/house.repository';
+import { APART_ALREADY_EXIST, APART_NOT_EXIST, HOME_NOT_EXIST } from '@myhome/constants';
+import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
+
 @Controller()
 export class ApartmentController {
 	constructor(
@@ -16,7 +19,7 @@ export class ApartmentController {
 	async getApartment(@Body() { id }: ReferenceGetApartment.Request) {
 		const apartment = await this.apartmentRepository.findApartmentById(id);
 		if (!apartment) {
-			throw new NotFoundException('Такой квартиры не существует');
+			throw new RMQError(APART_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
 		}
 		const gettedApartment = new Apartments(apartment).getApartment();
 		return { gettedApartment };
@@ -28,11 +31,11 @@ export class ApartmentController {
 		const newApartmentEntity = new Apartments(dto);
 		const house = await this.houseRepository.findHouseById(dto.houseId);
 		if (!house) {
-			throw new NotFoundException('Такой дом не существует');
+			throw new RMQError(HOME_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
 		}
 		const existedApartment = await this.apartmentRepository.findApartmentByNumber(dto.apartmentNumber, dto.houseId);
 		if (existedApartment) {
-			throw new ConflictException('Такая квартира уже существует');
+			throw new RMQError(APART_ALREADY_EXIST, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
 		}
 		const newApartment = await this.apartmentRepository.createApartment(newApartmentEntity);
 		return { newApartment };

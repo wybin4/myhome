@@ -2,6 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { Houses } from '../subscriber/entities/house.entity';
 import { Apartments } from '../subscriber/entities/apartment.entity';
+import { Subscribers } from '../subscriber/entities/subscriber.entity';
 
 export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
   type: 'mysql',
@@ -11,6 +12,6 @@ export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptio
   password: configService.get('MYSQL_PASSWORD'),
   database: configService.get('MYSQL_DATABASE'),
   synchronize: true,
-  entities: [Houses, Apartments],
+  entities: [Houses, Apartments, Subscribers],
   autoLoadEntities: true
 });

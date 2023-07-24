@@ -1,5 +1,7 @@
 import { IApartment } from '@myhome/interfaces';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne } from 'typeorm';
+import { Houses } from './house.entity';
+import { Subscribers } from './subscriber.entity';
 
 @Entity()
 export class Apartments implements IApartment {
@@ -9,6 +11,9 @@ export class Apartments implements IApartment {
     @Column({ nullable: false })
     houseId: number;
 
+    @ManyToOne(() => Houses, (house) => house.apartments)
+    house: Houses;
+
     @Column({ nullable: false })
     apartmentNumber: number;
 
@@ -17,6 +22,9 @@ export class Apartments implements IApartment {
 
     @Column({ nullable: false })
     livingArea: number;
+
+    @OneToOne(() => Subscribers, (subscriber) => subscriber.apartment)
+    subscriber: Subscribers;
 
     constructor(data?: Partial<Apartments>) {
         if (data) {

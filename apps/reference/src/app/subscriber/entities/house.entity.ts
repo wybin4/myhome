@@ -1,10 +1,14 @@
 import { IHouse } from '@myhome/interfaces';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Apartments } from './apartment.entity';
 
 @Entity()
 export class Houses implements IHouse {
     @PrimaryGeneratedColumn()
     id: number;
+
+    @OneToMany(() => Apartments, (apartment) => apartment.house)
+    apartments: Apartments[];
 
     @Column({ nullable: false })
     managementCompanyId: number;

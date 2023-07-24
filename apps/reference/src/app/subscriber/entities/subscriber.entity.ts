@@ -1,5 +1,6 @@
 import { ISubscriber, SubscriberStatus, SubscriberStatusEnumTransformer } from '@myhome/interfaces';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
+import { Apartments } from './apartment.entity';
 
 @Entity()
 export class Subscribers implements ISubscriber {
@@ -11,6 +12,10 @@ export class Subscribers implements ISubscriber {
 
     @Column({ nullable: false })
     apartmentId: number;
+
+    @OneToOne(() => Apartments, (apartment) => apartment.subscriber)
+    @JoinColumn()
+    apartment: Apartments;
 
     @Column({ nullable: false })
     personalAccount: string;

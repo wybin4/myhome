@@ -15,3 +15,5 @@ export * from './lib/reference/reference.update-subscriber';
 export * from './lib/reference/reference.get-meter';
 export * from './lib/reference/reference.add-meter';
 export * from './lib/reference/reference.update-meter';
+export * from './lib/reference/reference.get-meter-reading';
+export * from './lib/reference/reference.add-meter-reading';

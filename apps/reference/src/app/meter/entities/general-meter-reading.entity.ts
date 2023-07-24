@@ -10,7 +10,7 @@ export class GeneralMeterReadings implements IGeneralMeterReading {
     generalMeterId: number;
 
     @Column({ nullable: false })
-    reading: string;
+    reading: number;
 
     @Column({ nullable: false })
     readAt: Date;

@@ -25,7 +25,7 @@ export class MeterController {
     @RMQValidate()
     @RMQRoute(ReferenceUpdateMeter.topic)
     async updateMeter(@Body() { id, verifiedAt, meterType }: ReferenceUpdateMeter.Request) {
-        return this.meterService.updateMeter(id, verifiedAt, meterType);
+        return this.meterService.updateMeter(id, new Date(verifiedAt), meterType);
     }
 
 }

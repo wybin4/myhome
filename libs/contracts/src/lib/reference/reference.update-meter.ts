@@ -1,4 +1,4 @@
-import { IsDate, IsNumber, IsString } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 import { IGeneralMeter, IIndividualMeter, MeterType } from '@myhome/interfaces';
 
 export namespace ReferenceUpdateMeter {
@@ -8,8 +8,8 @@ export namespace ReferenceUpdateMeter {
         @IsNumber()
         id!: number;
 
-        @IsDate()
-        verifiedAt!: Date;
+        @IsString()
+        verifiedAt!: string;
 
         @IsString()
         meterType!: MeterType;

@@ -5,6 +5,7 @@ import { getRMQConfig } from './configs/rmq.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { getMySQLConfig } from './configs/mysql.config';
 import { SubscriberModule } from './subscriber/subscriber.module';
+import { MeterModule } from './meter/meter.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { SubscriberModule } from './subscriber/subscriber.module';
       inject: [ConfigService],
     }),
     SubscriberModule,
+    MeterModule
   ],
 })
 export class AppModule { }

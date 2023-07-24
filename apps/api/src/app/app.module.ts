@@ -10,6 +10,7 @@ import { UserController } from './controllers/user.controller';
 import { HouseController } from './controllers/house.controller';
 import { ApartmentController } from './controllers/apartment.controller';
 import { SubscriberController } from './controllers/subscriber.controller';
+import { MeterController } from './controllers/meter.controller';
 
 @Module({
   imports: [
@@ -18,6 +19,11 @@ import { SubscriberController } from './controllers/subscriber.controller';
     JwtModule.registerAsync(getJWTConfig()),
     PassportModule,
   ],
-  controllers: [AuthController, UserController, HouseController, ApartmentController, SubscriberController],
+  controllers:
+    [
+      AuthController, UserController,
+      HouseController, ApartmentController, SubscriberController,
+      MeterController
+    ],
 })
 export class AppModule { }

@@ -1,7 +1,7 @@
 import { METER_NOT_EXIST, INCORRECT_METER_TYPE, APART_NOT_EXIST, METER_ALREADY_EXIST, HOME_NOT_EXIST } from "@myhome/constants";
 import { IGeneralMeter, IIndividualMeter, MeterType } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { RMQError, RMQService } from "nestjs-rmq";
+import { RMQError } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { GeneralMeters } from "../entities/general-meter.entity";
 import { IndividualMeters } from "../entities/individual-meter.entity";
@@ -13,14 +13,13 @@ import { HouseRepository } from "../../subscriber/repositories/house.repository"
 import { Apartments } from "../../subscriber/entities/apartment.entity";
 import { Houses } from "../../subscriber/entities/house.entity";
 
-type Meters = IndividualMeters | GeneralMeters;
+export type Meters = IndividualMeters | GeneralMeters;
 
 @Injectable()
 export class MeterService {
     constructor(
         private readonly individualMeterRepository: IndividualMeterRepository,
         private readonly generalMeterRepository: GeneralMeterRepository,
-        private readonly rmqService: RMQService,
         private readonly apartmentRepository: ApartmentRepository,
         private readonly houseRepository: HouseRepository,
     ) { }
@@ -65,7 +64,13 @@ export class MeterService {
                 if (existedMeter) {
                     throw new RMQError(METER_ALREADY_EXIST, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
                 }
-                newMeterEntity = new GeneralMeters(dto);
+                newMeterEntity = new GeneralMeters({
+                    typeOfServiceId: dto.typeOfServiceId,
+                    houseId: dto.houseId,
+                    factoryNumber: dto.factoryNumber,
+                    verifiedAt: new Date(dto.verifiedAt),
+                    issuedAt: new Date(dto.issuedAt),
+                });
                 newMeter = await this.generalMeterRepository.createGeneralMeter(newMeterEntity);
                 return { newMeter };
             case (MeterType.Individual):
@@ -77,7 +82,13 @@ export class MeterService {
                 if (existedMeter) {
                     throw new RMQError(METER_ALREADY_EXIST, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
                 }
-                newMeterEntity = new IndividualMeters(dto);
+                newMeterEntity = new IndividualMeters({
+                    typeOfServiceId: dto.typeOfServiceId,
+                    apartmentId: dto.apartmentId,
+                    factoryNumber: dto.factoryNumber,
+                    verifiedAt: new Date(dto.verifiedAt),
+                    issuedAt: new Date(dto.issuedAt),
+                });
                 newMeter = await this.individualMeterRepository.createIndividualMeter(newMeterEntity);
                 return { newMeter };
             default:

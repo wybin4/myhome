@@ -24,14 +24,14 @@ export interface IGeneralMeter {
 export interface IIndividualMeterReading {
     id: number;
     individualMeterId: number;
-    reading: string;
+    reading: number;
     readAt: Date;
 }
 
 export interface IGeneralMeterReading {
     id: number;
     generalMeterId: number;
-    reading: string;
+    reading: number;
     readAt: Date;
 }
 

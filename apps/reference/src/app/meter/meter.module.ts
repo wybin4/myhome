@@ -9,27 +9,28 @@ import { IndividualMeterRepository } from "./repositories/individual-meter.repos
 import { Module } from "@nestjs/common";
 import { MeterService } from "./services/meter.service";
 import { MeterController } from "./controllers/meter.controller";
+import { MeterReadingController } from "./controllers/meter-reading.controller";
+import { MeterReadingService } from "./services/meter-reading.service";
+import { GeneralMeterRepository } from "./repositories/general-meter.repository";
+import { SubscriberModule } from "../subscriber/subscriber.module";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature(
-            [
-                IndividualMeters, GeneralMeters,
-                IndividualMeterReadings, GeneralMeterReadings
-            ]
-        ),
+        TypeOrmModule.forFeature([
+            IndividualMeters, GeneralMeters,
+            IndividualMeterReadings, GeneralMeterReadings
+        ]),
+        SubscriberModule
     ],
-    providers:
-        [
-            IndividualMeterRepository, GeneralMeterReadingRepository,
-            IndividualMeterReadingRepository, GeneralMeterReadingRepository,
-            MeterService
-        ],
-    exports:
-        [
-            IndividualMeterRepository, GeneralMeterReadingRepository,
-            IndividualMeterReadingRepository, GeneralMeterReadingRepository
-        ],
-    controllers: [MeterController],
+    providers: [
+        IndividualMeterRepository, GeneralMeterRepository,
+        IndividualMeterReadingRepository, GeneralMeterReadingRepository,
+        MeterService, MeterReadingService,
+    ],
+    exports: [
+        IndividualMeterRepository, GeneralMeterRepository,
+        IndividualMeterReadingRepository, GeneralMeterReadingRepository,
+    ],
+    controllers: [MeterController, MeterReadingController],
 })
 export class MeterModule { }

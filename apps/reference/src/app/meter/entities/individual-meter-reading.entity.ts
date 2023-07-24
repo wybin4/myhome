@@ -1,4 +1,4 @@
-import {  IIndividualMeterReading } from '@myhome/interfaces';
+import { IIndividualMeterReading } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
@@ -10,11 +10,10 @@ export class IndividualMeterReadings implements IIndividualMeterReading {
     individualMeterId: number;
 
     @Column({ nullable: false })
-    reading: string;
+    reading: number;
 
     @Column({ nullable: false })
     readAt: Date;
-
 
     constructor(data?: Partial<IndividualMeterReadings>) {
         if (data) {

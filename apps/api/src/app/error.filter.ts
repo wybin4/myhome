@@ -5,5 +5,5 @@ export function CatchError(e) {
         throw new NotFoundException(e.message);
     } else if (e.code === HttpStatus.CONFLICT) {
         throw new ConflictException(e.message);
-    } else throw new InternalServerErrorException('Что-то пошло не так');
+    } else throw new InternalServerErrorException(e.message);
 }

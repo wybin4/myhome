@@ -1,5 +1,5 @@
 import { IGeneralMeter, IIndividualMeter, MeterType, RequireHomeOrApartment } from '@myhome/interfaces';
-import { IsDate, IsNumber, IsString } from 'class-validator';
+import {  IsNumber, IsString } from 'class-validator';
 
 export namespace ReferenceAddMeter {
     export const topic = 'reference.add-meter.command';
@@ -17,11 +17,11 @@ export namespace ReferenceAddMeter {
         @IsString()
         factoryNumber!: string;
 
-        @IsDate()
-        verifiedAt!: Date;
+        @IsString()
+        verifiedAt!: string;
 
-        @IsDate()
-        issuedAt!: Date;
+        @IsString()
+        issuedAt!: string;
 
         @IsString()
         meterType!: MeterType;

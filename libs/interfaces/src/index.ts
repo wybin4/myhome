@@ -3,3 +3,4 @@ export * from './lib/user.interface';
 export * from './lib/house.interface';
 export * from './lib/apartment.interface';
 export * from './lib/subscriber.interface';
+export * from './lib/meter.interface';

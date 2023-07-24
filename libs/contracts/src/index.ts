@@ -11,3 +11,7 @@ export * from './lib/reference/reference.get-apartment';
 export * from './lib/reference/reference.get-subscriber';
 export * from './lib/reference/reference.add-subscriber';
 export * from './lib/reference/reference.update-subscriber';
+
+export * from './lib/reference/reference.get-meter';
+export * from './lib/reference/reference.add-meter';
+export * from './lib/reference/reference.update-meter';

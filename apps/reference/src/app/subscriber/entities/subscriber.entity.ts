@@ -1,6 +1,7 @@
-import { ISubscriber, SubscriberStatus, SubscriberStatusEnumTransformer } from '@myhome/interfaces';
+import { ISubscriber, SubscriberStatus } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 import { Apartments } from './apartment.entity';
+import { GenericEnumTransformer } from '@myhome/constants';
 
 @Entity()
 export class Subscribers implements ISubscriber {
@@ -23,7 +24,7 @@ export class Subscribers implements ISubscriber {
     @Column({
         nullable: false,
         type: 'varchar',
-        transformer: SubscriberStatusEnumTransformer,
+        transformer: GenericEnumTransformer(SubscriberStatus),
         default: SubscriberStatus.Active,
     })
     status: SubscriberStatus;

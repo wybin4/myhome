@@ -13,9 +13,12 @@ import { MeterReadingController } from "./controllers/meter-reading.controller";
 import { MeterReadingService } from "./services/meter-reading.service";
 import { GeneralMeterRepository } from "./repositories/general-meter.repository";
 import { SubscriberModule } from "../subscriber/subscriber.module";
+import { MeterEventEmitter } from "./meter.event-emitter";
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
     imports: [
+        ScheduleModule.forRoot(),
         TypeOrmModule.forFeature([
             IndividualMeters, GeneralMeters,
             IndividualMeterReadings, GeneralMeterReadings
@@ -26,6 +29,7 @@ import { SubscriberModule } from "../subscriber/subscriber.module";
         IndividualMeterRepository, GeneralMeterRepository,
         IndividualMeterReadingRepository, GeneralMeterReadingRepository,
         MeterService, MeterReadingService,
+        MeterEventEmitter
     ],
     exports: [
         IndividualMeterRepository, GeneralMeterRepository,

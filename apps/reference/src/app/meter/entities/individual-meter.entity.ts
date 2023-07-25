@@ -52,4 +52,9 @@ export class IndividualMeters implements IIndividualMeter {
         return this;
     }
 
+    public async expire() {
+        this.status = MeterStatus.Archieve;
+        return this;
+    }
+
 }

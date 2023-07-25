@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Not, Repository } from 'typeorm';
 import { IndividualMeters } from '../entities/individual-meter.entity';
+import { MeterStatus } from '@myhome/interfaces';
 
 @Injectable()
 export class IndividualMeterRepository {
@@ -24,5 +25,17 @@ export class IndividualMeterRepository {
     async updateIndividualMeter(meter: IndividualMeters) {
         await this.individualMeterRepository.update(meter.id, meter);
         return this.findIndividualMeterById(meter.id);
+    }
+    async findExpiredIndividualMeters(): Promise<IndividualMeters[]> {
+        const currentDate = new Date();
+        return this.individualMeterRepository.find({
+            where: {
+                verifiedAt: LessThan(currentDate),
+                status: Not(MeterStatus.Archieve),
+            },
+        });
+    }
+    async saveIndividualMeters(meters: IndividualMeters[]): Promise<IndividualMeters[]> {
+        return this.individualMeterRepository.save(meters);
     }
 }

@@ -51,4 +51,9 @@ export class GeneralMeters implements IGeneralMeter {
         this.verifiedAt = verifiedAt;
         return this;
     }
+
+    public async expire() {
+        this.status = MeterStatus.Archieve;
+        return this;
+    }
 }

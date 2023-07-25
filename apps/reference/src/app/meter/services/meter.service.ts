@@ -7,11 +7,13 @@ import { GeneralMeters } from "../entities/general-meter.entity";
 import { IndividualMeters } from "../entities/individual-meter.entity";
 import { GeneralMeterRepository } from "../repositories/general-meter.repository";
 import { IndividualMeterRepository } from "../repositories/individual-meter.repository";
-import { ReferenceAddMeter } from "@myhome/contracts";
+import { ReferenceAddMeter, ReferenceExpireMeter } from "@myhome/contracts";
 import { ApartmentRepository } from "../../subscriber/repositories/apartment.repository";
 import { HouseRepository } from "../../subscriber/repositories/house.repository";
 import { Apartments } from "../../subscriber/entities/apartment.entity";
 import { Houses } from "../../subscriber/entities/house.entity";
+import { MeterEventEmitter } from "../meter.event-emitter";
+import { Cron } from "@nestjs/schedule";
 
 export type Meters = IndividualMeters | GeneralMeters;
 
@@ -22,7 +24,33 @@ export class MeterService {
         private readonly generalMeterRepository: GeneralMeterRepository,
         private readonly apartmentRepository: ApartmentRepository,
         private readonly houseRepository: HouseRepository,
+        private readonly meterEventEmitter: MeterEventEmitter,
     ) { }
+
+    @Cron('0 9 * * *')
+    async checkMetersAndSendEvent() {
+        const generalMeters = await this.generalMeterRepository.findExpiredGeneralMeters();
+        const individualMeters = await this.individualMeterRepository.findExpiredIndividualMeters();
+
+        this.changeMeterStatus(generalMeters);
+        this.changeMeterStatus(individualMeters);
+
+        await this.generalMeterRepository.saveGeneralMeters(generalMeters);
+        await this.individualMeterRepository.saveIndividualMeters(individualMeters);
+
+        await this.meterEventEmitter.handle(
+            {
+                topic: ReferenceExpireMeter.topic,
+                data: { generalMeters, individualMeters }
+            }
+        );
+    }
+
+    private changeMeterStatus(meters: GeneralMeters[] | IndividualMeters[]) {
+        for (const meter of meters) {
+            meter.expire();
+        }
+    }
 
     public async getMeter(id: number, meterType: MeterType) {
         let meter: GeneralMeters | IndividualMeters;

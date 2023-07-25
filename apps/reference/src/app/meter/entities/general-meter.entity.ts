@@ -2,7 +2,7 @@ import { GenericEnumTransformer } from '@myhome/constants';
 import { IGeneralMeter, MeterStatus, SubscriberStatus } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity()
+@Entity('general_meters')
 export class GeneralMeterEnitity implements IGeneralMeter {
     @PrimaryGeneratedColumn()
     id: number;

@@ -1,7 +1,7 @@
 import { IGeneralMeterReading } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity()
+@Entity('general_meter_readings')
 export class GeneralMeterReadingEnitity implements IGeneralMeterReading {
     @PrimaryGeneratedColumn()
     id: number;

@@ -44,13 +44,13 @@ export class UserEnitity implements IUser {
   }
 }
 
-@Entity()
+@Entity('admins')
 export class Admins extends UserEnitity { }
 
-@Entity()
+@Entity('owners')
 export class Owners extends UserEnitity { }
 
-@Entity()
+@Entity('management_companies')
 export class ManagementCompanies extends UserEnitity {
   @Column({ nullable: true })
   checkingAccount: string;

@@ -1,19 +1,13 @@
 import { ITypeOfService } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity()
+@Entity('type_of_services')
 export class TypeOfServiceEnitity implements ITypeOfService {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column({ nullable: false })
-    individualMeterId: number;
-
-    @Column({ nullable: false })
-    reading: number;
-
-    @Column({ nullable: false })
-    readAt: Date;
+    name: string;
 
     constructor(data?: Partial<TypeOfServiceEnitity>) {
         if (data) {
@@ -23,9 +17,7 @@ export class TypeOfServiceEnitity implements ITypeOfService {
 
     public getTypeOfService() {
         return {
-            individualMeterId: this.individualMeterId,
-            reading: this.reading,
-            readAt: this.readAt
+            name: this.name
         }
     }
 }

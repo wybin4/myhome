@@ -2,7 +2,7 @@ import { IHouse } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ApartmentEnitity } from './apartment.entity';
 
-@Entity()
+@Entity('houses')
 export class HouseEnitity implements IHouse {
     @PrimaryGeneratedColumn()
     id: number;

@@ -3,7 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne } from 'typ
 import { HouseEnitity } from './house.entity';
 import { SubscriberEnitity } from './subscriber.entity';
 
-@Entity()
+@Entity('apartments')
 export class ApartmentEnitity implements IApartment {
     @PrimaryGeneratedColumn()
     id: number;

@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Not, Repository } from 'typeorm';
-import { TypeOfServiceEnitity } from '../entities/units.entity';
-import { MeterStatus } from '@myhome/interfaces';
+import { Repository } from 'typeorm';
+import { TypeOfServiceEnitity } from '../entities/type-of-service.entity';
 
 @Injectable()
 export class TypeOfServiceRepository {
@@ -19,26 +18,4 @@ export class TypeOfServiceRepository {
         return this.typeOfServiceRepository.findOne({ where: { id } });
     }
 
-    async findIndividualMeterByFNumber(factoryNumber: string) {
-        return this.typeOfServiceRepository.findOne({ where: { factoryNumber } });
-    }
-
-    async updateTypeOfService(meter: TypeOfServiceEnitity) {
-        await this.typeOfServiceRepository.update(meter.id, meter);
-        return this.findTypeOfServiceById(meter.id);
-    }
-
-    async findExpiredTypeOfServices(): Promise<TypeOfServiceEnitity[]> {
-        const currentDate = new Date();
-        return this.typeOfServiceRepository.find({
-            where: {
-                verifiedAt: LessThan(currentDate),
-                status: Not(MeterStatus.Archieve),
-            },
-        });
-    }
-
-    async saveTypeOfServices(meters: TypeOfServiceEnitity[]): Promise<TypeOfServiceEnitity[]> {
-        return this.typeOfServiceRepository.save(meters);
-    }
 }

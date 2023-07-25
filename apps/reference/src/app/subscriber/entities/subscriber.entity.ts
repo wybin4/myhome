@@ -3,7 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'ty
 import { ApartmentEnitity } from './apartment.entity';
 import { GenericEnumTransformer } from '@myhome/constants';
 
-@Entity()
+@Entity('subscribers')
 export class SubscriberEnitity implements ISubscriber {
     @PrimaryGeneratedColumn()
     id: number;

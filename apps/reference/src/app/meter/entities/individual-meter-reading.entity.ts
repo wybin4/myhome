@@ -2,7 +2,7 @@ import { IIndividualMeterReading } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('individual_meter_readings')
-export class IndividualMeterReadingEnitity implements IIndividualMeterReading {
+export class IndividualMeterReadingEntity implements IIndividualMeterReading {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -15,7 +15,7 @@ export class IndividualMeterReadingEnitity implements IIndividualMeterReading {
     @Column({ nullable: false })
     readAt: Date;
 
-    constructor(data?: Partial<IndividualMeterReadingEnitity>) {
+    constructor(data?: Partial<IndividualMeterReadingEntity>) {
         if (data) {
             Object.assign(this, data);
         }

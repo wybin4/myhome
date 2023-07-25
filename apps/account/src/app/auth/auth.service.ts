@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { Admins, ManagementCompanies, Owners, UserEnitity } from '../user/entities/user.entity';
+import { AdminEntity, ManagementCompanyEntity, OwnerEntity, UserEntity } from '../user/entities/user.entity';
 import { UserRole } from '@myhome/interfaces';
 import { JwtService } from '@nestjs/jwt';
 import { AccountRegister } from '@myhome/contracts';
@@ -28,7 +28,7 @@ export class AuthService {
         if (oldUser) {
           throw new Error('Такой пользователь уже зарегистрирован');
         }
-        newUserEntity = await new Admins({ name, email, passwordHash: '' }).setPassword(password);
+        newUserEntity = await new AdminEntity({ name, email, passwordHash: '' }).setPassword(password);
         await this.adminRepository.createUser(newUserEntity);
         break;
       case UserRole.Owner:
@@ -36,7 +36,7 @@ export class AuthService {
         if (oldUser) {
           throw new Error('Такой пользователь уже зарегистрирован');
         }
-        newUserEntity = await new Owners({ name, email, passwordHash: '' }).setPassword(password);
+        newUserEntity = await new OwnerEntity({ name, email, passwordHash: '' }).setPassword(password);
         await this.ownerRepository.createUser(newUserEntity);
         break;
       case UserRole.ManagementCompany:
@@ -44,7 +44,7 @@ export class AuthService {
         if (oldUser) {
           throw new Error('Такой пользователь уже зарегистрирован');
         }
-        newUserEntity = await new ManagementCompanies({ name, email, passwordHash: '' }).setPassword(password);
+        newUserEntity = await new ManagementCompanyEntity({ name, email, passwordHash: '' }).setPassword(password);
         await this.managementCompanyRepository.createUser(newUserEntity);
         break;
       default:
@@ -63,17 +63,17 @@ export class AuthService {
       throw new Error('Неверный логин или пароль');
     }
 
-    let userEntity: UserEnitity;
+    let userEntity: UserEntity;
 
     switch (role) {
       case UserRole.Admin:
-        userEntity = new Admins(user);
+        userEntity = new AdminEntity(user);
         break;
       case UserRole.Owner:
-        userEntity = new Owners(user);
+        userEntity = new OwnerEntity(user);
         break;
       case UserRole.ManagementCompany:
-        userEntity = new ManagementCompanies(user);
+        userEntity = new ManagementCompanyEntity(user);
         break;
       default:
         throw new RMQError(INCORRECT_USER_ROLE, ERROR_TYPE.RMQ, HttpStatus.UNPROCESSABLE_ENTITY);

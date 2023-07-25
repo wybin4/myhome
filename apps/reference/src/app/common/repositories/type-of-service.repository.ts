@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TypeOfServiceEnitity } from '../entities/type-of-service.entity';
+import { TypeOfServiceEntity } from '../entities/type-of-service.entity';
 
 @Injectable()
 export class TypeOfServiceRepository {
     constructor(
-        @InjectRepository(TypeOfServiceEnitity)
-        private readonly typeOfServiceRepository: Repository<TypeOfServiceEnitity>,
+        @InjectRepository(TypeOfServiceEntity)
+        private readonly typeOfServiceRepository: Repository<TypeOfServiceEntity>,
     ) { }
 
-    async createTypeOfService(typeOfService: TypeOfServiceEnitity) {
+    async createTypeOfService(typeOfService: TypeOfServiceEntity) {
         return this.typeOfServiceRepository.save(typeOfService);
     }
 

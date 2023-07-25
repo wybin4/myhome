@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ManagementCompanies } from '../entities/user.entity';
+import { ManagementCompanyEntity } from '../entities/user.entity';
 
 
 @Injectable()
 export class ManagementCompanyRepository {
     constructor(
-        @InjectRepository(ManagementCompanies)
-        private readonly managementCompanyRepository: Repository<ManagementCompanies>,
+        @InjectRepository(ManagementCompanyEntity)
+        private readonly managementCompanyRepository: Repository<ManagementCompanyEntity>,
     ) { }
 
-    async createUser(user: ManagementCompanies) {
+    async createUser(user: ManagementCompanyEntity) {
         return this.managementCompanyRepository.save(user);
     }
 
@@ -27,7 +27,7 @@ export class ManagementCompanyRepository {
         await this.managementCompanyRepository.delete({ email });
     }
 
-    async updateUser(user: ManagementCompanies) {
+    async updateUser(user: ManagementCompanyEntity) {
         await this.managementCompanyRepository.update(user.id, user);
         return this.findUserById(user.id);
     }

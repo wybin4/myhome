@@ -4,15 +4,15 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { ReferenceAddMeterReading } from "@myhome/contracts";
-import { GeneralMeterReadingEnitity } from "../entities/general-meter-reading.entity";
-import { IndividualMeterReadingEnitity } from "../entities/individual-meter-reading.entity";
+import { GeneralMeterReadingEntity } from "../entities/general-meter-reading.entity";
+import { IndividualMeterReadingEntity } from "../entities/individual-meter-reading.entity";
 import { GeneralMeterReadingRepository } from "../repositories/general-meter-reading.repository";
 import { IndividualMeterReadingRepository } from "../repositories/individual-meter-reading.repository";
 import { IndividualMeterRepository } from "../repositories/individual-meter.repository";
 import { GeneralMeterRepository } from "../repositories/general-meter.repository";
 import { Meters } from "./meter.service";
 
-type MeterReadings = IndividualMeterReadingEnitity | GeneralMeterReadingEnitity;
+type MeterReadings = IndividualMeterReadingEntity | GeneralMeterReadingEntity;
 
 @Injectable()
 export class MeterReadingService {
@@ -24,7 +24,7 @@ export class MeterReadingService {
     ) { }
 
     public async getMeterReading(id: number, meterType: MeterType) {
-        let meterReading: GeneralMeterReadingEnitity | IndividualMeterReadingEnitity;
+        let meterReading: GeneralMeterReadingEntity | IndividualMeterReadingEntity;
         let gettedMeterReading: Omit<IGeneralMeterReading | IIndividualMeterReading, 'id'>;
         switch (meterType) {
             case (MeterType.General):
@@ -32,14 +32,14 @@ export class MeterReadingService {
                 if (!meterReading) {
                     throw new RMQError(METER_READING_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
                 }
-                gettedMeterReading = new GeneralMeterReadingEnitity(meterReading).getGeneralMeterReading();
+                gettedMeterReading = new GeneralMeterReadingEntity(meterReading).getGeneralMeterReading();
                 return { gettedMeterReading };
             case (MeterType.Individual):
                 meterReading = await this.individualMeterReadingRepository.findIndividualMeterReadingById(id);
                 if (!meterReading) {
                     throw new RMQError(METER_READING_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
                 }
-                gettedMeterReading = new IndividualMeterReadingEnitity(meterReading).getIndividualMeterReading();
+                gettedMeterReading = new IndividualMeterReadingEntity(meterReading).getIndividualMeterReading();
                 return { gettedMeterReading };
             default:
                 throw new RMQError(INCORRECT_METER_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
@@ -57,7 +57,7 @@ export class MeterReadingService {
                 if (!meter) {
                     throw new RMQError(METER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
                 }
-                newMeterReadingEntity = new GeneralMeterReadingEnitity({
+                newMeterReadingEntity = new GeneralMeterReadingEntity({
                     generalMeterId: dto.meterId,
                     reading: dto.reading,
                     readAt: new Date(dto.readAt),
@@ -69,7 +69,7 @@ export class MeterReadingService {
                 if (!meter) {
                     throw new RMQError(METER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
                 }
-                newMeterReadingEntity = new IndividualMeterReadingEnitity({
+                newMeterReadingEntity = new IndividualMeterReadingEntity({
                     individualMeterId: dto.meterId,
                     reading: dto.reading,
                     readAt: new Date(dto.readAt),

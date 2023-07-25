@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Admins } from '../entities/user.entity';
+import { AdminEntity } from '../entities/user.entity';
 
 @Injectable()
 export class AdminRepository {
     constructor(
-        @InjectRepository(Admins)
-        private readonly adminRepository: Repository<Admins>,
+        @InjectRepository(AdminEntity)
+        private readonly adminRepository: Repository<AdminEntity>,
     ) { }
 
-    async createUser(user: Admins) {
+    async createUser(user: AdminEntity) {
         return this.adminRepository.save(user);
     }
 

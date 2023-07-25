@@ -8,4 +8,7 @@ export * from './lib/reference/subscriber/subscriber.interface';
 export * from './lib/reference/meter.interface';
 export * from './lib/reference/common.interface';
 
+export * from './lib/reference/tariff-and-norm/base-tariff-and-norm.interface';
+export * from './lib/reference/tariff-and-norm/common-house-need-tariff.interface';
+
 export * from './lib/event.interface';

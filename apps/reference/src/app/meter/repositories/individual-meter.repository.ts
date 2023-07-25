@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Not, Repository } from 'typeorm';
-import { IndividualMeterEnitity } from '../entities/individual-meter.entity';
+import { IndividualMeterEntity } from '../entities/individual-meter.entity';
 import { MeterStatus } from '@myhome/interfaces';
 
 @Injectable()
 export class IndividualMeterRepository {
     constructor(
-        @InjectRepository(IndividualMeterEnitity)
-        private readonly individualMeterRepository: Repository<IndividualMeterEnitity>,
+        @InjectRepository(IndividualMeterEntity)
+        private readonly individualMeterRepository: Repository<IndividualMeterEntity>,
     ) { }
 
-    async createIndividualMeter(individualMeter: IndividualMeterEnitity) {
+    async createIndividualMeter(individualMeter: IndividualMeterEntity) {
         return this.individualMeterRepository.save(individualMeter);
     }
 
@@ -22,11 +22,11 @@ export class IndividualMeterRepository {
     async findIndividualMeterByFNumber(factoryNumber: string) {
         return this.individualMeterRepository.findOne({ where: { factoryNumber } });
     }
-    async updateIndividualMeter(meter: IndividualMeterEnitity) {
+    async updateIndividualMeter(meter: IndividualMeterEntity) {
         await this.individualMeterRepository.update(meter.id, meter);
         return this.findIndividualMeterById(meter.id);
     }
-    async findExpiredIndividualMeters(): Promise<IndividualMeterEnitity[]> {
+    async findExpiredIndividualMeters(): Promise<IndividualMeterEntity[]> {
         const currentDate = new Date();
         return this.individualMeterRepository.find({
             where: {
@@ -35,7 +35,7 @@ export class IndividualMeterRepository {
             },
         });
     }
-    async saveIndividualMeters(meters: IndividualMeterEnitity[]): Promise<IndividualMeterEnitity[]> {
+    async saveIndividualMeters(meters: IndividualMeterEntity[]): Promise<IndividualMeterEntity[]> {
         return this.individualMeterRepository.save(meters);
     }
 }

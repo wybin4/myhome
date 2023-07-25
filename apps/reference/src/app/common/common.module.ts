@@ -1,7 +1,7 @@
 import { InjectRepository, TypeOrmModule } from "@nestjs/typeorm";
 import { Module } from "@nestjs/common";
-import { UnitEnitity } from "./entities/unit.entity";
-import { TypeOfServiceEnitity } from "./entities/type-of-service.entity";
+import { UnitEntity } from "./entities/unit.entity";
+import { TypeOfServiceEntity } from "./entities/type-of-service.entity";
 import { TypeOfServiceRepository } from "./repositories/type-of-service.repository";
 import { UnitRepository } from "./repositories/unit.repository";
 import { Repository } from "typeorm";
@@ -10,7 +10,7 @@ import { seedUnit } from "./seeds/unit.seed";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([TypeOfServiceEnitity, UnitEnitity]),
+        TypeOrmModule.forFeature([TypeOfServiceEntity, UnitEntity]),
     ],
     providers: [TypeOfServiceRepository, UnitRepository],
     exports: [TypeOfServiceRepository, UnitRepository],
@@ -18,10 +18,10 @@ import { seedUnit } from "./seeds/unit.seed";
 })
 export class CommonModule {
     constructor(
-        @InjectRepository(TypeOfServiceEnitity)
-        private readonly typeOfServiceRepository: Repository<TypeOfServiceEnitity>,
-        @InjectRepository(UnitEnitity)
-        private readonly unitRepository: Repository<UnitEnitity>,
+        @InjectRepository(TypeOfServiceEntity)
+        private readonly typeOfServiceRepository: Repository<TypeOfServiceEntity>,
+        @InjectRepository(UnitEntity)
+        private readonly unitRepository: Repository<UnitEntity>,
     ) { }
 
     async onModuleInit() {

@@ -1,7 +1,7 @@
 import { Repository } from "typeorm";
-import { TypeOfServiceEnitity } from "../entities/type-of-service.entity";
+import { TypeOfServiceEntity } from "../entities/type-of-service.entity";
 
-export async function seedTypeOfService(typeOfServiceRepository: Repository<TypeOfServiceEnitity>) {
+export async function seedTypeOfService(typeOfServiceRepository: Repository<TypeOfServiceEntity>) {
     const data = [
         { name: 'Отопление' },
         { name: 'ГВС' },

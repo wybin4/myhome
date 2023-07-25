@@ -2,7 +2,7 @@ import { IGeneralMeterReading } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('general_meter_readings')
-export class GeneralMeterReadingEnitity implements IGeneralMeterReading {
+export class GeneralMeterReadingEntity implements IGeneralMeterReading {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -15,7 +15,7 @@ export class GeneralMeterReadingEnitity implements IGeneralMeterReading {
     @Column({ nullable: false })
     readAt: Date;
 
-    constructor(data?: Partial<GeneralMeterReadingEnitity>) {
+    constructor(data?: Partial<GeneralMeterReadingEntity>) {
         if (data) {
             Object.assign(this, data);
         }

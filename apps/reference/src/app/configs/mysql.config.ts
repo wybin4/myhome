@@ -1,14 +1,16 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { HouseEnitity } from '../subscriber/entities/house.entity';
-import { ApartmentEnitity } from '../subscriber/entities/apartment.entity';
-import { SubscriberEnitity } from '../subscriber/entities/subscriber.entity';
-import { GeneralMeterEnitity } from '../meter/entities/general-meter.entity';
-import { IndividualMeterEnitity } from '../meter/entities/individual-meter.entity';
-import { GeneralMeterReadingEnitity } from '../meter/entities/general-meter-reading.entity';
-import { IndividualMeterReadingEnitity } from '../meter/entities/individual-meter-reading.entity';
-import { UnitEnitity } from '../common/entities/unit.entity';
-import { TypeOfServiceEnitity } from '../common/entities/type-of-service.entity';
+import { HouseEntity } from '../subscriber/entities/house.entity';
+import { ApartmentEntity } from '../subscriber/entities/apartment.entity';
+import { SubscriberEntity } from '../subscriber/entities/subscriber.entity';
+import { GeneralMeterEntity } from '../meter/entities/general-meter.entity';
+import { IndividualMeterEntity } from '../meter/entities/individual-meter.entity';
+import { GeneralMeterReadingEntity } from '../meter/entities/general-meter-reading.entity';
+import { IndividualMeterReadingEntity } from '../meter/entities/individual-meter-reading.entity';
+import { UnitEntity } from '../common/entities/unit.entity';
+import { TypeOfServiceEntity } from '../common/entities/type-of-service.entity';
+import { NormEntity, MunicipalTariffEntity, SocialNormsEntity, SeasonalityFactorsEntity } from '../tariff-and-norm/entities/base-tariff-and-norm.entity';
+import { CommonHouseNeedTariffEntity } from '../tariff-and-norm/entities/house-tariff.entity';
 
 export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
   type: 'mysql',
@@ -20,9 +22,11 @@ export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptio
   synchronize: true,
   entities:
     [
-      HouseEnitity, ApartmentEnitity, SubscriberEnitity,
-      GeneralMeterEnitity, IndividualMeterEnitity, GeneralMeterReadingEnitity, IndividualMeterReadingEnitity,
-      UnitEnitity, TypeOfServiceEnitity
+      HouseEntity, ApartmentEntity, SubscriberEntity,
+      GeneralMeterEntity, IndividualMeterEntity, GeneralMeterReadingEntity, IndividualMeterReadingEntity,
+      UnitEntity, TypeOfServiceEntity,
+      NormEntity, MunicipalTariffEntity, SocialNormsEntity, SeasonalityFactorsEntity,
+      CommonHouseNeedTariffEntity
     ],
   autoLoadEntities: true
 });

@@ -1,14 +1,14 @@
 import { Body, Controller, HttpStatus } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ReferenceAddApartment, ReferenceGetApartment } from '@myhome/contracts';
-import { ApartmentRepository } from '../repositories/apartment.repository';
-import { ApartmentEntity } from '../entities/apartment.entity';
-import { HouseRepository } from '../repositories/house.repository';
+import { ApartmentRepository } from '../repositories/base-tariff-and-norm.repository';
+import { ApartmentEntity } from '../entities/base-tariff-and-norm.entity';
+import { HouseRepository } from '../repositories/house-tariff.repository';
 import { APART_ALREADY_EXIST, APART_NOT_EXIST, HOME_NOT_EXIST } from '@myhome/constants';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
 @Controller()
-export class ApartmentController {
+export class BaseTariffAndNormController {
 	constructor(
 		private readonly apartmentRepository: ApartmentRepository,
 		private readonly houseRepository: HouseRepository,

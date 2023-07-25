@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SubscriberEnitity } from '../entities/subscriber.entity';
+import { SubscriberEntity } from '../entities/subscriber.entity';
 
 @Injectable()
 export class SubscriberRepository {
     constructor(
-        @InjectRepository(SubscriberEnitity)
-        private readonly subscriberRepository: Repository<SubscriberEnitity>,
+        @InjectRepository(SubscriberEntity)
+        private readonly subscriberRepository: Repository<SubscriberEntity>,
     ) { }
 
-    async createSubscriber(subscriber: SubscriberEnitity) {
+    async createSubscriber(subscriber: SubscriberEntity) {
         return this.subscriberRepository.save(subscriber);
     }
 
@@ -26,7 +26,7 @@ export class SubscriberRepository {
         await this.subscriberRepository.delete({ id });
     }
 
-    async updateSubscriber(subscriber: SubscriberEnitity) {
+    async updateSubscriber(subscriber: SubscriberEntity) {
         await this.subscriberRepository.update(subscriber.id, subscriber);
         return this.findSubscriberById(subscriber.id);
     }

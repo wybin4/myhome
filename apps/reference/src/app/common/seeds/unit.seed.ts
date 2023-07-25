@@ -1,7 +1,7 @@
 import { Repository } from "typeorm";
-import { UnitEnitity } from "../entities/unit.entity";
+import { UnitEntity } from "../entities/unit.entity";
 
-export async function seedUnit(unitRepository: Repository<UnitEnitity>) {
+export async function seedUnit(unitRepository: Repository<UnitEntity>) {
     const data = [
         { name: 'руб./гКал' },
         { name: 'руб./м3' },

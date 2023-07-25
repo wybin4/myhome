@@ -3,7 +3,7 @@ import { IGeneralMeter, MeterStatus, SubscriberStatus } from '@myhome/interfaces
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('general_meters')
-export class GeneralMeterEnitity implements IGeneralMeter {
+export class GeneralMeterEntity implements IGeneralMeter {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -30,7 +30,7 @@ export class GeneralMeterEnitity implements IGeneralMeter {
     })
     status: MeterStatus;
 
-    constructor(data?: Partial<GeneralMeterEnitity>) {
+    constructor(data?: Partial<GeneralMeterEntity>) {
         if (data) {
             Object.assign(this, data);
         }

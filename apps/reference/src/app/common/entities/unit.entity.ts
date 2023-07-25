@@ -2,14 +2,14 @@ import { IUnit } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('units')
-export class UnitEnitity implements IUnit {
+export class UnitEntity implements IUnit {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column({ nullable: false })
     name: string;
 
-    constructor(data?: Partial<UnitEnitity>) {
+    constructor(data?: Partial<UnitEntity>) {
         if (data) {
             Object.assign(this, data);
         }

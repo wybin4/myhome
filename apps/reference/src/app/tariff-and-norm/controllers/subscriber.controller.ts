@@ -4,7 +4,7 @@ import { ReferenceAddSubscriber, ReferenceGetSubscriber, ReferenceUpdateSubscrib
 import { SubscriberRepository } from '../repositories/subscriber.repository';
 import { SubscriberEntity } from '../entities/subscriber.entity';
 import { APART_NOT_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_NOT_EXIST } from '@myhome/constants';
-import { ApartmentRepository } from '../repositories/apartment.repository';
+import { ApartmentRepository } from '../repositories/base-tariff-and-norm.repository';
 import { SubscriberStatus } from '@myhome/interfaces';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 

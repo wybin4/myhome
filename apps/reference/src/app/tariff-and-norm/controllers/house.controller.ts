@@ -1,8 +1,8 @@
 import { Body, Controller, HttpStatus } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQService, RMQValidate } from 'nestjs-rmq';
 import { AccountUserInfo, ReferenceAddHouse, ReferenceGetHouse, ReferenceUpdateHouse } from '@myhome/contracts';
-import { HouseRepository } from '../repositories/house.repository';
-import { HouseEntity } from '../entities/house.entity';
+import { HouseRepository } from '../repositories/house-tariff.repository';
+import { HouseEntity } from '../entities/house-tariff.entity';
 import { UserRole } from '@myhome/interfaces';
 import { HOME_NOT_EXIST, MANAG_COMP_NOT_EXIST } from '@myhome/constants';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';

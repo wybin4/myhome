@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UnitEnitity } from '../entities/unit.entity';
+import { UnitEntity } from '../entities/unit.entity';
 
 @Injectable()
 export class UnitRepository {
     constructor(
-        @InjectRepository(UnitEnitity)
-        private readonly unitRepository: Repository<UnitEnitity>,
+        @InjectRepository(UnitEntity)
+        private readonly unitRepository: Repository<UnitEntity>,
     ) { }
 
-    async createUnit(unit: UnitEnitity) {
+    async createUnit(unit: UnitEntity) {
         return this.unitRepository.save(unit);
     }
 

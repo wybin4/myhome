@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 // import { IUser } from "@myhome/interfaces";
 import { RMQService } from "nestjs-rmq";
-// import { Users } from "./entities/user.entity";
+// import { UserEnitity } from "./entities/user.entity";
 // import { UserRepository } from "./repositories/user.repository";
 
 @Injectable()
@@ -16,12 +16,12 @@ export class UserService {
     //     if (!existedUser) {
     //         throw new Error('Такого пользователя не существует');
     //     }
-    //     const userEntity = new Users(existedUser).updateProfile(user.name);
+    //     const userEntity = new UserEnitity(existedUser).updateProfile(user.name);
     //     await this.updateUser(await userEntity);
     //     return {};
     // }
 
-    // private updateUser(user: Users) {
+    // private updateUser(user: UserEnitity) {
     //     return Promise.all([
     //         this.userRepository.updateUser(user),
     //     ])

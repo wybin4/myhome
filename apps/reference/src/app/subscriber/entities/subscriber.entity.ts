@@ -1,10 +1,10 @@
 import { ISubscriber, SubscriberStatus } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
-import { Apartments } from './apartment.entity';
+import { ApartmentEnitity } from './apartment.entity';
 import { GenericEnumTransformer } from '@myhome/constants';
 
 @Entity()
-export class Subscribers implements ISubscriber {
+export class SubscriberEnitity implements ISubscriber {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -14,9 +14,9 @@ export class Subscribers implements ISubscriber {
     @Column({ nullable: false })
     apartmentId: number;
 
-    @OneToOne(() => Apartments, (apartment) => apartment.subscriber)
+    @OneToOne(() => ApartmentEnitity, (apartment) => apartment.subscriber)
     @JoinColumn()
-    apartment: Apartments;
+    apartment: ApartmentEnitity;
 
     @Column({ nullable: false })
     personalAccount: string;
@@ -29,7 +29,7 @@ export class Subscribers implements ISubscriber {
     })
     status: SubscriberStatus;
 
-    constructor(data?: Partial<Subscribers>) {
+    constructor(data?: Partial<SubscriberEnitity>) {
         if (data) {
             Object.assign(this, data);
         }

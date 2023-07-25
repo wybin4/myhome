@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Apartments } from '../entities/apartment.entity';
+import { ApartmentEnitity } from '../entities/apartment.entity';
 
 @Injectable()
 export class ApartmentRepository {
     constructor(
-        @InjectRepository(Apartments)
-        private readonly apartmentRepository: Repository<Apartments>,
+        @InjectRepository(ApartmentEnitity)
+        private readonly apartmentRepository: Repository<ApartmentEnitity>,
     ) { }
 
-    async createApartment(apartment: Apartments) {
+    async createApartment(apartment: ApartmentEnitity) {
         return this.apartmentRepository.save(apartment);
     }
 

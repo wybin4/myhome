@@ -1,14 +1,14 @@
 import { IHouse } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Apartments } from './apartment.entity';
+import { ApartmentEnitity } from './apartment.entity';
 
 @Entity()
-export class Houses implements IHouse {
+export class HouseEnitity implements IHouse {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @OneToMany(() => Apartments, (apartment) => apartment.house)
-    apartments: Apartments[];
+    @OneToMany(() => ApartmentEnitity, (apartment) => apartment.house)
+    apartments: ApartmentEnitity[];
 
     @Column({ nullable: false })
     managementCompanyId: number;
@@ -22,7 +22,7 @@ export class Houses implements IHouse {
     @Column({ nullable: false })
     houseNumber: string;
 
-    constructor(data?: Partial<Houses>) {
+    constructor(data?: Partial<HouseEnitity>) {
         if (data) {
             Object.assign(this, data);
         }

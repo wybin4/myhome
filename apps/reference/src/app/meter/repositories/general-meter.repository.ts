@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Not, Repository } from 'typeorm';
-import { GeneralMeters } from '../entities/general-meter.entity';
+import { GeneralMeterEnitity } from '../entities/general-meter.entity';
 import { MeterStatus } from '@myhome/interfaces';
 
 @Injectable()
 export class GeneralMeterRepository {
     constructor(
-        @InjectRepository(GeneralMeters)
-        private readonly generalMeterRepository: Repository<GeneralMeters>,
+        @InjectRepository(GeneralMeterEnitity)
+        private readonly generalMeterRepository: Repository<GeneralMeterEnitity>,
     ) { }
 
-    async createGeneralMeter(generalMeter: GeneralMeters) {
+    async createGeneralMeter(generalMeter: GeneralMeterEnitity) {
         return this.generalMeterRepository.save(generalMeter);
     }
 
@@ -23,12 +23,12 @@ export class GeneralMeterRepository {
         return this.generalMeterRepository.findOne({ where: { factoryNumber } });
     }
 
-    async updateGeneralMeter(meter: GeneralMeters) {
+    async updateGeneralMeter(meter: GeneralMeterEnitity) {
         await this.generalMeterRepository.update(meter.id, meter);
         return this.findGeneralMeterById(meter.id);
     }
 
-    async findExpiredGeneralMeters(): Promise<GeneralMeters[]> {
+    async findExpiredGeneralMeters(): Promise<GeneralMeterEnitity[]> {
         const currentDate = new Date();
         return this.generalMeterRepository.find({
             where: {
@@ -38,7 +38,7 @@ export class GeneralMeterRepository {
         });
     }
 
-    async saveGeneralMeters(meters: GeneralMeters[]): Promise<GeneralMeters[]> {
+    async saveGeneralMeters(meters: GeneralMeterEnitity[]): Promise<GeneralMeterEnitity[]> {
         return this.generalMeterRepository.save(meters);
     }
 }

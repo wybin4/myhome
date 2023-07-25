@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GeneralMeterReadings } from '../entities/general-meter-reading.entity';
+import { GeneralMeterReadingEnitity } from '../entities/general-meter-reading.entity';
 
 @Injectable()
 export class GeneralMeterReadingRepository {
     constructor(
-        @InjectRepository(GeneralMeterReadings)
-        private readonly generalMeterReadingRepository: Repository<GeneralMeterReadings>,
+        @InjectRepository(GeneralMeterReadingEnitity)
+        private readonly generalMeterReadingRepository: Repository<GeneralMeterReadingEnitity>,
     ) { }
 
-    async createGeneralMeterReading(generalMeterReading: GeneralMeterReadings) {
+    async createGeneralMeterReading(generalMeterReading: GeneralMeterReadingEnitity) {
         return this.generalMeterReadingRepository.save(generalMeterReading);
     }
 

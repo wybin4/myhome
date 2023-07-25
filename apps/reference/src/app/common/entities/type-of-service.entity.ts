@@ -1,8 +1,8 @@
-import { IIndividualMeterReading } from '@myhome/interfaces';
+import { ITypeOfService } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
-export class IndividualMeterReadingEnitity implements IIndividualMeterReading {
+export class TypeOfServiceEnitity implements ITypeOfService {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -15,13 +15,13 @@ export class IndividualMeterReadingEnitity implements IIndividualMeterReading {
     @Column({ nullable: false })
     readAt: Date;
 
-    constructor(data?: Partial<IndividualMeterReadingEnitity>) {
+    constructor(data?: Partial<TypeOfServiceEnitity>) {
         if (data) {
             Object.assign(this, data);
         }
     }
 
-    public getIndividualMeterReading() {
+    public getTypeOfService() {
         return {
             individualMeterId: this.individualMeterId,
             reading: this.reading,

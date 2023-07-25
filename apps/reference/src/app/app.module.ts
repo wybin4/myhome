@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { getMySQLConfig } from './configs/mysql.config';
 import { SubscriberModule } from './subscriber/subscriber.module';
 import { MeterModule } from './meter/meter.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { MeterModule } from './meter/meter.module';
       inject: [ConfigService],
     }),
     SubscriberModule,
-    MeterModule
+    MeterModule,
+    CommonModule
   ],
 })
 export class AppModule { }

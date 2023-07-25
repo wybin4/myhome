@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Houses } from '../entities/house.entity';
+import { HouseEnitity } from '../entities/house.entity';
 
 @Injectable()
 export class HouseRepository {
     constructor(
-        @InjectRepository(Houses)
-        private readonly houseRepository: Repository<Houses>,
+        @InjectRepository(HouseEnitity)
+        private readonly houseRepository: Repository<HouseEnitity>,
     ) { }
 
-    async createHouse(house: Houses) {
+    async createHouse(house: HouseEnitity) {
         return this.houseRepository.save(house);
     }
 
@@ -22,7 +22,7 @@ export class HouseRepository {
         await this.houseRepository.delete({ id });
     }
 
-    async updateHouse(house: Houses) {
+    async updateHouse(house: HouseEnitity) {
         await this.houseRepository.update(house.id, house);
         return this.findHouseById(house.id);
     }

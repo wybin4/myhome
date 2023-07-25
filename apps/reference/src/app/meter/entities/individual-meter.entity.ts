@@ -3,7 +3,7 @@ import { IIndividualMeter, MeterStatus, SubscriberStatus } from '@myhome/interfa
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
-export class IndividualMeters implements IIndividualMeter {
+export class IndividualMeterEnitity implements IIndividualMeter {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -30,7 +30,7 @@ export class IndividualMeters implements IIndividualMeter {
     })
     status: MeterStatus;
 
-    constructor(data?: Partial<IndividualMeters>) {
+    constructor(data?: Partial<IndividualMeterEnitity>) {
         if (data) {
             Object.assign(this, data);
         }

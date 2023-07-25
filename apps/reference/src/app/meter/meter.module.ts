@@ -1,8 +1,8 @@
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { GeneralMeterReadings } from "./entities/general-meter-reading.entity";
-import { GeneralMeters } from "./entities/general-meter.entity";
-import { IndividualMeterReadings } from "./entities/individual-meter-reading.entity";
-import { IndividualMeters } from "./entities/individual-meter.entity";
+import { GeneralMeterReadingEnitity } from "./entities/general-meter-reading.entity";
+import { GeneralMeterEnitity } from "./entities/general-meter.entity";
+import { IndividualMeterReadingEnitity } from "./entities/individual-meter-reading.entity";
+import { IndividualMeterEnitity } from "./entities/individual-meter.entity";
 import { GeneralMeterReadingRepository } from "./repositories/general-meter-reading.repository";
 import { IndividualMeterReadingRepository } from "./repositories/individual-meter-reading.repository";
 import { IndividualMeterRepository } from "./repositories/individual-meter.repository";
@@ -20,8 +20,8 @@ import { ScheduleModule } from "@nestjs/schedule";
     imports: [
         ScheduleModule.forRoot(),
         TypeOrmModule.forFeature([
-            IndividualMeters, GeneralMeters,
-            IndividualMeterReadings, GeneralMeterReadings
+            IndividualMeterEnitity, GeneralMeterEnitity,
+            IndividualMeterReadingEnitity, GeneralMeterReadingEnitity
         ]),
         SubscriberModule
     ],

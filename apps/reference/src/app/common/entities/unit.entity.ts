@@ -1,9 +1,9 @@
 import { GenericEnumTransformer } from '@myhome/constants';
-import { IGeneralMeter, MeterStatus, SubscriberStatus } from '@myhome/interfaces';
+import { IUnit, MeterStatus, SubscriberStatus } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
-export class GeneralMeterEnitity implements IGeneralMeter {
+export class UnitEnitity implements IUnit {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -30,13 +30,13 @@ export class GeneralMeterEnitity implements IGeneralMeter {
     })
     status: MeterStatus;
 
-    constructor(data?: Partial<GeneralMeterEnitity>) {
+    constructor(data?: Partial<UnitEnitity>) {
         if (data) {
             Object.assign(this, data);
         }
     }
 
-    public getGeneralMeter() {
+    public getUnit() {
         return {
             typeOfServiceId: this.typeOfServiceId,
             houseId: this.houseId,
@@ -47,7 +47,7 @@ export class GeneralMeterEnitity implements IGeneralMeter {
         }
     }
 
-    public async updateGeneralMeter(verifiedAt: Date) {
+    public async updateUnit(verifiedAt: Date) {
         this.verifiedAt = verifiedAt;
         return this;
     }

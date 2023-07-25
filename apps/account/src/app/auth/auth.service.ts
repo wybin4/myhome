@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { Admins, ManagementCompanies, Owners, Users } from '../user/entities/user.entity';
+import { Admins, ManagementCompanies, Owners, UserEnitity } from '../user/entities/user.entity';
 import { UserRole } from '@myhome/interfaces';
 import { JwtService } from '@nestjs/jwt';
 import { AccountRegister } from '@myhome/contracts';
@@ -63,7 +63,7 @@ export class AuthService {
       throw new Error('Неверный логин или пароль');
     }
 
-    let userEntity: Users;
+    let userEntity: UserEnitity;
 
     switch (role) {
       case UserRole.Admin:

@@ -2,7 +2,7 @@ import { IUser } from '@myhome/interfaces';
 import { compare, genSalt, hash } from 'bcryptjs';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-export class Users implements IUser {
+export class UserEnitity implements IUser {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -15,7 +15,7 @@ export class Users implements IUser {
   @Column({ nullable: false })
   passwordHash: string;
 
-  constructor(data?: Partial<Users>) {
+  constructor(data?: Partial<UserEnitity>) {
     if (data) {
       Object.assign(this, data);
     }
@@ -45,13 +45,13 @@ export class Users implements IUser {
 }
 
 @Entity()
-export class Admins extends Users { }
+export class Admins extends UserEnitity { }
 
 @Entity()
-export class Owners extends Users { }
+export class Owners extends UserEnitity { }
 
 @Entity()
-export class ManagementCompanies extends Users {
+export class ManagementCompanies extends UserEnitity {
   @Column({ nullable: true })
   checkingAccount: string;
 

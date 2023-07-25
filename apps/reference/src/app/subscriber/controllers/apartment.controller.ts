@@ -2,7 +2,7 @@ import { Body, Controller, HttpStatus } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ReferenceAddApartment, ReferenceGetApartment } from '@myhome/contracts';
 import { ApartmentRepository } from '../repositories/apartment.repository';
-import { Apartments } from '../entities/apartment.entity';
+import { ApartmentEnitity } from '../entities/apartment.entity';
 import { HouseRepository } from '../repositories/house.repository';
 import { APART_ALREADY_EXIST, APART_NOT_EXIST, HOME_NOT_EXIST } from '@myhome/constants';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
@@ -21,14 +21,14 @@ export class ApartmentController {
 		if (!apartment) {
 			throw new RMQError(APART_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
 		}
-		const gettedApartment = new Apartments(apartment).getApartment();
+		const gettedApartment = new ApartmentEnitity(apartment).getApartment();
 		return { gettedApartment };
 	}
 
 	@RMQValidate()
 	@RMQRoute(ReferenceAddApartment.topic)
 	async addApartment(@Body() dto: ReferenceAddApartment.Request) {
-		const newApartmentEntity = new Apartments(dto);
+		const newApartmentEntity = new ApartmentEnitity(dto);
 		const house = await this.houseRepository.findHouseById(dto.houseId);
 		if (!house) {
 			throw new RMQError(HOME_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);

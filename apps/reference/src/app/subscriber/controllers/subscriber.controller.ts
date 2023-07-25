@@ -2,7 +2,7 @@ import { Body, Controller, HttpStatus } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ReferenceAddSubscriber, ReferenceGetSubscriber, ReferenceUpdateSubscriber } from '@myhome/contracts';
 import { SubscriberRepository } from '../repositories/subscriber.repository';
-import { Subscribers } from '../entities/subscriber.entity';
+import { SubscriberEnitity } from '../entities/subscriber.entity';
 import { APART_NOT_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_NOT_EXIST } from '@myhome/constants';
 import { ApartmentRepository } from '../repositories/apartment.repository';
 import { SubscriberStatus } from '@myhome/interfaces';
@@ -22,14 +22,14 @@ export class SubscriberController {
 		if (!subscriber) {
 			throw new RMQError(SUBSCRIBER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
 		}
-		const gettedSubscriber = new Subscribers(subscriber).getSubscriber();
+		const gettedSubscriber = new SubscriberEnitity(subscriber).getSubscriber();
 		return { gettedSubscriber };
 	}
 
 	@RMQValidate()
 	@RMQRoute(ReferenceAddSubscriber.topic)
 	async addSubscriber(@Body() dto: ReferenceAddSubscriber.Request) {
-		const newSubscriberEntity = new Subscribers(dto);
+		const newSubscriberEntity = new SubscriberEnitity(dto);
 		const apartment = await this.apartmentrRepository.findApartmentById(dto.apartmentId);
 		if (!apartment) {
 			throw new RMQError(APART_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
@@ -52,7 +52,7 @@ export class SubscriberController {
 		if (existedSubscriber.status === SubscriberStatus.Archieved) {
 			throw new RMQError(SUBSCRIBER_ALREADY_ARCHIEVED, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
 		}
-		const subscriberEntity = new Subscribers(existedSubscriber).archieveSubscriber();
+		const subscriberEntity = new SubscriberEnitity(existedSubscriber).archieveSubscriber();
 		return Promise.all([
 			this.subscriberRepository.updateSubscriber(subscriberEntity),
 		]);

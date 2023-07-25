@@ -15,6 +15,7 @@ import { GeneralMeterRepository } from "./repositories/general-meter.repository"
 import { SubscriberModule } from "../subscriber/subscriber.module";
 import { MeterEventEmitter } from "./meter.event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
+import { CommonModule } from "../common/common.module";
 
 @Module({
     imports: [
@@ -23,7 +24,8 @@ import { ScheduleModule } from "@nestjs/schedule";
             IndividualMeterEnitity, GeneralMeterEnitity,
             IndividualMeterReadingEnitity, GeneralMeterReadingEnitity
         ]),
-        SubscriberModule
+        SubscriberModule,
+        CommonModule
     ],
     providers: [
         IndividualMeterRepository, GeneralMeterRepository,

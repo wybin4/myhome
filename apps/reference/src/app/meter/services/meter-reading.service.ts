@@ -4,7 +4,6 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { ReferenceAddMeterReading } from "@myhome/contracts";
-import { ApartmentRepository } from "../../subscriber/repositories/apartment.repository";
 import { GeneralMeterReadingEnitity } from "../entities/general-meter-reading.entity";
 import { IndividualMeterReadingEnitity } from "../entities/individual-meter-reading.entity";
 import { GeneralMeterReadingRepository } from "../repositories/general-meter-reading.repository";
@@ -20,7 +19,6 @@ export class MeterReadingService {
     constructor(
         private readonly individualMeterReadingRepository: IndividualMeterReadingRepository,
         private readonly generalMeterReadingRepository: GeneralMeterReadingRepository,
-        private readonly apartmentRepository: ApartmentRepository,
         private readonly individualMeterRepository: IndividualMeterRepository,
         private readonly generalMeterRepository: GeneralMeterRepository,
     ) { }

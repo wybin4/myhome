@@ -1,4 +1,4 @@
-import { METER_NOT_EXIST, INCORRECT_METER_TYPE, APART_NOT_EXIST, METER_ALREADY_EXIST, HOME_NOT_EXIST } from "@myhome/constants";
+import { METER_NOT_EXIST, INCORRECT_METER_TYPE, APART_NOT_EXIST, METER_ALREADY_EXIST, HOME_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST } from "@myhome/constants";
 import { IGeneralMeter, IIndividualMeter, MeterType } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError } from "nestjs-rmq";
@@ -14,6 +14,8 @@ import { ApartmentEnitity } from "../../subscriber/entities/apartment.entity";
 import { HouseEnitity } from "../../subscriber/entities/house.entity";
 import { MeterEventEmitter } from "../meter.event-emitter";
 import { Cron } from "@nestjs/schedule";
+import { TypeOfServiceRepository } from "../../common/repositories/type-of-service.repository";
+import { TypeOfServiceEnitity } from "../../common/entities/type-of-service.entity";
 
 export type Meters = IndividualMeterEnitity | GeneralMeterEnitity;
 
@@ -25,6 +27,7 @@ export class MeterService {
         private readonly apartmentRepository: ApartmentRepository,
         private readonly houseRepository: HouseRepository,
         private readonly meterEventEmitter: MeterEventEmitter,
+        private readonly typeOfServicesRepository: TypeOfServiceRepository,
     ) { }
 
     @Cron('0 9 * * *')
@@ -79,6 +82,7 @@ export class MeterService {
     public async addMeter(dto: ReferenceAddMeter.Request) {
         let apartment: ApartmentEnitity;
         let house: HouseEnitity;
+        let typeOfService: TypeOfServiceEnitity;
         let existedMeter: Meters,
             newMeter: Meters,
             newMeterEntity: Meters;
@@ -87,6 +91,10 @@ export class MeterService {
                 house = await this.houseRepository.findHouseById(dto.houseId);
                 if (!house) {
                     throw new RMQError(HOME_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                }
+                typeOfService = await this.typeOfServicesRepository.findTypeOfServiceById(dto.typeOfServiceId);
+                if (!typeOfService) {
+                    throw new RMQError(TYPE_OF_SERVICE_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
                 }
                 existedMeter = await this.generalMeterRepository.findIndividualMeterByFNumber(dto.factoryNumber);
                 if (existedMeter) {
@@ -105,6 +113,10 @@ export class MeterService {
                 apartment = await this.apartmentRepository.findApartmentById(dto.apartmentId);
                 if (!apartment) {
                     throw new RMQError(APART_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                }
+                typeOfService = await this.typeOfServicesRepository.findTypeOfServiceById(dto.typeOfServiceId);
+                if (!typeOfService) {
+                    throw new RMQError(TYPE_OF_SERVICE_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
                 }
                 existedMeter = await this.individualMeterRepository.findIndividualMeterByFNumber(dto.factoryNumber);
                 if (existedMeter) {

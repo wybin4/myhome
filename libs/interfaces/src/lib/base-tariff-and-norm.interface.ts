@@ -40,4 +40,4 @@ export enum TariffAndNormType {
   CommonHouseNeedTariff = 'CommonHouseNeedTariff',
 }
 
-export type TariffOrNorm = INorm | IMunicipalTariff | ISocialNorm | ISeasonalityFactor | ICommonHouseNeedTariff;
+export type TariffOrNormType = INorm | IMunicipalTariff | ISocialNorm | ISeasonalityFactor | ICommonHouseNeedTariff;

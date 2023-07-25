@@ -1,4 +1,4 @@
-import { TariffAndNormType, TariffOrNorm } from '@myhome/interfaces';
+import { TariffAndNormType, TariffOrNormType } from '@myhome/interfaces';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export namespace ReferenceAddTariffOrNorm {
@@ -40,7 +40,7 @@ export namespace ReferenceAddTariffOrNorm {
     }
 
     export class Response {
-        tariffOrNorm!: TariffOrNorm;
+        tariffOrNorm!: TariffOrNormType;
     }
 }
 

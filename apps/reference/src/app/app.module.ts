@@ -7,6 +7,7 @@ import { getMySQLConfig } from './configs/mysql.config';
 import { SubscriberModule } from './subscriber/subscriber.module';
 import { MeterModule } from './meter/meter.module';
 import { CommonModule } from './common/common.module';
+import { TariffAndNormModule } from './tariff-and-norm/tariff-and-norm.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { CommonModule } from './common/common.module';
     }),
     SubscriberModule,
     MeterModule,
-    CommonModule
+    CommonModule,
+    TariffAndNormModule
   ],
 })
 export class AppModule { }

@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MunicipalTariffEntity, NormEntity, SeasonalityFactorEntity, SocialNormEntity } from './entities/base-tariff-and-norm.entity';
 import { NormRepository, MunicipalTariffRepository, SocialNormRepository, SeasonalityFactorRepository, CommonHouseNeedTariffRepository } from './base-tariff-and-norm.repository';
 import { TariffAndNormService } from './tariff-and-norm.service';
+import { TariffAndNormController } from './tariff-and-norm.controller';
 
 @Module({
   imports: [
@@ -25,6 +26,6 @@ import { TariffAndNormService } from './tariff-and-norm.service';
       NormRepository, MunicipalTariffRepository, SocialNormRepository, SeasonalityFactorRepository,
       CommonHouseNeedTariffRepository
     ],
-  controllers: [],
+  controllers: [TariffAndNormController],
 })
-export class SubscriberModule { }
+export class TariffAndNormModule { }

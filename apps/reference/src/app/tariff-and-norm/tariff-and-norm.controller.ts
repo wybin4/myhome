@@ -15,16 +15,16 @@ export class TariffAndNormController {
         return this.tariffAndNormService.getTariffAndNorm(id, type);
     }
 
-    @RMQValidate()
-    @RMQRoute(ReferenceAddTariffOrNorm.topic)
-    async addTariffAndNorm(@Body() dto: ReferenceAddTariffOrNorm.Request) {
-        return this.tariffAndNormService.addTariffAndNorm(dto);
-    }
+    // @RMQValidate()
+    // @RMQRoute(ReferenceAddTariffOrNorm.topic)
+    // async addTariffAndNorm(@Body() dto: ReferenceAddTariffOrNorm.Request) {
+    //     return this.tariffAndNormService.addTariffAndNorm(dto);
+    // }
 
-    @RMQValidate()
-    @RMQRoute(ReferenceUpdateTariffOrNorm.topic)
-    async updateTariffAndNorm(@Body() dto: ReferenceUpdateTariffOrNorm.Request) {
-        return this.tariffAndNormService.updateTariffAndNorm(dto);
-    }
+    // @RMQValidate()
+    // @RMQRoute(ReferenceUpdateTariffOrNorm.topic)
+    // async updateTariffAndNorm(@Body() dto: ReferenceUpdateTariffOrNorm.Request) {
+    //     return this.tariffAndNormService.updateTariffAndNorm(dto);
+    // }
 }
 

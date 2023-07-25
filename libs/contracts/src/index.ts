@@ -19,6 +19,6 @@ export * from './lib/reference/meter/reference.update-meter';
 export * from './lib/reference/meter/reference.add-meter-reading';
 export * from './lib/reference/meter/reference.get-meter-reading';
 
-export * from './lib/reference/tariff-and-norm/reference.update-tariff-or-norm';
-export * from './lib/reference/tariff-and-norm/reference.add-tariff-or-norm';
-export * from './lib/reference/tariff-and-norm/reference.get-tariff-or-norm';
+export * from './lib/reference/tariff-and-norm/reference.update-tariff-and-norm';
+export * from './lib/reference/tariff-and-norm/reference.add-tariff-and-norm';
+export * from './lib/reference/tariff-and-norm/reference.get-tariff-and-norm';

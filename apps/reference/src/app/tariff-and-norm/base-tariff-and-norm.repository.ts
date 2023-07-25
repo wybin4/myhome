@@ -1,7 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { FindOneOptions, FindOptionsWhere, ObjectLiteral, Repository } from "typeorm";
-import { MunicipalTariffEntity, NormEntity, SeasonalityFactorEntity, SocialNormEntity } from "../entities/base-tariff-and-norm.entity";
+import { MunicipalTariffEntity, NormEntity, SeasonalityFactorEntity, SocialNormEntity } from "./entities/base-tariff-and-norm.entity";
+import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
 
 interface BaseTariffAndNorm extends ObjectLiteral {
     id: number;
@@ -77,5 +78,15 @@ export class SeasonalityFactorRepository extends GenericTariffAndNormRepository<
         private readonly seasonalityFactorRepository: Repository<SeasonalityFactorEntity>,
     ) {
         super(seasonalityFactorRepository);
+    }
+}
+
+@Injectable()
+export class CommonHouseNeedTariffRepository extends GenericTariffAndNormRepository<CommonHouseNeedTariffEntity> {
+    constructor(
+        @InjectRepository(CommonHouseNeedTariffEntity)
+        private readonly сommonHouseNeedTariffRepository: Repository<CommonHouseNeedTariffEntity>,
+    ) {
+        super(сommonHouseNeedTariffRepository);
     }
 }

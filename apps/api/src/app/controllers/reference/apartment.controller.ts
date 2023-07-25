@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { ReferenceAddApartment, ReferenceGetApartment } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
-import { GetApartmentDto, AddApartmentDto } from '../dtos/apartment.dto';
-import { CatchError } from '../error.filter';
+import { GetApartmentDto, AddApartmentDto } from '../../dtos/reference/apartment.dto';
+import { CatchError } from '../../error.filter';
 
 @Controller('apartment')
 export class ApartmentController {

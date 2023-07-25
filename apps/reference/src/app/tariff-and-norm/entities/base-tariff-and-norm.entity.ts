@@ -1,4 +1,4 @@
-import { IBaseTariffAndNorm } from '@myhome/interfaces';
+import { IBaseTariffAndNorm, IMunicipalTariff, INorm, ISeasonalityFactor, ISocialNorm } from '@myhome/interfaces';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export class BaseTariffAndNormEntity implements IBaseTariffAndNorm {
@@ -26,7 +26,7 @@ export class BaseTariffAndNormEntity implements IBaseTariffAndNorm {
 }
 
 @Entity('norms')
-export class NormEntity extends BaseTariffAndNormEntity {
+export class NormEntity extends BaseTariffAndNormEntity implements INorm {
   @Column({ nullable: false })
   unitId: number;
 
@@ -49,7 +49,7 @@ export class NormEntity extends BaseTariffAndNormEntity {
 }
 
 @Entity('municipal_tariffs')
-export class MunicipalTariffEntity extends BaseTariffAndNormEntity {
+export class MunicipalTariffEntity extends BaseTariffAndNormEntity implements IMunicipalTariff {
   @Column({ nullable: false })
   unitId: number;
 
@@ -81,7 +81,7 @@ export class MunicipalTariffEntity extends BaseTariffAndNormEntity {
 }
 
 @Entity('social_norms')
-export class SocialNormEntity extends BaseTariffAndNormEntity {
+export class SocialNormEntity extends BaseTariffAndNormEntity implements ISocialNorm {
   @Column({ nullable: false })
   unitId: number;
 
@@ -112,7 +112,7 @@ export class SocialNormEntity extends BaseTariffAndNormEntity {
 }
 
 @Entity('seasonality_factors')
-export class SeasonalityFactorEntity extends BaseTariffAndNormEntity {
+export class SeasonalityFactorEntity extends BaseTariffAndNormEntity implements ISeasonalityFactor {
   @Column({ nullable: false })
   monthName: string;
 

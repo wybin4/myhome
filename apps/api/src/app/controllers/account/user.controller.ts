@@ -2,8 +2,8 @@ import { Body, Controller, HttpCode, Post/*, UseGuards*/ } from '@nestjs/common'
 // import { JWTAuthGuard } from '../guards/jwt.guard';
 import { RMQService } from 'nestjs-rmq';
 import { AccountUserInfo } from '@myhome/contracts';
-import { UserInfoDto } from '../dtos/user.dto';
-import { CatchError } from '../error.filter';
+import { UserInfoDto } from '../../dtos/account/user.dto';
+import { CatchError } from '../../error.filter';
 
 @Controller('user')
 export class UserController {

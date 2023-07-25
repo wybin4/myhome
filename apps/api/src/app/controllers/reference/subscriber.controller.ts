@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { ReferenceAddSubscriber, ReferenceGetSubscriber, ReferenceUpdateSubscriber } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
-import { GetSubscriberDto, AddSubscriberDto, UpdateSubscriberDto } from '../dtos/subscriber.dto';
-import { CatchError } from '../error.filter';
+import { GetSubscriberDto, AddSubscriberDto, UpdateSubscriberDto } from '../../dtos/reference/subscriber.dto';
+import { CatchError } from '../../error.filter';
 
 @Controller('subscriber')
 export class SubscriberController {

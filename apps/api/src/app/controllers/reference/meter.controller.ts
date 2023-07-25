@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { ReferenceAddMeter, ReferenceAddMeterReading, ReferenceGetMeter, ReferenceGetMeterReading, ReferenceUpdateMeter } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
-import { GetMeterDto, AddMeterDto, GetMeterReadingDto, AddMeterReadingDto, UpdateMeterDto } from '../dtos/meter.dto';
-import { CatchError } from '../error.filter';
+import { GetMeterDto, AddMeterDto, UpdateMeterDto, GetMeterReadingDto, AddMeterReadingDto } from '../../dtos/reference/meter.dto';
+import { CatchError } from '../../error.filter';
 
 @Controller('meter')
 export class MeterController {

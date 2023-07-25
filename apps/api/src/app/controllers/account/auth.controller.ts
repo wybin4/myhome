@@ -1,9 +1,9 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AccountLogin, AccountRegister } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
-import { LoginDto } from '../dtos/login.dto';
-import { RegisterDto } from '../dtos/register.dto';
-import { CatchError } from '../error.filter';
+import { LoginDto } from '../../dtos/account/login.dto';
+import { RegisterDto } from '../../dtos/account/register.dto';
+import { CatchError } from '../../error.filter';
 
 @Controller('auth')
 export class AuthController {

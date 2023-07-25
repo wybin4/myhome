@@ -9,7 +9,7 @@ import { GeneralMeterReadingEntity } from '../meter/entities/general-meter-readi
 import { IndividualMeterReadingEntity } from '../meter/entities/individual-meter-reading.entity';
 import { UnitEntity } from '../common/entities/unit.entity';
 import { TypeOfServiceEntity } from '../common/entities/type-of-service.entity';
-import { NormEntity, MunicipalTariffEntity, SocialNormsEntity, SeasonalityFactorsEntity } from '../tariff-and-norm/entities/base-tariff-and-norm.entity';
+import { NormEntity, MunicipalTariffEntity, SeasonalityFactorEntity, SocialNormEntity } from '../tariff-and-norm/entities/base-tariff-and-norm.entity';
 import { CommonHouseNeedTariffEntity } from '../tariff-and-norm/entities/house-tariff.entity';
 
 export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
@@ -25,7 +25,7 @@ export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptio
       HouseEntity, ApartmentEntity, SubscriberEntity,
       GeneralMeterEntity, IndividualMeterEntity, GeneralMeterReadingEntity, IndividualMeterReadingEntity,
       UnitEntity, TypeOfServiceEntity,
-      NormEntity, MunicipalTariffEntity, SocialNormsEntity, SeasonalityFactorsEntity,
+      NormEntity, MunicipalTariffEntity, SocialNormEntity, SeasonalityFactorEntity,
       CommonHouseNeedTariffEntity
     ],
   autoLoadEntities: true

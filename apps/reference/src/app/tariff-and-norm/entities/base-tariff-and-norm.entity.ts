@@ -81,7 +81,7 @@ export class MunicipalTariffEntity extends BaseTariffAndNormEntity {
 }
 
 @Entity('social_norms')
-export class SocialNormsEntity extends BaseTariffAndNormEntity {
+export class SocialNormEntity extends BaseTariffAndNormEntity {
   @Column({ nullable: false })
   unitId: number;
 
@@ -112,7 +112,7 @@ export class SocialNormsEntity extends BaseTariffAndNormEntity {
 }
 
 @Entity('seasonality_factors')
-export class SeasonalityFactorsEntity extends BaseTariffAndNormEntity {
+export class SeasonalityFactorEntity extends BaseTariffAndNormEntity {
   @Column({ nullable: false })
   monthName: string;
 

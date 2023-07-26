@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ValidationOptions, registerDecorator, ValidationArguments } from "class-validator";
+
 export interface IBaseTariffAndNorm {
   id?: number;
   managementCompanyId: number;
@@ -41,3 +44,25 @@ export enum TariffAndNormType {
 }
 
 export type TariffOrNormType = INorm | IMunicipalTariff | ISocialNorm | ISeasonalityFactor | ICommonHouseNeedTariff;
+
+export function RequireHomeOrManagementCompany(validationOptions?: ValidationOptions) {
+  return function (object: any, propertyName: string) {
+      registerDecorator({
+          name: 'RequireHomeOrManagementCompany',
+          target: object.constructor,
+          propertyName: propertyName,
+          options: validationOptions,
+          validator: {
+              validate(value: any, args: ValidationArguments) {
+                  const houseId = (args.object as any).houseId;
+                  const managementCompanyId = (args.object as any).managementCompanyId;
+                  return !!houseId || !!managementCompanyId;
+              },
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              defaultMessage(args: ValidationArguments) {
+                  return `В зависимости от типа тарифа или нормы введите houseId или managementCompanyId`;
+              },
+          },
+      });
+  };
+}

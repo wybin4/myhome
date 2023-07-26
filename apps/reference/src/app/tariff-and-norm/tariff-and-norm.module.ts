@@ -5,6 +5,8 @@ import { MunicipalTariffEntity, NormEntity, SeasonalityFactorEntity, SocialNormE
 import { NormRepository, MunicipalTariffRepository, SocialNormRepository, SeasonalityFactorRepository, CommonHouseNeedTariffRepository } from './base-tariff-and-norm.repository';
 import { TariffAndNormService } from './tariff-and-norm.service';
 import { TariffAndNormController } from './tariff-and-norm.controller';
+import { CommonModule } from '../common/common.module';
+import { SubscriberModule } from '../subscriber/subscriber.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { TariffAndNormController } from './tariff-and-norm.controller';
         CommonHouseNeedTariffEntity
       ]
     ),
+    CommonModule,
+    SubscriberModule
   ],
   providers:
     [

@@ -2,7 +2,7 @@ import { TariffAndNormType, TariffOrNormType } from '@myhome/interfaces';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export namespace ReferenceUpdateTariffOrNorm {
-    export const topic = 'reference.update-tariff-or-norm.command';
+    export const topic = 'reference.update-tariff-and-norm.command';
 
     export class Request {
         @IsNumber()

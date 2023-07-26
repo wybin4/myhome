@@ -1,12 +1,15 @@
-import { TariffAndNormType, TariffOrNormType } from '@myhome/interfaces';
+import { RequireHomeOrManagementCompany, TariffAndNormType, TariffOrNormType } from '@myhome/interfaces';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export namespace ReferenceAddTariffOrNorm {
-    export const topic = 'reference.add-tariff-or-norm.command';
+    export const topic = 'reference.add-tariff-and-norm.command';
 
     export class Request {
-        @IsNumber()
-        managementCompanyId!: number;
+        @RequireHomeOrManagementCompany()
+        managementCompanyId?: number;
+
+        @RequireHomeOrManagementCompany()
+        houseId?: number;
 
         @IsNumber()
         typeOfServiceId!: number;
@@ -22,6 +25,10 @@ export namespace ReferenceAddTariffOrNorm {
         @IsOptional()
         @IsNumber()
         amount?: number;
+
+        @IsOptional()
+        @IsNumber()
+        supernorm?: number;
 
         @IsOptional()
         @IsString()

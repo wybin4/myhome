@@ -5,8 +5,8 @@ import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { NormEntity, SeasonalityFactorEntity, MunicipalTariffEntity, SocialNormEntity, BaseTariffAndNormEntity } from "./entities/base-tariff-and-norm.entity";
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
 import { ICommonHouseNeedTariff, TariffAndNormType, UserRole } from "@myhome/interfaces";
-import { AccountUserInfo, ReferenceAddTariffOrNorm } from "@myhome/contracts";
-import { HOME_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, MANAG_COMP_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE } from "@myhome/constants";
+import { AccountUserInfo, ReferenceAddTariffOrNorm, ReferenceUpdateTariffOrNorm } from "@myhome/contracts";
+import { HOME_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, MANAG_COMP_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST } from "@myhome/constants";
 import { TypeOfServiceRepository } from "../common/repositories/type-of-service.repository";
 import { UnitRepository } from "../common/repositories/unit.repository";
 import { HouseRepository } from "../subscriber/repositories/house.repository";
@@ -191,6 +191,80 @@ export class TariffAndNormService {
         return { newT };
     }
 
-    // public async updateTariffAndNorm(dto: ReferenceUpdateTariffOrNorm.Request) {
-    // }
+    public async updateTariffAndNorm(dto: ReferenceUpdateTariffOrNorm.Request) {
+        let existedT: CommonHouseNeedTariffEntity, tEntity: Promise<CommonHouseNeedTariffEntity>;
+
+        switch (dto.type) {
+            case TariffAndNormType.Norm:
+                if (!dto.norm) {
+                    throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                }
+                return this.genericUpdateTariffAndNorm<NormEntity>(
+                    this.normRepository,
+                    dto, (item) => new NormEntity(item),
+                )
+            case TariffAndNormType.SeasonalityFactor:
+                if (!dto.monthName) {
+                    throw new RMQError(INCORRECT_PARAM + 'monthName', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                }
+                if (!dto.coefficient) {
+                    throw new RMQError(INCORRECT_PARAM + 'coefficient', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                }
+                return this.genericUpdateTariffAndNorm<SeasonalityFactorEntity>(
+                    this.seasonalityFactorRepository,
+                    dto, (item) => new SeasonalityFactorEntity(item),
+                )
+            case TariffAndNormType.MunicipalTariff:
+                if (!dto.norm) {
+                    throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                }
+                if (!dto.supernorm) {
+                    throw new RMQError(INCORRECT_PARAM + 'supernorm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                }
+                return this.genericUpdateTariffAndNorm<MunicipalTariffEntity>(
+                    this.municipalTariffRepository,
+                    dto, (item) => new MunicipalTariffEntity(item),
+                )
+            case TariffAndNormType.SocialNorm:
+                if (!dto.norm) {
+                    throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                }
+                if (!dto.amount) {
+                    throw new RMQError(INCORRECT_PARAM + 'amount', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                }
+                return this.genericUpdateTariffAndNorm<SocialNormEntity>(
+                    this.socialNormRepository,
+                    dto, (item) => new SocialNormEntity(item),
+                )
+            case TariffAndNormType.CommonHouseNeedTariff:
+                if (!dto.multiplier) {
+                    throw new RMQError(INCORRECT_PARAM + 'multiplier', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                }
+                existedT = await this.commonHouseNeedTariffRepository.findById(dto.id);
+                if (!existedT) {
+                    throw new RMQError(TARIFF_AND_NORM_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                }
+                tEntity = new CommonHouseNeedTariffEntity(existedT).update(dto.multiplier);
+                return Promise.all([
+                    this.commonHouseNeedTariffRepository.update(await tEntity),
+                ]);
+            default:
+                throw new RMQError(INCORRECT_TARIFF_AND_NORM_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+        }
+    }
+
+    private async genericUpdateTariffAndNorm<T extends BaseTariffAndNormEntity>(
+        repository: IGenericTariffAndNormRepository<T>,
+        dto: ReferenceUpdateTariffOrNorm.Request,
+        createInstance: (item: T) => T,
+    ) {
+        const existedT = await repository.findById(dto.id);
+        if (!existedT) {
+            throw new RMQError(TARIFF_AND_NORM_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+        }
+        const tEntity = createInstance(existedT).update(dto);
+        return Promise.all([
+            repository.update(await tEntity),
+        ]);
+    }
 }

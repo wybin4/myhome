@@ -14,6 +14,10 @@ export namespace ReferenceUpdateTariffOrNorm {
 
         @IsOptional()
         @IsNumber()
+        supernorm?: number;
+
+        @IsOptional()
+        @IsNumber()
         amount?: number;
 
         @IsOptional()

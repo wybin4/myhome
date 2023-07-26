@@ -21,10 +21,10 @@ export class TariffAndNormController {
         return this.tariffAndNormService.addTariffAndNorm(dto);
     }
 
-    // @RMQValidate()
-    // @RMQRoute(ReferenceUpdateTariffOrNorm.topic)
-    // async updateTariffAndNorm(@Body() dto: ReferenceUpdateTariffOrNorm.Request) {
-    //     return this.tariffAndNormService.updateTariffAndNorm(dto);
-    // }
+    @RMQValidate()
+    @RMQRoute(ReferenceUpdateTariffOrNorm.topic)
+    async updateTariffAndNorm(@Body() dto: ReferenceUpdateTariffOrNorm.Request) {
+        return this.tariffAndNormService.updateTariffAndNorm(dto);
+    }
 }
 

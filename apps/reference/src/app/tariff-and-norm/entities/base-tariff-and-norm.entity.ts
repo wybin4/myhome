@@ -1,3 +1,4 @@
+import { ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
 import { IBaseTariffAndNorm, IMunicipalTariff, INorm, ISeasonalityFactor, ISocialNorm } from '@myhome/interfaces';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -23,6 +24,11 @@ export class BaseTariffAndNormEntity implements IBaseTariffAndNorm {
       typeOfServiceId: this.typeOfServiceId,
     }
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public async update(object: ReferenceUpdateTariffOrNorm.Request) {
+    return this;
+  }
 }
 
 @Entity('norms')
@@ -42,8 +48,8 @@ export class NormEntity extends BaseTariffAndNormEntity implements INorm {
     }
   }
 
-  public async update(norm: number) {
-    this.norm = norm;
+  public async update(object: ReferenceUpdateTariffOrNorm.Request) {
+    this.norm = object.norm;
     return this;
   }
 }
@@ -69,12 +75,12 @@ export class MunicipalTariffEntity extends BaseTariffAndNormEntity implements IM
     }
   }
 
-  public async update(norm?: number, supernorm?: number) {
-    if (norm !== undefined) {
-      this.norm = norm;
+  public async update(object: ReferenceUpdateTariffOrNorm.Request) {
+    if (object.norm !== undefined) {
+      this.norm = object.norm;
     }
-    if (supernorm !== undefined) {
-      this.supernorm = supernorm;
+    if (object.supernorm !== undefined) {
+      this.supernorm = object.supernorm;
     } return this;
   }
 
@@ -101,12 +107,12 @@ export class SocialNormEntity extends BaseTariffAndNormEntity implements ISocial
     }
   }
 
-  public async update(norm?: number, amount?: number) {
-    if (norm !== undefined) {
-      this.norm = norm;
+  public async update(object: ReferenceUpdateTariffOrNorm.Request) {
+    if (object.norm !== undefined) {
+      this.norm = object.norm;
     }
-    if (amount !== undefined) {
-      this.amount = amount;
+    if (object.amount !== undefined) {
+      this.amount = object.amount;
     } return this;
   }
 }
@@ -127,8 +133,8 @@ export class SeasonalityFactorEntity extends BaseTariffAndNormEntity implements 
       coefficient: this.coefficient,
     }
   }
-  public async update(coefficient: number) {
-    this.coefficient = coefficient;
+  public async update(object: ReferenceUpdateTariffOrNorm.Request) {
+    this.coefficient = object.coefficient;
     return this;
   }
 }

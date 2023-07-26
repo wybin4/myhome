@@ -18,7 +18,7 @@ import { seedUnit } from "./seeds/unit.seed";
 })
 
 export class CommonModule implements OnModuleInit {
-  private readonly tableNames = ['type_of_services', 'units'];
+  private readonly tableNames = ['type_of_services'];
 
   constructor(
     @InjectRepository(TypeOfServiceEntity)
@@ -27,7 +27,6 @@ export class CommonModule implements OnModuleInit {
     private readonly unitRepository: Repository<UnitEntity>,
     private readonly connection: DataSource,
   ) { }
-
   async onModuleInit() {
     try {
       const tablesExist = await this.checkTablesExistence();
@@ -45,22 +44,18 @@ export class CommonModule implements OnModuleInit {
 
   private async checkTablesExistence(): Promise<boolean> {
     try {
-      const queryRunner = this.connection.createQueryRunner();
-      await queryRunner.connect();
-
-      const tableExistencePromises = this.tableNames.map(async (tableName) => {
-        const table = await queryRunner.getTable(tableName);
-        return !!table;
+      const hasDataPromises = this.tableNames.map(async (tableName) => {
+        const count = await this.connection.manager.count(tableName);
+        return count > 0;
       });
 
-      const tableExistenceResults = await Promise.all(tableExistencePromises);
+      const hasDataResults = await Promise.all(hasDataPromises);
 
-      await queryRunner.release();
-
-      return !tableExistenceResults.some((exist) => exist);
+      return hasDataResults.some((hasData) => hasData);
     } catch (error) {
       Logger.error('Error checking table existence:', error);
       return false;
     }
   }
+
 }

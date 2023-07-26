@@ -2,12 +2,12 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { AdminEntity, ManagementCompanyEntity, OwnerEntity, UserEntity } from '../user/entities/user.entity';
 import { UserRole } from '@myhome/interfaces';
 import { JwtService } from '@nestjs/jwt';
-import { AccountRegister } from '@myhome/contracts';
+import { AccountRegister, EmailRegister } from '@myhome/contracts';
 import { AdminRepository } from '../user/repositories/admin.repository';
 import { ManagementCompanyRepository } from '../user/repositories/management-company.repository';
 import { OwnerRepository } from '../user/repositories/owner.repository';
 import { INCORRECT_USER_ROLE } from '@myhome/constants';
-import { RMQError } from 'nestjs-rmq';
+import { RMQError, RMQService } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
 @Injectable()
@@ -16,10 +16,12 @@ export class AuthService {
     private readonly adminRepository: AdminRepository,
     private readonly ownerRepository: OwnerRepository,
     private readonly managementCompanyRepository: ManagementCompanyRepository,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly rmqService: RMQService,
   ) { }
 
   async register({ email, password, name, role }: AccountRegister.Request) {
+
     let newUserEntity, oldUser;
 
     switch (role) {
@@ -50,6 +52,11 @@ export class AuthService {
       default:
         throw new RMQError(INCORRECT_USER_ROLE, ERROR_TYPE.RMQ, HttpStatus.UNPROCESSABLE_ENTITY);
     }
+
+    await this.rmqService.notify(EmailRegister.topic,
+      { user: newUserEntity, link: 'https://nx.dev/packages/nest' }
+    );
+
     return { id: newUserEntity.id };
   }
 

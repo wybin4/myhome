@@ -5,6 +5,7 @@
   "scripts": {},
   "private": true,
   "dependencies": {
+    "@nestjs-modules/mailer": "^1.9.1",
     "@nestjs/common": "^10.0.5",
     "@nestjs/config": "^3.0.0",
     "@nestjs/core": "^10.0.2",
@@ -20,7 +21,8 @@
     "enum": "^3.0.4",
     "jsonwebtoken": "^9.0.1",
     "mysql2": "^3.5.2",
-    "nestjs-rmq": "^2.8.1",
+    "nestjs-rmq": "^2.9.0",
+    "nodemailer": "^6.9.4",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.1.13",

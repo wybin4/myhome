@@ -22,3 +22,5 @@ export * from './lib/reference/meter/reference.get-meter-reading';
 export * from './lib/reference/tariff-and-norm/reference.update-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.add-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.get-tariff-and-norm';
+
+export * from './lib/email/email.register';

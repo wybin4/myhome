@@ -11,3 +11,5 @@ export * from './lib/reference/common.interface';
 export * from './lib/tariff-and-norm.interface';
 
 export * from './lib/event.interface';
+
+export * from './lib/email/email.interface';

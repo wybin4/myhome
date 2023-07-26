@@ -13,7 +13,8 @@ export const getRMQConfig = (): IRMQServiceAsyncOptions => ({
         host: configService.get('AMQP_HOSTNAME') ?? '',
       },
     ],
+    queueName: configService.get('AMQP_QUEUE'),
     prefetchCount: 32,
-    serviceName: 'myhome-api',
+    serviceName: 'myhome-email',
   }),
 });

@@ -24,3 +24,6 @@ export * from './lib/reference/tariff-and-norm/reference.add-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.get-tariff-and-norm';
 
 export * from './lib/email/email.register';
+
+export * from './lib/appeal/appeal.add-appeal';
+export * from './lib/appeal/appeal.get-appeal';

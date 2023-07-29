@@ -8,8 +8,8 @@ export * from './lib/reference/subscriber/subscriber.interface';
 export * from './lib/reference/meter.interface';
 export * from './lib/reference/common.interface';
 
-export * from './lib/tariff-and-norm.interface';
+export * from './lib/reference/tariff-and-norm.interface';
 
 export * from './lib/event.interface';
 
-export * from './lib/email/email.interface';
+export * from './lib/appeal.interface';

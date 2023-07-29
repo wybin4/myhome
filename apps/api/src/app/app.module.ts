@@ -12,6 +12,7 @@ import { MeterController } from './controllers/reference/meter.controller';
 import { SubscriberController } from './controllers/reference/subscriber.controller';
 import { AuthController } from './controllers/account/auth.controller';
 import { TariffAndNormController } from './controllers/reference/tariff-and-norm.controller';
+import { AppealController } from './controllers/appeal/appeal.controller';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { TariffAndNormController } from './controllers/reference/tariff-and-norm
       AuthController, UserController,
       HouseController, ApartmentController, SubscriberController,
       MeterController,
-      TariffAndNormController
+      TariffAndNormController,
+      AppealController
     ],
 })
 export class AppModule { }

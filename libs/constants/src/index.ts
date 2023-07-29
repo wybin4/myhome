@@ -5,5 +5,6 @@ export * from './lib/errors/common.errors';
 export * from './lib/errors/tariff-and-norm.errors';
 export * from './lib/errors/email.errors';
 export * from './lib/errors/appeal.errors';
+export * from './lib/errors/notification.errors';
 
 export * from './lib/enum.transformer';

@@ -13,3 +13,5 @@ export * from './lib/reference/tariff-and-norm.interface';
 export * from './lib/event.interface';
 
 export * from './lib/appeal.interface';
+
+export * from './lib/notification.interface';

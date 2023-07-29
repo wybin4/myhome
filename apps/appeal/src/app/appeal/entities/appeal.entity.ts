@@ -36,7 +36,7 @@ export class AppealEntity implements IAppeal {
         }
     }
 
-    public getIndividualMeter() {
+    public getAppeal() {
         return {
             managementCompanyId: this.managementCompanyId,
             typeOfAppealId: this.typeOfAppealId,

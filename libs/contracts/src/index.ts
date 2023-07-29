@@ -27,3 +27,7 @@ export * from './lib/email/email.register';
 
 export * from './lib/appeal/appeal.add-appeal';
 export * from './lib/appeal/appeal.get-appeal';
+
+export * from './lib/notification/notification.add-notification';
+export * from './lib/notification/notification.get-notification';
+export * from './lib/notification/notification.read-notification';

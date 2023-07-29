@@ -20,8 +20,8 @@ export enum AppealStatus {
 }
 
 export enum AppealType {
-    AddIndividualMeter = 'AddIndividualMeter',
-    VerifyIndividualMeter = 'VerifyIndividualMeter',
-    Claim = 'Claim',
-    ProblemOrQuestion = 'ProblemOrQuestion'
+    AddIndividualMeter = 'Замена счётчика',
+    VerifyIndividualMeter = 'Поверка счётчика',
+    Claim = 'Претензия',
+    ProblemOrQuestion = 'Проблема или вопрос'
 }

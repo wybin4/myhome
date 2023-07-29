@@ -1,12 +1,13 @@
 import { Repository } from "typeorm";
 import { TypeOfAppealEntity } from "../entities/appeal.entity";
+import { AppealType } from "@myhome/interfaces";
 
 export async function seedTypeOfAppeal(typeOfAppealRepository: Repository<TypeOfAppealEntity>) {
     const data = [
-        { name: 'Замена счётчика' },
-        { name: 'Поверка счётчика' },
-        { name: 'Претензия' },
-        { name: 'Проблема или вопрос' },
+        { name: AppealType.AddIndividualMeter },
+        { name: AppealType.VerifyIndividualMeter },
+        { name: AppealType.Claim },
+        { name: AppealType.ProblemOrQuestion },
     ];
 
     for (const item of data) {

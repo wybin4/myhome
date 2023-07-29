@@ -18,7 +18,7 @@ import { seedUnit } from "./seeds/unit.seed";
 })
 
 export class CommonModule implements OnModuleInit {
-  private readonly tableNames = ['type_of_services'];
+  private readonly tableNames = ['type_of_services', 'units'];
 
   constructor(
     @InjectRepository(TypeOfServiceEntity)

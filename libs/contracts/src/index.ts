@@ -9,6 +9,7 @@ export * from './lib/reference/subscriber/reference.add-subscriber';
 export * from './lib/reference/subscriber/reference.get-house';
 export * from './lib/reference/subscriber/reference.get-apartment';
 export * from './lib/reference/subscriber/reference.get-subscriber';
+export * from './lib/reference/subscriber/reference.get-management-company';
 export * from './lib/reference/subscriber/reference.update-house';
 export * from './lib/reference/subscriber/reference.update-subscriber';
 

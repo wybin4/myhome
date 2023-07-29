@@ -3,9 +3,9 @@ import { RMQError, RMQService } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { AppealRepository, TypeOfAppealRepository } from "./repositories/appeal.repository";
 import { APPEAL_NOT_EXIST, MANAG_COMP_NOT_EXIST, SUBSCRIBER_NOT_EXIST, TYPE_OF_APPEAL_NOT_EXIST } from "@myhome/constants";
-import { AccountUserInfo, AppealAddAppeal, ReferenceGetSubscriber } from "@myhome/contracts";
+import { AccountUserInfo, AddNotification, AppealAddAppeal, ReferenceGetManagementCompany, ReferenceGetSubscriber } from "@myhome/contracts";
 import { AppealEntity } from "./entities/appeal.entity";
-import { UserRole } from "@myhome/interfaces";
+import { AppealType, NotificationType, UserRole } from "@myhome/interfaces";
 
 
 @Injectable()
@@ -53,6 +53,46 @@ export class AppealService {
             data: String(dto.data),
         });
         const newAppeal = await this.appealRepository.createAppeal(newAppealEntity);
+
+        const typeOfAppealName = (await this.typeOfAppealRepository.findById(dto.typeOfAppealId)).name;
+        switch (typeOfAppealName) {
+            case AppealType.AddIndividualMeter:
+                this.sendNotification(
+                    dto,
+                    'Было добавлено обращение по поводу замены счётчика'
+                )
+                break;
+            case AppealType.VerifyIndividualMeter:
+                this.sendNotification(
+                    dto,
+                    'Было добавлено обращение по поводу поверки счётчика'
+                )
+                break;
+            case AppealType.Claim:
+            case AppealType.ProblemOrQuestion:
+                this.sendNotification(
+                    dto,
+                    'Было добавлено обращение'
+                )
+                break;
+        }
+
         return { newAppeal };
+    }
+
+    private async sendNotification(dto: AppealAddAppeal.Request, message: string) {
+        const managementCompanyId = await this.rmqService.send
+            <ReferenceGetManagementCompany.Request, ReferenceGetManagementCompany.Response>
+            (ReferenceGetManagementCompany.topic, { subscriberId: dto.subscriberId });
+
+        await this.rmqService.notify(AddNotification.topic,
+            {
+                userId: managementCompanyId,
+                userRole: UserRole.ManagementCompany,
+                notificationType: NotificationType.SentAppeal,
+                message: message,
+                createdAt: new Date(),
+            }
+        );
     }
 }

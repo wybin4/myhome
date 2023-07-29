@@ -1,7 +1,7 @@
 import { INotification } from "@myhome/interfaces";
 import { IsNumber } from "class-validator";
 
-export namespace NotificationGetNotification {
+export namespace GetNotification {
     export const topic = 'notification.get-notification.query';
 
     export class Request {

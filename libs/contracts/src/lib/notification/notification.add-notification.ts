@@ -1,7 +1,7 @@
 import { INotification, NotificationType, UserRole } from '@myhome/interfaces';
 import { IsNumber, IsString } from 'class-validator';
 
-export namespace NotificationAddNotification {
+export namespace AddNotification {
     export const topic = 'notification.add-notification.command';
 
     export class Request {

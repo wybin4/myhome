@@ -1,7 +1,7 @@
 import { Body, Controller, HttpStatus } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { NotificationService } from './notification.service';
-import { NotificationAddNotification, NotificationGetNotification, NotificationReadNotification } from '@myhome/contracts';
+import { AddNotification, GetNotification, ReadNotification } from '@myhome/contracts';
 import { NotificationRepository } from './notification.repository';
 import { NOTIFICATION_NOT_EXIST } from '@myhome/constants';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
@@ -15,20 +15,24 @@ export class NotificationController {
     ) { }
 
     @RMQValidate()
-    @RMQRoute(NotificationGetNotification.topic)
-    async getNotification(@Body() { id }: NotificationGetNotification.Request) {
+    @RMQRoute(GetNotification.topic)
+    async getNotification(@Body() { id }: GetNotification.Request) {
         return this.notificationService.getNotification(id);
     }
 
     @RMQValidate()
-    @RMQRoute(NotificationAddNotification.topic)
-    async addNotification(@Body() dto: NotificationAddNotification.Request) {
-        return this.notificationService.addNotification(dto);
+    @RMQRoute(AddNotification.topic)
+    async addNotification(@Body() dto: AddNotification.Request) {
+        try {
+            return this.notificationService.addNotification(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+        }
     }
 
     @RMQValidate()
-    @RMQRoute(NotificationReadNotification.topic)
-    async readNotification(@Body() { id }: NotificationReadNotification.Request) {
+    @RMQRoute(ReadNotification.topic)
+    async readNotification(@Body() { id }: ReadNotification.Request) {
         const notification = await this.notificationRepository.findNotificationById(id);
         if (!notification) {
             throw new RMQError(NOTIFICATION_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);

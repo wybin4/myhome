@@ -4,7 +4,7 @@ import { RMQError, RMQService } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { NotificationEntity } from "./notification.entity";
 import { NOTIFICATION_NOT_EXIST, USER_NOT_EXIST } from "@myhome/constants";
-import { NotificationAddNotification, AccountUserInfo } from "@myhome/contracts";
+import { AddNotification, AccountUserInfo } from "@myhome/contracts";
 
 @Injectable()
 export class NotificationService {
@@ -22,7 +22,7 @@ export class NotificationService {
         return { gettedNotification };
     }
 
-    public async addNotification(dto: NotificationAddNotification.Request) {
+    public async addNotification(dto: AddNotification.Request) {
         try {
             await this.rmqService.send
                 <AccountUserInfo.Request, AccountUserInfo.Response>

@@ -37,7 +37,9 @@ export class NotificationController {
         if (!notification) {
             throw new RMQError(NOTIFICATION_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
         }
-        const newNotification = new NotificationEntity(notification).read();
-        return { newNotification };
+        const notificationEntity = new NotificationEntity(notification).read();
+        return Promise.all([
+            this.notificationRepository.readNotification(await notificationEntity),
+        ]);
     }
 }

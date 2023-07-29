@@ -62,6 +62,7 @@ export class NotificationEntity implements INotification {
 
     public async read() {
         this.status = NotificationStatus.Read;
+        this.readAt = new Date();
         return this;
     }
 

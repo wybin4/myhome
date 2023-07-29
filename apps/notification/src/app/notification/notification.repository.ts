@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotificationStatus } from '@myhome/interfaces';
 import { NotificationEntity } from './notification.entity';
 
 @Injectable()
@@ -19,12 +18,8 @@ export class NotificationRepository {
         return this.notificationRepository.findOne({ where: { id } });
     }
 
-    async readNotification(id: number): Promise<NotificationEntity | undefined> {
-        const notification = await this.findNotificationById(id);
-        if (notification) {
-            notification.status = NotificationStatus.Read;
-            return this.notificationRepository.save(notification);
-        }
-        return undefined;
+    async readNotification(notification: NotificationEntity) {
+        await this.notificationRepository.update(notification.id, notification);
+        return this.findNotificationById(notification.id);
     }
 }

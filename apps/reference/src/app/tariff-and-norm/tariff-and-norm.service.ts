@@ -4,9 +4,9 @@ import { RMQError, RMQService } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { NormEntity, SeasonalityFactorEntity, MunicipalTariffEntity, SocialNormEntity, BaseTariffAndNormEntity } from "./entities/base-tariff-and-norm.entity";
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
-import { ICommonHouseNeedTariff, TariffAndNormType, UserRole } from "@myhome/interfaces";
-import { AccountUserInfo, ReferenceAddTariffOrNorm, ReferenceUpdateTariffOrNorm } from "@myhome/contracts";
-import { HOME_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, MANAG_COMP_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST } from "@myhome/constants";
+import { ICommonHouseNeedTariff, IHouse, TariffAndNormType, UserRole } from "@myhome/interfaces";
+import { AccountUserInfo, ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceUpdateTariffOrNorm } from "@myhome/contracts";
+import { HOME_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, MANAG_COMP_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { TypeOfServiceRepository } from "../common/repositories/type-of-service.repository";
 import { UnitRepository } from "../common/repositories/unit.repository";
 import { HouseRepository } from "../subscriber/repositories/house.repository";
@@ -266,5 +266,29 @@ export class TariffAndNormService {
         return Promise.all([
             repository.update(await tEntity),
         ]);
+    }
+
+    public async getAllTariffs(dto: ReferenceGetAllTariffs.Request) {
+        let house: IHouse;
+        switch (dto.type) {
+            case TariffAndNormType.MunicipalTariff:
+                try {
+                    return await this.municipalTariffRepository.findAllByManagementCID(dto.managementCompanyId);
+                } catch (e) {
+                    throw new RMQError(TARIFFS_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                }
+            case TariffAndNormType.CommonHouseNeedTariff:
+                house = await this.houseRepository.findHouseById(dto.houseId);
+                if (!house) {
+                    throw new RMQError(HOME_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                }
+                try {
+                    return await this.commonHouseNeedTariffRepository.findAllByHouseID(dto.houseId);
+                } catch (e) {
+                    throw new RMQError(TARIFFS_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                }
+            default:
+                throw new RMQError(INCORRECT_TARIFF_AND_NORM_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+        }
     }
 }

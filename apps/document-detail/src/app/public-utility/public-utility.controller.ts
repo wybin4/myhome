@@ -16,7 +16,7 @@ export class PublicUtilityController {
 
     @Post('get-public-utility')
     async getPublicUtility(@Body() dto: GetDocumentDetail.Request) {
-        return this.publicUtilityService.getPublicUtility(dto.subscriberIds);
+        return this.publicUtilityService.getPublicUtility(dto);
     }
 
 }

@@ -1,6 +1,6 @@
 import { Body, Controller } from '@nestjs/common';
 import { RMQRoute, RMQValidate } from 'nestjs-rmq';
-import { ReferenceAddTariffOrNorm, ReferenceGetTariffOrNorm, ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
+import { ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceGetTariffOrNorm, ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
 import { TariffAndNormService } from './tariff-and-norm.service';
 
 @Controller()
@@ -25,6 +25,12 @@ export class TariffAndNormController {
     @RMQRoute(ReferenceUpdateTariffOrNorm.topic)
     async updateTariffAndNorm(@Body() dto: ReferenceUpdateTariffOrNorm.Request) {
         return this.tariffAndNormService.updateTariffAndNorm(dto);
+    }
+
+    @RMQValidate()
+    @RMQRoute(ReferenceGetAllTariffs.topic)
+    async getAllTariffs(@Body() dto: ReferenceGetAllTariffs.Request) {
+        return this.tariffAndNormService.getAllTariffs(dto);
     }
 }
 

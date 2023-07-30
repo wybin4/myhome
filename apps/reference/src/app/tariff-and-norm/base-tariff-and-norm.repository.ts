@@ -59,6 +59,14 @@ export class MunicipalTariffRepository extends GenericTariffAndNormRepository<Mu
     ) {
         super(municipalTariffRepository);
     }
+
+    async findAllByManagementCID(managementCompanyId: number): Promise<MunicipalTariffEntity[]> {
+        return this.municipalTariffRepository.find({
+            where: {
+                managementCompanyId: managementCompanyId
+            },
+        });
+    }
 }
 
 @Injectable()
@@ -88,5 +96,13 @@ export class CommonHouseNeedTariffRepository extends GenericTariffAndNormReposit
         private readonly сommonHouseNeedTariffRepository: Repository<CommonHouseNeedTariffEntity>,
     ) {
         super(сommonHouseNeedTariffRepository);
+    }
+
+    async findAllByHouseID(houseId: number): Promise<CommonHouseNeedTariffEntity[]> {
+        return this.сommonHouseNeedTariffRepository.find({
+            where: {
+                houseId: houseId
+            },
+        });
     }
 }

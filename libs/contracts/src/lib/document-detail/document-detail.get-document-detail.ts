@@ -1,4 +1,4 @@
-import { IDocumentDetail } from "@myhome/interfaces";
+import { IDocumentDetail, RequireHomeOrManagementCompany } from "@myhome/interfaces";
 import { IsNumber } from "class-validator";
 
 export namespace GetDocumentDetail {
@@ -7,6 +7,12 @@ export namespace GetDocumentDetail {
     export class Request {
         @IsNumber()
         subscriberIds!: number[];
+
+        @RequireHomeOrManagementCompany()
+        managementCompanyId?: number;
+
+        @RequireHomeOrManagementCompany()
+        houseId?: number;
     }
 
     export class Response {

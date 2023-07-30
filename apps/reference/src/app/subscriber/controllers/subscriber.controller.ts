@@ -71,4 +71,16 @@ export class SubscriberController {
 		const house = await this.houseRepository.findHouseById(apartment.houseId);
 		return house.managementCompanyId;
 	}
+
+	@RMQValidate()
+	@RMQRoute(ReferenceGetManagementCompany.topic)
+	async getHouseBySID(@Body() { subscriberId }: ReferenceGetManagementCompany.Request) {
+		const subscriber = await this.subscriberRepository.findSubscriberById(subscriberId);
+		if (!subscriber) {
+			throw new RMQError(SUBSCRIBER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+		}
+		const apartment = await this.apartmentRepository.findApartmentById(subscriber.apartmentId);
+		const house = await this.houseRepository.findHouseById(apartment.houseId);
+		return house.managementCompanyId;
+	}
 }

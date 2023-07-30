@@ -12,6 +12,9 @@ export class AddHouseDto {
 
     @IsString()
     houseNumber: string;
+
+    @IsNumber()
+    floorSpace: number;
 }
 
 export class GetHouseDto {

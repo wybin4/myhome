@@ -38,6 +38,15 @@ export class GeneralMeterRepository {
         });
     }
 
+    async findActiveGeneralMetersByHouse(houseId: number): Promise<GeneralMeterEntity[]> {
+        return this.generalMeterRepository.find({
+            where: {
+                status: MeterStatus.Active,
+                houseId: houseId
+            },
+        });
+    }
+
     async saveGeneralMeters(meters: GeneralMeterEntity[]): Promise<GeneralMeterEntity[]> {
         return this.generalMeterRepository.save(meters);
     }

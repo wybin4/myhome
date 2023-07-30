@@ -1,5 +1,5 @@
 export interface ISubscriber {
-    id: number;
+    id?: number;
     ownerId: number;
     apartmentId: number;
     personalAccount: string;

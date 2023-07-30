@@ -22,6 +22,9 @@ export class HouseEntity implements IHouse {
     @Column({ nullable: false })
     houseNumber: string;
 
+    @Column('double', { nullable: false })
+    floorSpace: number;
+
     constructor(data?: Partial<HouseEntity>) {
         if (data) {
             Object.assign(this, data);
@@ -38,7 +41,8 @@ export class HouseEntity implements IHouse {
             managementCompanyId: this.managementCompanyId,
             city: this.city,
             street: this.street,
-            houseNumber: this.houseNumber
+            houseNumber: this.houseNumber,
+            floorSpace: this.floorSpace
         }
     }
 }

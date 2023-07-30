@@ -4,4 +4,5 @@ export interface IHouse {
     city: string;
     street: string;
     houseNumber: string;
+    floorSpace: number;
 }

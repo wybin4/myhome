@@ -18,4 +18,11 @@ export class GeneralMeterReadingRepository {
         return this.generalMeterReadingRepository.findOne({ where: { id } });
     }
 
+    async findLastTwoReadingByMeterID(generalMeterId: number) {
+        return this.generalMeterReadingRepository.find({
+            where: { generalMeterId },
+            order: { readAt: 'DESC' },
+            take: 2,
+        });
+    }
 }

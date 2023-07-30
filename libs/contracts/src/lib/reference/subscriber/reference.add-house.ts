@@ -16,6 +16,9 @@ export namespace ReferenceAddHouse {
 
         @IsString()
         houseNumber!: string;
+
+        @IsNumber()
+        floorSpace!: number;
     }
 
     export class Response {

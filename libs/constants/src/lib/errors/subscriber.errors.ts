@@ -4,3 +4,4 @@ export const SUBSCRIBER_NOT_EXIST = 'Такой абонент не сущест
 export const APART_ALREADY_EXIST = 'Такая квартира уже существует';
 export const SUBSCRIBER_ALREADY_EXIST = 'Такой абонент уже существует';
 export const SUBSCRIBER_ALREADY_ARCHIEVED = 'Абонент уже в архиве';
+export const CANT_GET_SUBSCRIBER = 'Не удалось получить пользователя';

@@ -1,9 +1,9 @@
 import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST } from "@myhome/constants";
-import { IGeneralMeterReading, IIndividualMeterReading, MeterType } from "@myhome/interfaces";
+import { IGeneralMeterReading, IHouse, IIndividualMeterReading, MeterType } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
-import { ReferenceAddMeterReading } from "@myhome/contracts";
+import { IGetMeterReadingBySID, ReferenceAddMeterReading, ReferenceGetMeterReadingBySID } from "@myhome/contracts";
 import { GeneralMeterReadingEntity } from "../entities/general-meter-reading.entity";
 import { IndividualMeterReadingEntity } from "../entities/individual-meter-reading.entity";
 import { GeneralMeterReadingRepository } from "../repositories/general-meter-reading.repository";
@@ -11,6 +11,8 @@ import { IndividualMeterReadingRepository } from "../repositories/individual-met
 import { IndividualMeterRepository } from "../repositories/individual-meter.repository";
 import { GeneralMeterRepository } from "../repositories/general-meter.repository";
 import { Meters } from "./meter.service";
+import { ApartmentRepository } from "../../subscriber/repositories/apartment.repository";
+import { HouseRepository } from "../../subscriber/repositories/house.repository";
 
 type MeterReadings = IndividualMeterReadingEntity | GeneralMeterReadingEntity;
 
@@ -21,6 +23,8 @@ export class MeterReadingService {
         private readonly generalMeterReadingRepository: GeneralMeterReadingRepository,
         private readonly individualMeterRepository: IndividualMeterRepository,
         private readonly generalMeterRepository: GeneralMeterRepository,
+        private readonly apartmentRepository: ApartmentRepository,
+        private readonly houseRepository: HouseRepository,
     ) { }
 
     public async getMeterReading(id: number, meterType: MeterType) {
@@ -80,4 +84,32 @@ export class MeterReadingService {
                 throw new RMQError(INCORRECT_METER_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
         }
     }
+    public async getMeterReadingBySID(dto: ReferenceGetMeterReadingBySID.Request): Promise<ReferenceGetMeterReadingBySID.Response> {
+        const apartment = await this.apartmentRepository.findApartmentById(dto.subscriber.apartmentId);
+        let meters: Meters[];
+        const newMeterReading: IGetMeterReadingBySID[] = [];
+        let house: IHouse;
+
+        switch (dto.meterType) {
+            case (MeterType.General):
+                house = await this.houseRepository.findHouseById(apartment.houseId);
+                meters = await this.generalMeterRepository.findActiveGeneralMetersByHouse(house.id);
+                for (const meter of meters) {
+                    const readings = await this.generalMeterReadingRepository.findLastTwoReadingByMeterID(meter.id);
+                    newMeterReading.push({ meterReadings: { ...readings }, typeOfSeriveId: meter.typeOfServiceId });
+                }
+                return { meterReadings: newMeterReading };
+            case (MeterType.Individual):
+                meters = await this.individualMeterRepository.findActiveIndividualMetersByApartment(apartment.id);
+                for (const meter of meters) {
+                    const readings = await this.individualMeterReadingRepository.findLastTwoReadingByMeterID(meter.id);
+                    newMeterReading.push({ meterReadings: { ...readings }, typeOfSeriveId: meter.typeOfServiceId });
+                }
+                return { meterReadings: newMeterReading };
+            default:
+                throw new RMQError(INCORRECT_METER_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+        }
+    }
+
+
 }

@@ -36,7 +36,7 @@ export class NormEntity extends BaseTariffAndNormEntity implements INorm {
   @Column({ nullable: false })
   unitId: number;
 
-  @Column({ nullable: false })
+  @Column('double', { nullable: false })
   norm: number;
 
   public get() {
@@ -59,10 +59,10 @@ export class MunicipalTariffEntity extends BaseTariffAndNormEntity implements IM
   @Column({ nullable: false })
   unitId: number;
 
-  @Column({ nullable: false })
+  @Column('double', { nullable: false })
   norm: number;
 
-  @Column({ nullable: true })
+  @Column('double', { nullable: true })
   supernorm: number;
 
   public get() {
@@ -91,7 +91,7 @@ export class SocialNormEntity extends BaseTariffAndNormEntity implements ISocial
   @Column({ nullable: false })
   unitId: number;
 
-  @Column({ nullable: false })
+  @Column('double', { nullable: false })
   norm: number;
 
   @Column({ nullable: false })
@@ -122,7 +122,7 @@ export class SeasonalityFactorEntity extends BaseTariffAndNormEntity implements 
   @Column({ nullable: false })
   monthName: string;
 
-  @Column({ nullable: false })
+  @Column('double', { nullable: false })
   coefficient: number;
 
   public get() {

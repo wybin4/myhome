@@ -13,8 +13,13 @@ export class PublicUtilityService {
     ) { }
 
     public async getPublicUtility({ subscriberIds, managementCompanyId }: GetDocumentDetail.Request) {
-        const tariffs = this.getPublicUtilityTariffs(managementCompanyId);
-        console.log(tariffs[0])
+        try {
+            const tariffs = await this.getPublicUtilityTariffs(managementCompanyId);
+            console.log(tariffs)
+        }
+        catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+        }
         // for (const subscriberId of subscriberIds) {
         //     const subscriber = await this.getSubscriber(subscriberId);
         //     if (!subscriber) {

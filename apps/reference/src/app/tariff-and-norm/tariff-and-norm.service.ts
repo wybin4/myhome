@@ -272,6 +272,7 @@ export class TariffAndNormService {
         let house: IHouse;
         switch (dto.type) {
             case TariffAndNormType.MunicipalTariff:
+                this.checkManagementCompany(dto.managementCompanyId);
                 try {
                     return await this.municipalTariffRepository.findAllByManagementCID(dto.managementCompanyId);
                 } catch (e) {

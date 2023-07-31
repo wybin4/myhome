@@ -32,6 +32,10 @@ export class AddTariffAndNormDto {
     @IsNumber()
     multiplier?: number;
 
+    @IsOptional()
+    @IsNumber()
+    multiplyingFactor?: number;
+
     @IsString()
     type: TariffAndNormType;
 }

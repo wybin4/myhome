@@ -65,6 +65,9 @@ export class MunicipalTariffEntity extends BaseTariffAndNormEntity implements IM
   @Column('double', { nullable: true })
   supernorm: number;
 
+  @Column('double', { nullable: true })
+  multiplyingFactor: number;
+
   public get() {
     return {
       managementCompanyId: this.managementCompanyId,

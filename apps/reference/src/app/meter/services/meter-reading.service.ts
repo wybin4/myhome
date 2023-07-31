@@ -1,4 +1,4 @@
-import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, APART_NOT_EXIST, multiplyingFactor } from "@myhome/constants";
+import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, APART_NOT_EXIST } from "@myhome/constants";
 import { IGeneralMeterReading, IHouse, IIndividualMeterReading, MeterStatus, MeterType } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError } from "nestjs-rmq";
@@ -148,25 +148,13 @@ export class MeterReadingService {
             } catch (e) {
                 throw new RMQError(NORM_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
             }
-            if (meter.status === MeterStatus.NoPossibility) {
-                temp.push({
-                    meterReadings: {
-                        individualMeterId: meter.id,
-                        reading: norm * numberOfRegistered,
-                        readAt: new Date(),
-                    }, typeOfSeriveId: meter.typeOfServiceId
-                });
-            }
-            if (meter.status === MeterStatus.NotInstall) {
-                temp.push({
-                    meterReadings: {
-                        individualMeterId: meter.id,
-                        reading: multiplyingFactor * norm * numberOfRegistered,
-                        readAt: new Date(),
-                    }, typeOfSeriveId: meter.typeOfServiceId
-                });
-            }
-
+            temp.push({
+                meterReadings: {
+                    individualMeterId: meter.id,
+                    reading: norm * numberOfRegistered,
+                    readAt: new Date(),
+                }, typeOfSeriveId: meter.typeOfServiceId
+            });
         }
         return temp;
     }

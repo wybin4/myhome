@@ -1,1 +1,0 @@
-export const multiplyingFactor = 1.5;

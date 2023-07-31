@@ -83,7 +83,12 @@ export class PublicUtilityService {
             const currentTariff = tariffs.filter((obj) => obj.typeOfServiceId === meterReading.typeOfSeriveId);
             if (currentTariff[0]) {
                 temp.push({
-                    amount: difference * currentTariff[0].norm,
+                    amount:
+                        currentTariff[0].multiplyingFactor
+                            ?
+                            difference * currentTariff[0].norm * currentTariff[0].multiplyingFactor
+                            :
+                            difference * currentTariff[0].norm,
                     typeOfServiceId: meterReading.typeOfSeriveId
                 });
             }

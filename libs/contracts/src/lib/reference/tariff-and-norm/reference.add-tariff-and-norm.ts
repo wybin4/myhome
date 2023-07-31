@@ -42,6 +42,10 @@ export namespace ReferenceAddTariffOrNorm {
         @IsNumber()
         multiplier?: number;
 
+        @IsOptional()
+        @IsNumber()
+        multiplyingFactor?: number;
+
         @IsString()
         type!: TariffAndNormType;
     }

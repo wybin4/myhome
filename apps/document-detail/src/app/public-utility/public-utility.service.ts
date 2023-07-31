@@ -26,7 +26,7 @@ export class PublicUtilityService {
             if (!subscriber) {
                 throw new RMQError(CANT_GET_SUBSCRIBER_WITH_ID + subscriberId, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
             }
-            const meterReadings = (await this.getMeterReadingsBySID(subscriber as unknown as ISubscriber, managementCompanyId)).meterReadings;
+            const meterReadings = (await this.getMeterReadingsBySID(subscriber.subscriber, managementCompanyId)).meterReadings;
             result.push({
                 subscriberId: subscriberId,
                 publicUtility: await this.getPUAmount(meterReadings, tariffs)
@@ -83,15 +83,16 @@ export class PublicUtilityService {
             const currentTariff = tariffs.filter((obj) => obj.typeOfServiceId === meterReading.typeOfSeriveId);
             if (currentTariff[0]) {
                 temp.push({
-                    amount:
+                    tariff:
                         currentTariff[0].multiplyingFactor
                             ?
-                            difference * currentTariff[0].norm * currentTariff[0].multiplyingFactor
+                            currentTariff[0].norm * currentTariff[0].multiplyingFactor
                             :
-                            difference * currentTariff[0].norm,
+                            currentTariff[0].norm,
+                    amountConsumed: difference,
                     typeOfServiceId: meterReading.typeOfSeriveId
                 });
-            }
+            } else throw new RMQError(TARIFFS_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
         }
         return temp;
     }

@@ -25,7 +25,7 @@ export class SubscriberController {
 			throw new RMQError(SUBSCRIBER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
 		}
 		const gettedSubscriber = new SubscriberEntity(subscriber).getSubscriber();
-		return { gettedSubscriber };
+		return { subscriber: gettedSubscriber };
 	}
 
 	@RMQValidate()
@@ -41,7 +41,7 @@ export class SubscriberController {
 			throw new RMQError(SUBSCRIBER_ALREADY_EXIST, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
 		}
 		const newSubscriber = await this.subscriberRepository.createSubscriber(newSubscriberEntity);
-		return { newSubscriber };
+		return { subscriber: newSubscriber };
 	}
 
 	@RMQValidate()

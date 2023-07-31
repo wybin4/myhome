@@ -94,7 +94,6 @@ export class MeterReadingService {
         let activeMeters: Meters[];
         const newMeterReading: IGetMeterReadingBySID[] = [];
         let house: IHouse;
-
         switch (dto.meterType) {
             case (MeterType.General):
                 break;

@@ -9,7 +9,7 @@ export class IndividualMeterReadingEntity implements IIndividualMeterReading {
     @Column({ nullable: false })
     individualMeterId: number;
 
-    @Column({ nullable: false })
+    @Column('double', { nullable: false })
     reading: number;
 
     @Column({ nullable: false })

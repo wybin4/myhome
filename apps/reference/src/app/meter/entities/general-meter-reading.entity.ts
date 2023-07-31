@@ -9,7 +9,7 @@ export class GeneralMeterReadingEntity implements IGeneralMeterReading {
     @Column({ nullable: false })
     generalMeterId: number;
 
-    @Column({ nullable: false })
+    @Column('double', { nullable: false })
     reading: number;
 
     @Column({ nullable: false })

@@ -1,5 +1,5 @@
-import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, APART_NOT_EXIST } from "@myhome/constants";
-import { IGeneralMeterReading, IHouse, IIndividualMeterReading, MeterType } from "@myhome/interfaces";
+import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, APART_NOT_EXIST, multiplyingFactor } from "@myhome/constants";
+import { IGeneralMeterReading, IHouse, IIndividualMeterReading, MeterStatus, MeterType } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
@@ -107,8 +107,15 @@ export class MeterReadingService {
             // return { meterReadings: newMeterReading };
             case (MeterType.Individual):
                 newMeterReading.push(...await this.getActiveMeterReadings(apartment.id));
-                newMeterReading.push(...await this.getNoPossibilityMeterReadings(apartment.id, apartment.numberOfRegistered, dto.managementCompanyId));
-
+                newMeterReading.push(
+                    ...await this.getNPAndNIMeterReadings
+                        (
+                            apartment.id,
+                            apartment.numberOfRegistered,
+                            dto.managementCompanyId,
+                            [MeterStatus.NoPossibility, MeterStatus.NotInstall]
+                        )
+                );
                 return { meterReadings: newMeterReading };
             default:
                 throw new RMQError(INCORRECT_METER_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
@@ -117,7 +124,7 @@ export class MeterReadingService {
 
     private async getActiveMeterReadings(apartmentId: number) {
         const temp = [];
-        const activeMeters = await this.individualMeterRepository.findActiveIndividualMetersByApartment(apartmentId);
+        const activeMeters = await this.individualMeterRepository.findByApartmentAndStatus(apartmentId, [MeterStatus.Active]);
         for (const meter of activeMeters) {
             const readings = await this.individualMeterReadingRepository.findLastTwoReadingByMeterID(meter.id);
             temp.push({
@@ -131,23 +138,35 @@ export class MeterReadingService {
         return temp;
     }
 
-    private async getNoPossibilityMeterReadings(apartmentId: number, numberOfRegistered: number, managementCompanyId: number) {
+    private async getNPAndNIMeterReadings(apartmentId: number, numberOfRegistered: number, managementCompanyId: number, meterStatus: MeterStatus[]) {
         const temp = [];
-        const noPossibilityMeters = await this.individualMeterRepository.findNoPossibilityIndividualMetersByApartment(apartmentId);
-        for (const meter of noPossibilityMeters) {
+        const meters = await this.individualMeterRepository.findByApartmentAndStatus(apartmentId, meterStatus);
+        for (const meter of meters) {
             let norm: number;
             try {
                 norm = (await this.normRepository.findByMCIDAndTOSID(managementCompanyId, meter.typeOfServiceId)).norm;
             } catch (e) {
                 throw new RMQError(NORM_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
             }
-            temp.push({
-                meterReadings: {
-                    individualMeterId: meter.id,
-                    reading: norm * numberOfRegistered,
-                    readAt: new Date(),
-                }, typeOfSeriveId: meter.typeOfServiceId
-            });
+            if (meter.status === MeterStatus.NoPossibility) {
+                temp.push({
+                    meterReadings: {
+                        individualMeterId: meter.id,
+                        reading: norm * numberOfRegistered,
+                        readAt: new Date(),
+                    }, typeOfSeriveId: meter.typeOfServiceId
+                });
+            }
+            if (meter.status === MeterStatus.NotInstall) {
+                temp.push({
+                    meterReadings: {
+                        individualMeterId: meter.id,
+                        reading: multiplyingFactor * norm * numberOfRegistered,
+                        readAt: new Date(),
+                    }, typeOfSeriveId: meter.typeOfServiceId
+                });
+            }
+
         }
         return temp;
     }

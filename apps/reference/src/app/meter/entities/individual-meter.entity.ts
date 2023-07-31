@@ -25,7 +25,7 @@ export class IndividualMeterEntity implements IIndividualMeter {
     @Column({
         nullable: false,
         type: 'varchar',
-        transformer: GenericEnumTransformer(SubscriberStatus),
+        transformer: GenericEnumTransformer(MeterStatus),
         default: SubscriberStatus.Active,
     })
     status: MeterStatus;

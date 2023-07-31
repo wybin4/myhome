@@ -44,6 +44,7 @@ export enum MeterStatus {
     Active = 'Active',
     Archieve = 'Archieve',
     NoPossibility = 'NoPossibility',
+    NotInstall = 'NotInstall',
 }
 
 export function RequireHomeOrApartment(validationOptions?: ValidationOptions) {

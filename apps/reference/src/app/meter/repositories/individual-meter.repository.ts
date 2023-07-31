@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Not, Repository } from 'typeorm';
+import { In, LessThan, Not, Repository } from 'typeorm';
 import { IndividualMeterEntity } from '../entities/individual-meter.entity';
 import { MeterStatus } from '@myhome/interfaces';
 
@@ -35,22 +35,15 @@ export class IndividualMeterRepository {
             },
         });
     }
-    async findActiveIndividualMetersByApartment(apartmentId: number): Promise<IndividualMeterEntity[]> {
+    async findByApartmentAndStatus(apartmentId: number, status: MeterStatus[]): Promise<IndividualMeterEntity[]> {
         return this.individualMeterRepository.find({
             where: {
-                status: MeterStatus.Active,
-                apartmentId: apartmentId
+                apartmentId,
+                status: In(status),
             },
         });
     }
-    async findNoPossibilityIndividualMetersByApartment(apartmentId: number): Promise<IndividualMeterEntity[]> {
-        return this.individualMeterRepository.find({
-            where: {
-                status: MeterStatus.NoPossibility,
-                apartmentId: apartmentId
-            },
-        });
-    }
+
     async saveIndividualMeters(meters: IndividualMeterEntity[]): Promise<IndividualMeterEntity[]> {
         return this.individualMeterRepository.save(meters);
     }

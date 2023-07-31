@@ -43,6 +43,14 @@ export class IndividualMeterRepository {
             },
         });
     }
+    async findNoPossibilityIndividualMetersByApartment(apartmentId: number): Promise<IndividualMeterEntity[]> {
+        return this.individualMeterRepository.find({
+            where: {
+                status: MeterStatus.NoPossibility,
+                apartmentId: apartmentId
+            },
+        });
+    }
     async saveIndividualMeters(meters: IndividualMeterEntity[]): Promise<IndividualMeterEntity[]> {
         return this.individualMeterRepository.save(meters);
     }

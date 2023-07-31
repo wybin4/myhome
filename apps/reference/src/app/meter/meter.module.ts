@@ -16,6 +16,7 @@ import { SubscriberModule } from "../subscriber/subscriber.module";
 import { MeterEventEmitter } from "./meter.event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { CommonModule } from "../common/common.module";
+import { TariffAndNormModule } from "../tariff-and-norm/tariff-and-norm.module";
 
 @Module({
     imports: [
@@ -25,7 +26,8 @@ import { CommonModule } from "../common/common.module";
             IndividualMeterReadingEntity, GeneralMeterReadingEntity
         ]),
         SubscriberModule,
-        CommonModule
+        CommonModule,
+        TariffAndNormModule
     ],
     providers: [
         IndividualMeterRepository, GeneralMeterRepository,

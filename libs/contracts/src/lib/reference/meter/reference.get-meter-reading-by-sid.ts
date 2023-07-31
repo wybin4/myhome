@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 import { IGeneralMeterReading, IIndividualMeterReading, ISubscriber, MeterType } from '@myhome/interfaces';
 
 export namespace ReferenceGetMeterReadingBySID {
@@ -9,6 +9,9 @@ export namespace ReferenceGetMeterReadingBySID {
 
         @IsString()
         meterType!: MeterType;
+
+        @IsNumber()
+        managementCompanyId!: number;
     }
 
     export class Response {
@@ -17,6 +20,6 @@ export namespace ReferenceGetMeterReadingBySID {
 }
 
 export interface IGetMeterReadingBySID {
-    meterReadings: IIndividualMeterReading[] | IGeneralMeterReading[];
+    meterReadings: IIndividualMeterReading | IGeneralMeterReading;
     typeOfSeriveId: number;
 }

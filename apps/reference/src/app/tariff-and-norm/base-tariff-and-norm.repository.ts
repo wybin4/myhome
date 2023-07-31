@@ -49,6 +49,16 @@ export class NormRepository extends GenericTariffAndNormRepository<NormEntity> {
     ) {
         super(normRepository);
     }
+
+    async findByMCIDAndTOSID(managementCompanyId: number, typeOfServiceId: number): Promise<NormEntity | undefined> {
+        return await this.normRepository.findOne({
+            where: {
+                managementCompanyId,
+                typeOfServiceId,
+            },
+        });
+    }
+
 }
 
 @Injectable()

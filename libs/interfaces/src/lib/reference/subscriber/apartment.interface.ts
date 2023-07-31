@@ -4,4 +4,5 @@ export interface IApartment {
     apartmentNumber: number;
     totalArea: number;
     livingArea: number;
+    numberOfRegistered: number;
 }

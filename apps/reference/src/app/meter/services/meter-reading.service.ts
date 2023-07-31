@@ -1,4 +1,4 @@
-import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST } from "@myhome/constants";
+import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, APART_NOT_EXIST } from "@myhome/constants";
 import { IGeneralMeterReading, IHouse, IIndividualMeterReading, MeterType } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError } from "nestjs-rmq";
@@ -13,6 +13,7 @@ import { GeneralMeterRepository } from "../repositories/general-meter.repository
 import { Meters } from "./meter.service";
 import { ApartmentRepository } from "../../subscriber/repositories/apartment.repository";
 import { HouseRepository } from "../../subscriber/repositories/house.repository";
+import { NormRepository } from "../../tariff-and-norm/base-tariff-and-norm.repository";
 
 type MeterReadings = IndividualMeterReadingEntity | GeneralMeterReadingEntity;
 
@@ -25,6 +26,7 @@ export class MeterReadingService {
         private readonly generalMeterRepository: GeneralMeterRepository,
         private readonly apartmentRepository: ApartmentRepository,
         private readonly houseRepository: HouseRepository,
+        private readonly normRepository: NormRepository
     ) { }
 
     public async getMeterReading(id: number, meterType: MeterType) {
@@ -86,30 +88,67 @@ export class MeterReadingService {
     }
     public async getMeterReadingBySID(dto: ReferenceGetMeterReadingBySID.Request): Promise<ReferenceGetMeterReadingBySID.Response> {
         const apartment = await this.apartmentRepository.findApartmentById(dto.subscriber.apartmentId);
-        let meters: Meters[];
+        if (!apartment) {
+            throw new RMQError(APART_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+        }
+        let activeMeters: Meters[];
         const newMeterReading: IGetMeterReadingBySID[] = [];
         let house: IHouse;
 
         switch (dto.meterType) {
             case (MeterType.General):
-                house = await this.houseRepository.findHouseById(apartment.houseId);
-                meters = await this.generalMeterRepository.findActiveGeneralMetersByHouse(house.id);
-                for (const meter of meters) {
-                    const readings = await this.generalMeterReadingRepository.findLastTwoReadingByMeterID(meter.id);
-                    newMeterReading.push({ meterReadings: { ...readings }, typeOfSeriveId: meter.typeOfServiceId });
-                }
-                return { meterReadings: newMeterReading };
+                break;
+            // house = await this.houseRepository.findHouseById(apartment.houseId);
+            // activeMeters = await this.generalMeterRepository.findActiveGeneralMetersByHouse(house.id);
+            // for (const meter of activeMeters) {
+            //     const readings = await this.generalMeterReadingRepository.findLastTwoReadingByMeterID(meter.id);
+            //     newMeterReading.push({ meterReadings:  ...readings , typeOfSeriveId: meter.typeOfServiceId });
+            // }
+            // return { meterReadings: newMeterReading };
             case (MeterType.Individual):
-                meters = await this.individualMeterRepository.findActiveIndividualMetersByApartment(apartment.id);
-                for (const meter of meters) {
-                    const readings = await this.individualMeterReadingRepository.findLastTwoReadingByMeterID(meter.id);
-                    newMeterReading.push({ meterReadings: { ...readings }, typeOfSeriveId: meter.typeOfServiceId });
-                }
+                newMeterReading.push(...await this.getActiveMeterReadings(apartment.id));
+                newMeterReading.push(...await this.getNoPossibilityMeterReadings(apartment.id, apartment.numberOfRegistered, dto.managementCompanyId));
+
                 return { meterReadings: newMeterReading };
             default:
                 throw new RMQError(INCORRECT_METER_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
         }
     }
 
+    private async getActiveMeterReadings(apartmentId: number) {
+        const temp = [];
+        const activeMeters = await this.individualMeterRepository.findActiveIndividualMetersByApartment(apartmentId);
+        for (const meter of activeMeters) {
+            const readings = await this.individualMeterReadingRepository.findLastTwoReadingByMeterID(meter.id);
+            temp.push({
+                meterReadings: {
+                    individualMeterId: meter.id,
+                    reading: readings[0].reading - readings[1].reading,
+                    readAt: readings[0].readAt,
+                }, typeOfSeriveId: meter.typeOfServiceId
+            });
+        }
+        return temp;
+    }
 
+    private async getNoPossibilityMeterReadings(apartmentId: number, numberOfRegistered: number, managementCompanyId: number) {
+        const temp = [];
+        const noPossibilityMeters = await this.individualMeterRepository.findNoPossibilityIndividualMetersByApartment(apartmentId);
+        for (const meter of noPossibilityMeters) {
+            let norm: number;
+            try {
+                norm = (await this.normRepository.findByMCIDAndTOSID(managementCompanyId, meter.typeOfServiceId)).norm;
+            } catch (e) {
+                throw new RMQError(NORM_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+            }
+            temp.push({
+                meterReadings: {
+                    individualMeterId: meter.id,
+                    reading: norm * numberOfRegistered,
+                    readAt: new Date(),
+                }, typeOfSeriveId: meter.typeOfServiceId
+            });
+        }
+        return temp;
+    }
 }

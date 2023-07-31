@@ -22,7 +22,7 @@ export interface IGeneralMeter {
 }
 
 export interface IIndividualMeterReading {
-    id: number;
+    id?: number;
     individualMeterId: number;
     reading: number;
     readAt: Date;
@@ -42,7 +42,8 @@ export enum MeterType {
 
 export enum MeterStatus {
     Active = 'Active',
-    Archieve = 'Archieve'
+    Archieve = 'Archieve',
+    NoPossibility = 'NoPossibility',
 }
 
 export function RequireHomeOrApartment(validationOptions?: ValidationOptions) {

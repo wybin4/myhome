@@ -2,6 +2,7 @@ import { IApartment } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne } from 'typeorm';
 import { HouseEntity } from './house.entity';
 import { SubscriberEntity } from './subscriber.entity';
+import { Min } from 'class-validator';
 
 @Entity('apartments')
 export class ApartmentEntity implements IApartment {
@@ -23,6 +24,10 @@ export class ApartmentEntity implements IApartment {
     @Column({ nullable: false })
     livingArea: number;
 
+    @Column({ nullable: false })
+    @Min(1, { message: 'Количество прописанных должно быть больше нуля' })
+    numberOfRegistered: number;
+
     @OneToOne(() => SubscriberEntity, (subscriber) => subscriber.apartment)
     subscriber: SubscriberEntity;
 
@@ -37,7 +42,8 @@ export class ApartmentEntity implements IApartment {
             houseId: this.houseId,
             apartmentNumber: this.apartmentNumber,
             totalArea: this.totalArea,
-            livingArea: this.livingArea
+            livingArea: this.livingArea,
+            numberOfRegistered: this.numberOfRegistered
         }
     }
 }

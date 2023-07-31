@@ -26,7 +26,7 @@ export class PublicUtilityService {
             if (!subscriber) {
                 throw new RMQError(CANT_GET_SUBSCRIBER_WITH_ID + subscriberId, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
             }
-            const meterReadings = (await this.getMeterReadingsBySID(subscriber as unknown as ISubscriber)).meterReadings;
+            const meterReadings = (await this.getMeterReadingsBySID(subscriber as unknown as ISubscriber, managementCompanyId)).meterReadings;
             result.push({
                 subscriberId: subscriberId,
                 publicUtility: await this.getPUAmount(meterReadings, tariffs)
@@ -45,7 +45,7 @@ export class PublicUtilityService {
         }
     }
 
-    private async getMeterReadingsBySID(subscriber: ISubscriber): Promise<ReferenceGetMeterReadingBySID.Response> {
+    private async getMeterReadingsBySID(subscriber: ISubscriber, managementCompanyId: number): Promise<ReferenceGetMeterReadingBySID.Response> {
         try {
             return await this.rmqService.send
                 <
@@ -53,7 +53,7 @@ export class PublicUtilityService {
                     ReferenceGetMeterReadingBySID.Response
                 >
                 (
-                    ReferenceGetMeterReadingBySID.topic, { subscriber: subscriber, meterType: MeterType.Individual }
+                    ReferenceGetMeterReadingBySID.topic, { subscriber: subscriber, meterType: MeterType.Individual, managementCompanyId }
                 );
         } catch (e) {
             throw new RMQError(FAILED_TO_GET_METER_READINGS, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
@@ -79,7 +79,7 @@ export class PublicUtilityService {
     private async getPUAmount(meterReadings: IGetMeterReadingBySID[], tariffs: Array<IMunicipalTariff>) {
         const temp = [];
         for (const meterReading of meterReadings) {
-            const difference = meterReading.meterReadings[0].reading - meterReading.meterReadings[1].reading;
+            const difference = meterReading.meterReadings.reading;
             const currentTariff = tariffs.filter((obj) => obj.typeOfServiceId === meterReading.typeOfSeriveId);
             if (currentTariff[0]) {
                 temp.push({

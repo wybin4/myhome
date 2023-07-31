@@ -16,6 +16,9 @@ export namespace ReferenceAddApartment {
 
         @IsNumber()
         livingArea!: number;
+
+        @IsNumber()
+        numberOfRegistered!: number;
     }
 
     export class Response {

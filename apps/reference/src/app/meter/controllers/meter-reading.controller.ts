@@ -3,7 +3,7 @@ import { RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ReferenceAddMeterReading, ReferenceGetMeterReading, ReferenceGetMeterReadingBySID } from '@myhome/contracts';
 import { MeterReadingService } from '../services/meter-reading.service';
 
-@Controller()
+@Controller('meter-reading')
 export class MeterReadingController {
     constructor(
         private readonly meterReadingService: MeterReadingService

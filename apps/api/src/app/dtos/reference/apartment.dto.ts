@@ -15,6 +15,9 @@ export class AddApartmentDto {
 
     @IsNumber()
     livingArea: number;
+
+    @IsNumber()
+    numberOfRegistered: number;
 }
 
 export class GetApartmentDto {

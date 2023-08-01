@@ -50,11 +50,10 @@ export class NormRepository extends GenericTariffAndNormRepository<NormEntity> {
         super(normRepository);
     }
 
-    async findByMCIDAndTOSID(managementCompanyId: number, typeOfServiceId: number): Promise<NormEntity | undefined> {
-        return await this.normRepository.findOne({
+    async findByMCID(managementCompanyId: number): Promise<NormEntity[] | undefined> {
+        return await this.normRepository.find({
             where: {
                 managementCompanyId,
-                typeOfServiceId,
             },
         });
     }

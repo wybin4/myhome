@@ -1,4 +1,4 @@
-import { Body, Controller } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ReferenceAddMeterReading, ReferenceGetMeterReading, ReferenceGetMeterReadingBySID } from '@myhome/contracts';
 import { MeterReadingService } from '../services/meter-reading.service';
@@ -21,8 +21,9 @@ export class MeterReadingController {
         return this.meterReadingService.addMeterReading(dto);
     }
 
-    @RMQValidate()
-    @RMQRoute(ReferenceGetMeterReadingBySID.topic)
+    // @RMQValidate()
+    // @RMQRoute(ReferenceGetMeterReadingBySID.topic)
+    @Post('get-by-sid')
     async getMeterReadingBySID(@Body() dto: ReferenceGetMeterReadingBySID.Request) {
         return this.meterReadingService.getMeterReadingBySID(dto);
     }

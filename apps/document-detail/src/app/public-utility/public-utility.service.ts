@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError, RMQService } from "nestjs-rmq";
 import { IMunicipalTariff, ISubscriber, MeterType, TariffAndNormType } from "@myhome/interfaces";
 import { GetDocumentDetail, IGetMeterReadingBySID, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscriber } from "@myhome/contracts";
-import { CANT_GET_SUBSCRIBER_WITH_ID, FAILED_TO_GET_METER_READINGS, SUBSCRIBER_NOT_EXIST, TARIFFS_NOT_EXIST } from "@myhome/constants";
+import { CANT_GET_SUBSCRIBER_WITH_ID, RMQException, SUBSCRIBER_NOT_EXIST, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { DocumentDetailRepository } from "../document-detail/document-detail.repository";
 @Injectable()
@@ -14,6 +14,7 @@ export class PublicUtilityService {
 
     public async getPublicUtility({ subscriberIds, managementCompanyId }: GetDocumentDetail.Request) {
         const result = [];
+        let temp: ReferenceGetMeterReadingBySID.Response;
         let tariffs: Array<IMunicipalTariff>;
         try {
             tariffs = await this.getPublicUtilityTariffs(managementCompanyId) as unknown as Array<IMunicipalTariff>;
@@ -26,7 +27,12 @@ export class PublicUtilityService {
             if (!subscriber) {
                 throw new RMQError(CANT_GET_SUBSCRIBER_WITH_ID + subscriberId, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
             }
-            const meterReadings = (await this.getMeterReadingsBySID(subscriber.subscriber, managementCompanyId)).meterReadings;
+            try {
+                temp = await this.getMeterReadingsBySID(subscriber.subscriber, managementCompanyId);
+            } catch (e) {
+                throw new RMQException(e.message, e.status);
+            }
+            const meterReadings = temp.meterReadings;
             result.push({
                 subscriberId: subscriberId,
                 publicUtility: await this.getPUAmount(meterReadings, tariffs)
@@ -56,7 +62,7 @@ export class PublicUtilityService {
                     ReferenceGetMeterReadingBySID.topic, { subscriber: subscriber, meterType: MeterType.Individual, managementCompanyId }
                 );
         } catch (e) {
-            throw new RMQError(FAILED_TO_GET_METER_READINGS, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+            throw new RMQException(e.message, e.code);
         }
     }
 

@@ -1,6 +1,6 @@
-import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, APART_NOT_EXIST } from "@myhome/constants";
-import { IGeneralMeterReading, IHouse, IIndividualMeterReading, INorm, MeterStatus, MeterType } from "@myhome/interfaces";
-import { HttpStatus, Injectable, NotFoundException, UnprocessableEntityException } from "@nestjs/common";
+import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, APART_NOT_EXIST, RMQException, MISSING_PREVIOUS_READING, FAILED_TO_GET_METER_READINGS, FAILED_TO_GET_READINGS_WITHOUT_NORMS, NORMS_NOT_EXIST } from "@myhome/constants";
+import { IGeneralMeterReading, IIndividualMeterReading, INorm, MeterStatus, MeterType } from "@myhome/interfaces";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { IGetMeterReadingBySID, ReferenceAddMeterReading, ReferenceGetMeterReadingBySID } from "@myhome/contracts";
@@ -86,19 +86,20 @@ export class MeterReadingService {
                 throw new RMQError(INCORRECT_METER_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
         }
     }
+
     public async getMeterReadingBySID(dto: ReferenceGetMeterReadingBySID.Request)/*: Promise<ReferenceGetMeterReadingBySID.Response>*/ {
         const apartment = await this.apartmentRepository.findApartmentById(dto.subscriber.apartmentId);
         if (!apartment) {
             throw new RMQError(APART_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
         }
         const newMeterReading: IGetMeterReadingBySID[] = [];
-        let activeReadings: IIndividualMeterReading;
-        let house: IHouse;
+        // let activeReadings: IIndividualMeterReading;
+        // let house: IHouse;
         let norms: INorm[];
         try {
             norms = await this.normRepository.findByMCID(dto.managementCompanyId);
         } catch (e) {
-            throw new RMQError(NORM_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+            throw new RMQError(NORMS_NOT_EXIST.message, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
         }
         switch (dto.meterType) {
             case (MeterType.General):
@@ -124,7 +125,7 @@ export class MeterReadingService {
                     )
                 }
                 catch (e) {
-                    throw new RMQError(e.messages, ERROR_TYPE.RMQ, e.code);
+                    throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
                 }
                 return { meterReadings: newMeterReading };
             default:
@@ -134,18 +135,14 @@ export class MeterReadingService {
 
     private async getActiveMeterReadings(apartmentId: number, norms: INorm[], numberOfRegistered: number) {
         const temp = [];
-        let reading: Promise<IndividualMeterReadingEntity[] | {
+        let reading: IndividualMeterReadingEntity[] | {
             reading: number;
             readAt: Date;
             individualMeterId: number;
-        }>;
+        };
         const activeMeters = await this.individualMeterRepository.findByApartmentAndStatus(apartmentId, [MeterStatus.Active]);
         for (const meter of activeMeters) {
-            try {
-                reading = this.calculateActiveMeterReadings(meter.id, 15, 25, norms, numberOfRegistered, meter.typeOfServiceId);
-            } catch (e) {
-                throw new Error(e.messages);
-            }
+            reading = await this.calculateActiveMeterReadings(meter.id, 15, 25, norms, numberOfRegistered, meter.typeOfServiceId);
             temp.push({
                 meterReadings: { reading }, typeOfSeriveId: meter.typeOfServiceId
             });
@@ -164,8 +161,8 @@ export class MeterReadingService {
             if (currentMonthReadings.length > 0) {
                 // Если есть текущие, т.е. счётчик новый
                 return currentMonthReadings;
-            } else throw new NotFoundException('Для счётчика с id ' + meterId + ' нет показаний');
-            // Если ничего нет
+                // Если ничего нет
+            } else throw new RMQException(FAILED_TO_GET_METER_READINGS.message(meterId), FAILED_TO_GET_METER_READINGS.status);
         }
         const lastReadingDate = previousReadings[0].readAt;
         const differenceInMonths = (currentDate.getMonth() - lastReadingDate.getMonth()) + 12 * (currentDate.getFullYear() - lastReadingDate.getFullYear());
@@ -180,9 +177,7 @@ export class MeterReadingService {
                     individualMeterId: currentMonthReadings[0].individualMeterId
                 };
                 // Есть показания за текущий, но нет за предыдущий
-            } else throw new UnprocessableEntityException(
-                'Для счётчика с id ' + meterId + ' есть показания за текущий, но нет за предыдущий период'
-            );
+            } else throw new RMQException(MISSING_PREVIOUS_READING.message(meterId), MISSING_PREVIOUS_READING.status);
         } else {
             if (differenceInMonths < 3) {
                 // Если прошло меньше трех месяцев с момента отправки показаний
@@ -197,7 +192,7 @@ export class MeterReadingService {
                 let norm: number;
                 if (tempNorm.length > 0) {
                     norm = tempNorm[0].norm;
-                } else throw new NotFoundException(NORM_NOT_EXIST);
+                } else throw new RMQException(NORM_NOT_EXIST.message, NORM_NOT_EXIST.status);
                 return {
                     reading: norm * numberOfRegistered,
                     readAt: new Date(),
@@ -219,22 +214,26 @@ export class MeterReadingService {
     }
 
     private async getNPAndNIMeterReadings(apartmentId: number, numberOfRegistered: number, norms: INorm[], meterStatus: MeterStatus[]) {
-        const temp = [];
-        let norm: number, tempNorm: INorm[];
-        const meters = await this.individualMeterRepository.findByApartmentAndStatus(apartmentId, meterStatus);
-        for (const meter of meters) {
-            tempNorm = norms.filter(norm => norm.typeOfServiceId === meter.typeOfServiceId);
-            if (tempNorm.length > 0) {
-                norm = tempNorm[0].norm;
-            } else throw new NotFoundException(NORM_NOT_EXIST);
-            temp.push({
-                meterReadings: {
-                    individualMeterId: meter.id,
-                    reading: norm * numberOfRegistered,
-                    readAt: new Date(),
-                }, typeOfSeriveId: meter.typeOfServiceId
-            });
+        try {
+            const temp = [];
+            let norm: number, tempNorm: INorm[];
+            const meters = await this.individualMeterRepository.findByApartmentAndStatus(apartmentId, meterStatus);
+            for (const meter of meters) {
+                tempNorm = norms.filter(norm => norm.typeOfServiceId === meter.typeOfServiceId);
+                if (tempNorm.length > 0) {
+                    norm = tempNorm[0].norm;
+                } else throw new RMQException(NORM_NOT_EXIST.message, NORM_NOT_EXIST.status);
+                temp.push({
+                    meterReadings: {
+                        individualMeterId: meter.id,
+                        reading: norm * numberOfRegistered,
+                        readAt: new Date(),
+                    }, typeOfSeriveId: meter.typeOfServiceId
+                });
+            }
+            return temp;
+        } catch (e) {
+            throw new RMQException(FAILED_TO_GET_READINGS_WITHOUT_NORMS.message, FAILED_TO_GET_READINGS_WITHOUT_NORMS.status);
         }
-        return temp;
     }
 }

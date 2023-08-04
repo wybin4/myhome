@@ -135,11 +135,7 @@ export class MeterReadingService {
 
     private async getActiveMeterReadings(apartmentId: number, norms: INorm[], numberOfRegistered: number) {
         const temp = [];
-        let reading: IndividualMeterReadingEntity[] | {
-            reading: number;
-            readAt: Date;
-            individualMeterId: number;
-        };
+        let reading: number;
         const activeMeters = await this.individualMeterRepository.findByApartmentAndStatus(apartmentId, [MeterStatus.Active]);
         for (const meter of activeMeters) {
             reading = await this.calculateActiveMeterReadings(meter.id, 15, 25, norms, numberOfRegistered, meter.typeOfServiceId);
@@ -160,7 +156,7 @@ export class MeterReadingService {
             // Если нет предыдущих показаний
             if (currentMonthReadings.length > 0) {
                 // Если есть текущие, т.е. счётчик новый
-                return currentMonthReadings;
+                return currentMonthReadings[0].reading;
                 // Если ничего нет
             } else throw new RMQException(FAILED_TO_GET_METER_READINGS.message(meterId), FAILED_TO_GET_METER_READINGS.status);
         }
@@ -171,33 +167,21 @@ export class MeterReadingService {
             // Если есть показания за текущий месяц
             if (differenceInMonths === 1) {
                 // Если есть показания за предыдущий месяц
-                return {
-                    reading: currentMonthReadings[0].reading - previousReadings[0].reading,
-                    readAt: currentMonthReadings[0].readAt,
-                    individualMeterId: currentMonthReadings[0].individualMeterId
-                };
+                return currentMonthReadings[0].reading - previousReadings[0].reading;
                 // Есть показания за текущий, но нет за предыдущий
             } else throw new RMQException(MISSING_PREVIOUS_READING.message(meterId), MISSING_PREVIOUS_READING.status);
         } else {
             if (differenceInMonths < 3) {
                 // Если прошло меньше трех месяцев с момента отправки показаний
                 const averageConsumption = this.calculateAverageConsumption(previousReadings);
-                return {
-                    reading: averageConsumption,
-                    individualMeterId: previousReadings[0].individualMeterId,
-                    readAt: currentDate,
-                };
+                return averageConsumption;
             } else {
                 const tempNorm = norms.filter(norm => norm.typeOfServiceId === typeOfSeriveId);
                 let norm: number;
                 if (tempNorm.length > 0) {
                     norm = tempNorm[0].norm;
                 } else throw new RMQException(NORM_NOT_EXIST.message, NORM_NOT_EXIST.status);
-                return {
-                    reading: norm * numberOfRegistered,
-                    readAt: new Date(),
-                    individualMeterId: meterId
-                }
+                return norm * numberOfRegistered;
                 // Расчёт по нормативу
             }
         }
@@ -227,7 +211,6 @@ export class MeterReadingService {
                     meterReadings: {
                         individualMeterId: meter.id,
                         reading: norm * numberOfRegistered,
-                        readAt: new Date(),
                     }, typeOfSeriveId: meter.typeOfServiceId
                 });
             }

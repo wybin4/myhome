@@ -14,7 +14,7 @@ export class PublicUtilityService {
 
     public async getPublicUtility({ subscriberIds, managementCompanyId }: GetDocumentDetail.Request) {
         const result = [];
-        let temp: ReferenceGetMeterReadingBySID.Response;
+        let meterReadings: ReferenceGetMeterReadingBySID.Response;
         let tariffs: Array<IMunicipalTariff>;
         try {
             tariffs = await this.getPublicUtilityTariffs(managementCompanyId) as unknown as Array<IMunicipalTariff>;
@@ -28,14 +28,13 @@ export class PublicUtilityService {
                 throw new RMQError(CANT_GET_SUBSCRIBER_WITH_ID + subscriberId, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
             }
             try {
-                temp = await this.getMeterReadingsBySID(subscriber.subscriber, managementCompanyId);
+                meterReadings = await this.getMeterReadingsBySID(subscriber.subscriber, managementCompanyId);
             } catch (e) {
                 throw new RMQException(e.message, e.status);
             }
-            const meterReadings = temp.meterReadings;
             result.push({
                 subscriberId: subscriberId,
-                publicUtility: await this.getPUAmount(meterReadings, tariffs)
+                publicUtility: await this.getPUAmount(meterReadings.meterReadings, tariffs)
             })
         }
         return result;

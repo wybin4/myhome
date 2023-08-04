@@ -20,4 +20,10 @@ export class TypeOfServiceEntity implements ITypeOfService {
             name: this.name
         }
     }
+    public getTypeOfServiceWithId() {
+        return {
+            id: this.id,
+            name: this.name
+        }
+    }
 }

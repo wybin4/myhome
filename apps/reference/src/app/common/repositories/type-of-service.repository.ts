@@ -18,4 +18,7 @@ export class TypeOfServiceRepository {
         return this.typeOfServiceRepository.findOne({ where: { id } });
     }
 
+    async findAllTypesOfService() {
+        return this.typeOfServiceRepository.find();
+    }
 }

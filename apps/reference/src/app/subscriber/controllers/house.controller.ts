@@ -22,7 +22,7 @@ export class HouseController {
 			throw new RMQError(HOME_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
 		}
 		const gettedHouse = new HouseEntity(house).getHouse();
-		return { gettedHouse };
+		return { house: gettedHouse };
 	}
 
 	@RMQValidate()
@@ -31,7 +31,7 @@ export class HouseController {
 		const newHouseEntity = new HouseEntity(dto);
 		await this.checkManagementCompany(dto.managementCompanyId);
 		const newHouse = await this.houseRepository.createHouse(newHouseEntity);
-		return { newHouse };
+		return { house: newHouse };
 	}
 
 	@RMQValidate()

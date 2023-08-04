@@ -26,6 +26,8 @@ export * from './lib/reference/tariff-and-norm/reference.add-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.get-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.get-all-tariffs';
 
+export * from './lib/reference/common/reference.get-all-types-of-serive';
+
 export * from './lib/email/email.register';
 
 export * from './lib/appeal/appeal.add-appeal';

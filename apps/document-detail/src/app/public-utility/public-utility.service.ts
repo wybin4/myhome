@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { RMQError, RMQService } from "nestjs-rmq";
+import { RMQService } from "nestjs-rmq";
 import { IMunicipalTariff, ISubscriber, MeterType, TariffAndNormType } from "@myhome/interfaces";
 import { GetDocumentDetail, IGetMeterReadingBySID, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscriber } from "@myhome/contracts";
-import { CANT_GET_SUBSCRIBER_WITH_ID, RMQException, SUBSCRIBER_NOT_EXIST, TARIFFS_NOT_EXIST } from "@myhome/constants";
-import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
+import { CANT_GET_SUBSCRIBER_WITH_ID, RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { DocumentDetailRepository } from "../document-detail/document-detail.repository";
+
 @Injectable()
 export class PublicUtilityService {
     constructor(
@@ -20,12 +20,12 @@ export class PublicUtilityService {
             tariffs = await this.getPublicUtilityTariffs(managementCompanyId) as unknown as Array<IMunicipalTariff>;
         }
         catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQException(e.message, e.code);
         }
         for (const subscriberId of subscriberIds) {
             const subscriber = await this.getSubscriber(subscriberId);
             if (!subscriber) {
-                throw new RMQError(CANT_GET_SUBSCRIBER_WITH_ID + subscriberId, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                throw new RMQException(CANT_GET_SUBSCRIBER_WITH_ID + subscriberId, HttpStatus.NOT_FOUND);
             }
             try {
                 meterReadings = await this.getMeterReadingsBySID(subscriber.subscriber, managementCompanyId);
@@ -46,7 +46,7 @@ export class PublicUtilityService {
                 ReferenceGetSubscriber.topic, { id: subscriberId }
             );
         } catch (e) {
-            throw new RMQError(SUBSCRIBER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+            throw new RMQException(CANT_GET_SUBSCRIBER_WITH_ID + subscriberId, HttpStatus.NOT_FOUND);
         }
     }
 
@@ -77,7 +77,7 @@ export class PublicUtilityService {
                     { managementCompanyId: managementCompanyId, type: TariffAndNormType.MunicipalTariff }
                 );
         } catch (e) {
-            throw new RMQError(TARIFFS_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+            throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
     }
 
@@ -97,7 +97,7 @@ export class PublicUtilityService {
                     amountConsumed: difference,
                     typeOfServiceId: meterReading.typeOfSeriveId
                 });
-            } else throw new RMQError(TARIFFS_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+            } else throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
         return temp;
     }

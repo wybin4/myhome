@@ -20,7 +20,7 @@ import { TariffAndNormModule } from './tariff-and-norm/tariff-and-norm.module';
     SubscriberModule,
     MeterModule,
     CommonModule,
-    TariffAndNormModule
+    TariffAndNormModule,
   ],
 })
 export class AppModule { }

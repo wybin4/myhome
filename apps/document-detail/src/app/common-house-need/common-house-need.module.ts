@@ -1,14 +1,13 @@
 import { Module } from "@nestjs/common";
-import { TypeOrmModule } from "@nestjs/typeorm";
 import { CommonHouseNeedController } from "./common-house-need.controller";
 import { CommonHouseNeedService } from "./common-house-need.service";
-import { DocumentDetailEntity } from "../document-detail/document-detail.entity";
 import { DocumentDetailModule } from "../document-detail/document-detail.module";
+import { PublicUtilityModule } from "../public-utility/public-utility.module";
 
 @Module({
     imports: [
-        // TypeOrmModule.forFeature([DocumentDetailEntity]),
         DocumentDetailModule,
+        PublicUtilityModule
     ],
     providers: [CommonHouseNeedService],
     controllers: [CommonHouseNeedController],

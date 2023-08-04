@@ -7,6 +7,7 @@ import { UnitRepository } from "./repositories/unit.repository";
 import { DataSource, Repository } from "typeorm";
 import { seedTypeOfService } from "./seeds/type-of-service.seed";
 import { seedUnit } from "./seeds/unit.seed";
+import { TypeOfServiceController } from "./controllers/type-of-service.controller";
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { seedUnit } from "./seeds/unit.seed";
   ],
   providers: [TypeOfServiceRepository, UnitRepository],
   exports: [TypeOfServiceRepository, UnitRepository],
-  controllers: [],
+  controllers: [TypeOfServiceController],
 })
 
 export class CommonModule implements OnModuleInit {

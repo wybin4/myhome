@@ -1,52 +1,68 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { RMQError, RMQService } from "nestjs-rmq";
-import { ISubscriber, MeterType } from "@myhome/interfaces";
-import { ReferenceGetMeterReadingBySID, ReferenceGetSubscriber } from "@myhome/contracts";
-import { FAILED_TO_GET_METER_READINGS, SUBSCRIBER_NOT_EXIST } from "@myhome/constants";
-import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
+import { RMQService } from "nestjs-rmq";
+import { DocumentDetailRepository } from "../document-detail/document-detail.repository";
+import { GetDocumentDetail, ReferenceGetAllTypesOfService, ReferenceGetHouse } from "@myhome/contracts";
+import { HOME_NOT_EXIST, RMQException } from "@myhome/constants";
+import { PublicUtilityService } from "../public-utility/public-utility.service";
+
 @Injectable()
 export class CommonHouseNeedService {
-    // constructor(
-    //     private readonly documentDetailRepository: DocumentDetailRepository,
-    //     private readonly rmqService: RMQService,
-    // ) { }
+    constructor(
+        private readonly documentDetailRepository: DocumentDetailRepository,
+        private readonly rmqService: RMQService,
+        private readonly publicUtilityService: PublicUtilityService
+    ) { }
 
-    // public async getCommonHouseNeed(subscriberIds: number[]) {
-    //     for (const subscriberId of subscriberIds) {
-    //         const subscriber = await this.getSubscriber(subscriberId);
-    //         const meterReadings = await this.getMeterReadingsBySID(subscriber);
-    //     }
+    public async getCommonHouseNeed({ subscriberIds, houseId }: GetDocumentDetail.Request) {
+        const house = await this.getManagementCID(houseId);
+        const managementCompanyId = house.house.managementCompanyId;
 
-    // }
+        const individualAmountConsumed = await this.getPUSum(subscriberIds, managementCompanyId);
+        console.log(individualAmountConsumed)
+    }
 
-    // private async getSubscriber(subscriberId: number): Promise<ISubscriber> {
-    //     let requestSubscriber: ReferenceGetSubscriber.Request, responseSubscriber: ReferenceGetSubscriber.Response;
-    //     try {
-    //         requestSubscriber = { id: subscriberId };
-    //         responseSubscriber = await this.rmqService.send<ReferenceGetSubscriber.Request, ReferenceGetSubscriber.Response>(
-    //             ReferenceGetSubscriber.topic,
-    //             requestSubscriber,
-    //         );
-    //     } catch (e) {
-    //         throw new RMQError(SUBSCRIBER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
-    //     }
+    private async getManagementCID(houseId: number) {
+        try {
+            return await this.rmqService.send<ReferenceGetHouse.Request, ReferenceGetHouse.Response>(
+                ReferenceGetHouse.topic, { id: houseId }
+            );
+        } catch (e) {
+            throw new RMQException(HOME_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
+    }
 
-    //     return responseSubscriber.subscriber;
-    // }
+    private async getAllTypesOfService() {
+        try {
+            return await this.rmqService.send<ReferenceGetAllTypesOfService.Request, ReferenceGetAllTypesOfService.Response>(
+                ReferenceGetAllTypesOfService.topic, new ReferenceGetAllTypesOfService.Request()
+            );
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
+    }
 
-    // private async getMeterReadingsBySID(subscriber: ISubscriber) {
-    //     let requestMR: ReferenceGetMeterReadingBySID.Request, responseMR: ReferenceGetMeterReadingBySID.Response;
-    //     try {
-    //         requestMR = { subscriber: subscriber, meterType: MeterType.Individual };
-    //         responseMR = await this.rmqService.send<ReferenceGetMeterReadingBySID.Request, ReferenceGetMeterReadingBySID.Response>(
-    //             ReferenceGetSubscriber.topic,
-    //             requestMR,
-    //         );
-    //     } catch (e) {
-    //         throw new RMQError(FAILED_TO_GET_METER_READINGS, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
-    //     }
-
-    //     return responseMR.meterReadings;
-    // }
-
+    private async getPUSum(subscriberIds: number[], managementCompanyId: number) {
+        const publicUtilities = await this.publicUtilityService.getPublicUtility({ subscriberIds, managementCompanyId });
+        const typesOfService = (await this.getAllTypesOfService()).typesOfService.map(obj => obj.id);
+        const amountConsumed = [];
+        for (const tos of typesOfService) {
+            let temp: {
+                tariff: number,
+                amountConsumed: number,
+                typeOfServiceId: number
+            };
+            let sum = 0;
+            for (const pu of publicUtilities) {
+                temp = pu.publicUtility.find((obj) => obj.typeOfServiceId === tos);
+                if (temp) { sum += temp.amountConsumed; }
+            }
+            if (sum > 0) {
+                amountConsumed.push({
+                    count: sum,
+                    typesOfServiceId: tos
+                });
+            }
+        }
+        return amountConsumed;
+    }
 }

@@ -1,9 +1,9 @@
-import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, APART_NOT_EXIST, RMQException, MISSING_PREVIOUS_READING, FAILED_TO_GET_METER_READINGS, FAILED_TO_GET_READINGS_WITHOUT_NORMS, NORMS_NOT_EXIST } from "@myhome/constants";
-import { IGeneralMeterReading, IIndividualMeterReading, INorm, MeterStatus, MeterType } from "@myhome/interfaces";
+import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, APART_NOT_EXIST, RMQException, MISSING_PREVIOUS_READING, FAILED_TO_GET_METER_READINGS, FAILED_TO_GET_READINGS_WITHOUT_NORMS, NORMS_NOT_EXIST, HOME_NOT_EXIST, FAILED_TO_GET_PREVIOUS_READINGS, FAILED_TO_GET_CURRENT_READINGS } from "@myhome/constants";
+import { IGeneralMeterReading, IGetMeterReading, IIndividualMeterReading, INorm, MeterStatus, MeterType } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
-import { IGetMeterReadingBySID, ReferenceAddMeterReading, ReferenceGetMeterReadingBySID } from "@myhome/contracts";
+import { ReferenceAddMeterReading, ReferenceGetMeterReadingBySID, ReferenceGetMeterReadingByHID } from "@myhome/contracts";
 import { GeneralMeterReadingEntity } from "../entities/general-meter-reading.entity";
 import { IndividualMeterReadingEntity } from "../entities/individual-meter-reading.entity";
 import { GeneralMeterReadingRepository } from "../repositories/general-meter-reading.repository";
@@ -86,15 +86,53 @@ export class MeterReadingService {
                 throw new RMQError(INCORRECT_METER_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
         }
     }
+    public async getMeterReadingByHID({ houseId }: ReferenceGetMeterReadingByHID.Request) {
+        const house = await this.houseRepository.findHouseById(houseId);
+        if (!house) {
+            throw new RMQError(HOME_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+        }
+        const temp = [];
+        let reading: number;
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
 
-    public async getMeterReadingBySID(dto: ReferenceGetMeterReadingBySID.Request)/*: Promise<ReferenceGetMeterReadingBySID.Response>*/ {
+        const startOfPreviousMonth = new Date(currentYear, currentMonth - 1, 15);
+        const endOfPreviousMonth = new Date(currentYear, currentMonth - 1, 25);
+
+        const startOfCurrentMonth = new Date(currentYear, currentMonth, 15);
+        const endOfCurrentMonth = new Date(currentYear, currentMonth, 25);
+
+        const meters = await this.generalMeterRepository.findByHouseAndStatus(houseId, [MeterStatus.Active]);
+        for (const meter of meters) {
+            const tempReadings = await this.generalMeterReadingRepository.findReadingsByMeterIDAndPeriods(
+                meter.id,
+                startOfPreviousMonth,
+                endOfPreviousMonth,
+                startOfCurrentMonth,
+                endOfCurrentMonth
+            );
+            if (!tempReadings.previousMonthReadings) {
+                throw new RMQException(FAILED_TO_GET_PREVIOUS_READINGS.message(meter.id), FAILED_TO_GET_PREVIOUS_READINGS.status);
+            }
+            if (!tempReadings.currentMonthReadings) {
+                throw new RMQException(FAILED_TO_GET_CURRENT_READINGS.message(meter.id), FAILED_TO_GET_CURRENT_READINGS.status);
+            }
+            reading = tempReadings.currentMonthReadings.reading - tempReadings.previousMonthReadings.reading;
+            temp.push({
+                meterReadings: { reading }, typeOfServiceId: meter.typeOfServiceId
+            });
+        }
+        return { meterReadings: temp };
+    }
+
+    public async getMeterReadingBySID(dto: ReferenceGetMeterReadingBySID.Request) {
         const apartment = await this.apartmentRepository.findApartmentById(dto.subscriber.apartmentId);
         if (!apartment) {
             throw new RMQError(APART_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
         }
-        const newMeterReading: IGetMeterReadingBySID[] = [];
-        // let activeReadings: IIndividualMeterReading;
-        // let house: IHouse;
+        const newMeterReading: IGetMeterReading[] = [];
+
         let norms: INorm[];
         try {
             norms = await this.normRepository.findByMCID(dto.managementCompanyId);
@@ -104,13 +142,6 @@ export class MeterReadingService {
         switch (dto.meterType) {
             case (MeterType.General):
                 break;
-            // house = await this.houseRepository.findHouseById(apartment.houseId);
-            // activeMeters = await this.generalMeterRepository.findActiveGeneralMetersByHouse(house.id);
-            // for (const meter of activeMeters) {
-            //     const readings = await this.generalMeterReadingRepository.findLastTwoReadingByMeterID(meter.id);
-            //     newMeterReading.push({ meterReadings:  ...readings , typeOfSeriveId: meter.typeOfServiceId });
-            // }
-            // return { meterReadings: newMeterReading };
             case (MeterType.Individual):
                 try {
                     newMeterReading.push(...await this.getActiveMeterReadings(apartment.id, norms, apartment.numberOfRegistered));
@@ -140,13 +171,13 @@ export class MeterReadingService {
         for (const meter of activeMeters) {
             reading = await this.calculateActiveMeterReadings(meter.id, 15, 25, norms, numberOfRegistered, meter.typeOfServiceId);
             temp.push({
-                meterReadings: { reading }, typeOfSeriveId: meter.typeOfServiceId
+                meterReadings: { reading }, typeOfServiceId: meter.typeOfServiceId
             });
         }
         return temp;
     }
 
-    private async calculateActiveMeterReadings(meterId: number, start: number, end: number, norms: INorm[], numberOfRegistered: number, typeOfSeriveId: number) {
+    private async calculateActiveMeterReadings(meterId: number, start: number, end: number, norms: INorm[], numberOfRegistered: number, typeOfServiceId: number) {
         const currentDate = new Date();
         const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), start);
         const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), end);
@@ -176,7 +207,7 @@ export class MeterReadingService {
                 const averageConsumption = this.calculateAverageConsumption(previousReadings);
                 return averageConsumption;
             } else {
-                const tempNorm = norms.filter(norm => norm.typeOfServiceId === typeOfSeriveId);
+                const tempNorm = norms.filter(norm => norm.typeOfServiceId === typeOfServiceId);
                 let norm: number;
                 if (tempNorm.length > 0) {
                     norm = tempNorm[0].norm;
@@ -211,7 +242,7 @@ export class MeterReadingService {
                     meterReadings: {
                         individualMeterId: meter.id,
                         reading: norm * numberOfRegistered,
-                    }, typeOfSeriveId: meter.typeOfServiceId
+                    }, typeOfServiceId: meter.typeOfServiceId
                 });
             }
             return temp;

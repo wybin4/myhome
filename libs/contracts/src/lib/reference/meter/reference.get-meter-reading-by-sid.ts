@@ -1,5 +1,5 @@
 import { IsNumber, IsString } from 'class-validator';
-import { IGeneralMeterReading, IIndividualMeterReading, ISubscriber, MeterType } from '@myhome/interfaces';
+import {  IGetMeterReading, ISubscriber, MeterType } from '@myhome/interfaces';
 
 export namespace ReferenceGetMeterReadingBySID {
     export const topic = 'reference.get-meter-reading-by-sid.query';
@@ -15,11 +15,6 @@ export namespace ReferenceGetMeterReadingBySID {
     }
 
     export class Response {
-        meterReadings!: IGetMeterReadingBySID[];
+        meterReadings!: IGetMeterReading[];
     }
-}
-
-export interface IGetMeterReadingBySID {
-    meterReadings: IIndividualMeterReading | IGeneralMeterReading;
-    typeOfSeriveId: number;
 }

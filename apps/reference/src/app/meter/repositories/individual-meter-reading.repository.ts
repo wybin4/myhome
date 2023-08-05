@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { IndividualMeterReadingEntity } from '../entities/individual-meter-reading.entity';
@@ -35,7 +35,4 @@ export class IndividualMeterReadingRepository {
         });
         return { currentMonthReadings, previousReadings };
     }
-
-
-
 }

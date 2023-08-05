@@ -47,6 +47,12 @@ export enum MeterStatus {
     NotInstall = 'NotInstall',
 }
 
+
+export interface IGetMeterReading {
+    meterReadings: IIndividualMeterReading | IGeneralMeterReading;
+    typeOfServiceId: number;
+}
+
 export function RequireHomeOrApartment(validationOptions?: ValidationOptions) {
     return function (object: any, propertyName: string) {
         registerDecorator({

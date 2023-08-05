@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { IMunicipalTariff, ISubscriber, MeterType, TariffAndNormType } from "@myhome/interfaces";
-import { GetDocumentDetail, IGetMeterReadingBySID, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscriber } from "@myhome/contracts";
+import { IGetMeterReading, IMunicipalTariff, ISubscriber, MeterType, TariffAndNormType } from "@myhome/interfaces";
+import { GetDocumentDetail, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscriber } from "@myhome/contracts";
 import { CANT_GET_SUBSCRIBER_WITH_ID, RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { DocumentDetailRepository } from "../document-detail/document-detail.repository";
 
@@ -81,11 +81,11 @@ export class PublicUtilityService {
         }
     }
 
-    private async getPUAmount(meterReadings: IGetMeterReadingBySID[], tariffs: Array<IMunicipalTariff>) {
+    private async getPUAmount(meterReadings: IGetMeterReading[], tariffs: Array<IMunicipalTariff>) {
         const temp = [];
         for (const meterReading of meterReadings) {
             const difference = meterReading.meterReadings.reading;
-            const currentTariff = tariffs.filter((obj) => obj.typeOfServiceId === meterReading.typeOfSeriveId);
+            const currentTariff = tariffs.filter((obj) => obj.typeOfServiceId === meterReading.typeOfServiceId);
             if (currentTariff[0]) {
                 temp.push({
                     tariff:
@@ -95,7 +95,7 @@ export class PublicUtilityService {
                             :
                             currentTariff[0].norm,
                     amountConsumed: difference,
-                    typeOfServiceId: meterReading.typeOfSeriveId
+                    typeOfServiceId: meterReading.typeOfServiceId
                 });
             } else throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
         }

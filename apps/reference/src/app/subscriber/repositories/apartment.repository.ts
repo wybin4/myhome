@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ApartmentEntity } from '../entities/apartment.entity';
 
 @Injectable()
@@ -28,5 +28,24 @@ export class ApartmentRepository {
 
     async deleteApartment(id: number): Promise<void> {
         await this.apartmentRepository.delete({ id });
+    }
+
+    async findAllByHouse(houseId: number) {
+        return this.apartmentRepository.find({ where: { houseId } });
+    }
+
+    async findApartments(apartmentIds: number[]) {
+        return this.apartmentRepository.find({
+            where: {
+                id: In(apartmentIds),
+            }
+        });
+    }
+
+    async findApartmentsWithSubscribers(apartmentIds: number[]) {
+        return this.apartmentRepository.createQueryBuilder('apartment')
+            .innerJoinAndSelect('apartment.subscriber', 'subscriber')
+            .where('apartment.id IN (:...apartmentIds)', { apartmentIds })
+            .getMany();
     }
 }

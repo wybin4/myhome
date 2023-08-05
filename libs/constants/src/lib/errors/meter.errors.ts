@@ -22,3 +22,17 @@ export const FAILED_TO_GET_READINGS_WITHOUT_NORMS = {
     message: 'Невозможно получить показания из-за отсутствия нормативов',
     status: HttpStatus.BAD_REQUEST,
 };
+export const FAILED_TO_GET_PREVIOUS_READINGS = {
+    message: (meterId: number) =>
+        `Невозможно получить предыдущие показания счётчика с id=${meterId}`,
+    status: HttpStatus.NOT_FOUND,
+};
+export const FAILED_TO_GET_CURRENT_READINGS = {
+    message: (meterId: number) =>
+        `Невозможно получить текущие показания счётчика с id=${meterId}`,
+    status: HttpStatus.NOT_FOUND,
+};
+export const FAILED_TO_GET_INDIVIDUAL_READINGS = {
+    message: 'Невозможно получить показания индивидуальных счётчиков для аналогичного типа услуги',
+    status: HttpStatus.NOT_FOUND,
+};

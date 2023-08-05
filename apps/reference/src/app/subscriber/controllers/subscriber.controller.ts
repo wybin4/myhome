@@ -1,6 +1,6 @@
 import { Body, Controller, HttpStatus } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
-import { ReferenceAddSubscriber, ReferenceGetManagementCompany, ReferenceGetSubscriber, ReferenceUpdateSubscriber } from '@myhome/contracts';
+import { ReferenceAddSubscriber, ReferenceGetManagementCompany, ReferenceGetSubscriber, ReferenceGetSubscribersByHouse, ReferenceUpdateSubscriber } from '@myhome/contracts';
 import { SubscriberRepository } from '../repositories/subscriber.repository';
 import { SubscriberEntity } from '../entities/subscriber.entity';
 import { APART_NOT_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_NOT_EXIST } from '@myhome/constants';
@@ -82,5 +82,13 @@ export class SubscriberController {
 		const apartment = await this.apartmentRepository.findApartmentById(subscriber.apartmentId);
 		const house = await this.houseRepository.findHouseById(apartment.houseId);
 		return house.managementCompanyId;
+	}
+
+	@RMQValidate()
+	@RMQRoute(ReferenceGetSubscribersByHouse.topic)
+	async getSubscribersByHouse(@Body() { houseId }: ReferenceGetSubscribersByHouse.Request) {
+		const apartments = await this.apartmentRepository.findAllByHouse(houseId);
+		const apartmentIds = apartments.map(obj => obj.id);
+		return { subscriberIds: await this.subscriberRepository.findSubscriberIdsByApartmentIds(apartmentIds) };
 	}
 }

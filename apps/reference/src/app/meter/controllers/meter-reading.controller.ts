@@ -1,7 +1,8 @@
 import { Body, Controller } from '@nestjs/common';
-import {  RMQRoute, RMQValidate } from 'nestjs-rmq';
-import { ReferenceAddMeterReading, ReferenceGetMeterReading, ReferenceGetMeterReadingBySID } from '@myhome/contracts';
+import { RMQRoute, RMQValidate } from 'nestjs-rmq';
+import { ReferenceAddMeterReading, ReferenceGetMeterReading } from '@myhome/contracts';
 import { MeterReadingService } from '../services/meter-reading.service';
+import { ReferenceGetMeterReadingByHID, ReferenceGetMeterReadingBySID } from '@myhome/contracts';
 
 @Controller('meter-reading')
 export class MeterReadingController {
@@ -25,5 +26,11 @@ export class MeterReadingController {
     @RMQRoute(ReferenceGetMeterReadingBySID.topic)
     async getMeterReadingBySID(@Body() dto: ReferenceGetMeterReadingBySID.Request) {
         return this.meterReadingService.getMeterReadingBySID(dto);
+    }
+
+    @RMQValidate()
+    @RMQRoute(ReferenceGetMeterReadingByHID.topic)
+    async getMeterReadingByHID(@Body() dto: ReferenceGetMeterReadingByHID.Request) {
+        return this.meterReadingService.getMeterReadingByHID(dto);
     }
 }

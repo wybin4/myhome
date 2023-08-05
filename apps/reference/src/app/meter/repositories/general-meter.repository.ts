@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThan, Not, Repository } from 'typeorm';
+import { In, LessThan, Not, Repository } from 'typeorm';
 import { GeneralMeterEntity } from '../entities/general-meter.entity';
 import { MeterStatus } from '@myhome/interfaces';
 
@@ -50,4 +50,14 @@ export class GeneralMeterRepository {
     async saveGeneralMeters(meters: GeneralMeterEntity[]): Promise<GeneralMeterEntity[]> {
         return this.generalMeterRepository.save(meters);
     }
+
+    async findByHouseAndStatus(houseId: number, status: MeterStatus[]): Promise<GeneralMeterEntity[]> {
+        return this.generalMeterRepository.find({
+            where: {
+                houseId,
+                status: In(status),
+            },
+        });
+    }
+
 }

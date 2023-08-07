@@ -1,6 +1,8 @@
-import { BadRequestException, Body, ConflictException, Controller, HttpStatus, InternalServerErrorException, NotFoundException, Post, UnprocessableEntityException } from '@nestjs/common';
 import { CommonHouseNeedService } from './common-house-need.service';
-import { GetDocumentDetail } from '@myhome/contracts';
+import { GetCommonHouseNeeds } from '@myhome/contracts';
+import { Body, Controller } from '@nestjs/common';
+import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
+import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
 @Controller('common-house-need')
 export class CommonHouseNeedController {
@@ -8,23 +10,14 @@ export class CommonHouseNeedController {
         private readonly commonHouseNeedService: CommonHouseNeedService,
     ) { }
 
-    // @RMQValidate()
-    // @RMQRoute(GetDocumentDetail.topic)
-    @Post('get-common-house-need')
-    async getCommonHouseNeed(@Body() dto: GetDocumentDetail.Request) {
+    @RMQValidate()
+    @RMQRoute(GetCommonHouseNeeds.topic)
+    async getCommonHouseNeed(@Body() dto: GetCommonHouseNeeds.Request) {
         try {
             return this.commonHouseNeedService.getCommonHouseNeed(dto);
         }
         catch (e) {
-            if (e.status === HttpStatus.NOT_FOUND) {
-                throw new NotFoundException(e.message);
-            } else if (e.status === HttpStatus.CONFLICT) {
-                throw new ConflictException(e.message);
-            } else if (e.status === HttpStatus.UNPROCESSABLE_ENTITY) {
-                throw new UnprocessableEntityException(e.message);
-            } else if (e.status === HttpStatus.BAD_REQUEST) {
-                throw new BadRequestException(e.message);
-            } else throw new InternalServerErrorException(e.message);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 

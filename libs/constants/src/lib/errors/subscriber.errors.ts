@@ -12,3 +12,7 @@ export const CANT_GET_SUBSCRIBERS_BY_HOUSE_ID = {
     message: 'Невозможно получить абонентов по id дома',
     status: HttpStatus.BAD_REQUEST
 };
+export const SUBSCRIBER_WITH_ID_NOT_EXIST = {
+    message: (id: number) => `Абонент c id=${id} не существует`,
+    status: HttpStatus.NOT_FOUND
+};

@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { IGetMeterReading, IMunicipalTariff, ISubscriber, MeterType, TariffAndNormType } from "@myhome/interfaces";
-import { GetDocumentDetail, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscriber } from "@myhome/contracts";
+import { GetPublicUtilities, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscriber } from "@myhome/contracts";
 import { CANT_GET_SUBSCRIBER_WITH_ID, RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { DocumentDetailRepository } from "../document-detail/document-detail.repository";
 
@@ -12,7 +12,7 @@ export class PublicUtilityService {
         private readonly rmqService: RMQService,
     ) { }
 
-    public async getPublicUtility({ subscriberIds, managementCompanyId }: GetDocumentDetail.Request) {
+    public async getPublicUtility({ subscriberIds, managementCompanyId }: GetPublicUtilities.Request) {
         const result = [];
         let meterReadings: ReferenceGetMeterReadingBySID.Response;
         let tariffs: Array<IMunicipalTariff>;

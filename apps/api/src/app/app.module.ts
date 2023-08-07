@@ -14,6 +14,7 @@ import { AuthController } from './controllers/account/auth.controller';
 import { TariffAndNormController } from './controllers/reference/tariff-and-norm.controller';
 import { AppealController } from './controllers/appeal/appeal.controller';
 import { NotificationController } from './controllers/notification/notification.controller';
+import { SinglePaymentDocumentController } from './controllers/single-payment-document/single-payment-document.controller';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { NotificationController } from './controllers/notification/notification.
       MeterController,
       TariffAndNormController,
       AppealController,
-      NotificationController
+      NotificationController,
+      SinglePaymentDocumentController
     ],
 })
 export class AppModule { }

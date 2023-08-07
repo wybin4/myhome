@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DocumentDetailRepository } from "../document-detail/document-detail.repository";
-import { GetDocumentDetail, ReferenceGetAllTypesOfService, ReferenceGetApartmentsBySubscribers, ReferenceGetHouse, ReferenceGetMeterReadingByHID, ReferenceGetSubscribersByHouse } from "@myhome/contracts";
+import { GetCommonHouseNeeds, ReferenceGetAllTypesOfService, ReferenceGetApartmentsBySubscribers, ReferenceGetHouse, ReferenceGetMeterReadingByHID, ReferenceGetSubscribersByHouse } from "@myhome/contracts";
 import { CANT_GET_SUBSCRIBERS_BY_HOUSE_ID, FAILED_TO_GET_INDIVIDUAL_READINGS, HOME_NOT_EXIST, RMQException } from "@myhome/constants";
 import { PublicUtilityService } from "../public-utility/public-utility.service";
 
@@ -13,7 +13,7 @@ export class CommonHouseNeedService {
         private readonly publicUtilityService: PublicUtilityService
     ) { }
 
-    public async getCommonHouseNeed({ subscriberIds, houseId }: GetDocumentDetail.Request) {
+    public async getCommonHouseNeed({ subscriberIds, houseId }: GetCommonHouseNeeds.Request) {
         const house = await this.getManagementCID(houseId);
         const managementCompanyId = house.house.managementCompanyId;
 

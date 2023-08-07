@@ -17,3 +17,4 @@ export * from './lib/appeal.interface';
 export * from './lib/notification.interface';
 
 export * from './lib/single-payment-document/document-detail.interface';
+export * from './lib/single-payment-document/single-payment-document.interface';

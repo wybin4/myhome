@@ -1,7 +1,7 @@
 import { IPenalty } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity('penaltys')
+@Entity('penalties')
 export class PenaltyEntity implements IPenalty {
     @PrimaryGeneratedColumn()
     id: number;

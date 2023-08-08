@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { PenaltyRepository } from "./penalty.repository";
+import { PenaltyRepository } from "./repositories/penalty.repository";
 import { CorrectionGetPenalty } from "@myhome/contracts";
 
 @Injectable()

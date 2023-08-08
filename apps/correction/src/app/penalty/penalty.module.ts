@@ -2,12 +2,13 @@ import { Module } from "@nestjs/common";
 import { PenaltyController } from "./penalty.controller";
 import { PenaltyService } from "./penalty.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { PenaltyRepository } from "./penalty.repository";
-import { PenaltyEntity } from "./penalty.entity";
+import { PenaltyRepository } from "./repositories/penalty.repository";
+import { PenaltyEntity } from "./entities/penalty.entity";
+import { PenaltyRuleEntity } from "./entities/penalty-rule.entity";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([PenaltyEntity]),
+        TypeOrmModule.forFeature([PenaltyEntity, PenaltyRuleEntity]),
     ],
     providers: [PenaltyService, PenaltyRepository],
     controllers: [PenaltyController],

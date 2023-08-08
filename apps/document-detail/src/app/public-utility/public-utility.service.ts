@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { IGetMeterReading, IMunicipalTariff, ISubscriber, MeterType, TariffAndNormType } from "@myhome/interfaces";
 import { GetPublicUtilities, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscriber } from "@myhome/contracts";
-import { CANT_GET_SUBSCRIBER_WITH_ID, RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
+import { RMQException, SUBSCRIBER_WITH_ID_NOT_EXIST, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { DocumentDetailRepository } from "../document-detail/document-detail.repository";
 
 @Injectable()
@@ -12,7 +12,8 @@ export class PublicUtilityService {
         private readonly rmqService: RMQService,
     ) { }
 
-    public async getPublicUtility({ subscriberIds, managementCompanyId }: GetPublicUtilities.Request) {
+    public async getPublicUtility({ subscriberIds, managementCompanyId }: GetPublicUtilities.Request)
+        : Promise<GetPublicUtilities.Response> {
         const result = [];
         let meterReadings: ReferenceGetMeterReadingBySID.Response;
         let tariffs: Array<IMunicipalTariff>;
@@ -25,7 +26,7 @@ export class PublicUtilityService {
         for (const subscriberId of subscriberIds) {
             const subscriber = await this.getSubscriber(subscriberId);
             if (!subscriber) {
-                throw new RMQException(CANT_GET_SUBSCRIBER_WITH_ID + subscriberId, HttpStatus.NOT_FOUND);
+                throw new RMQException(SUBSCRIBER_WITH_ID_NOT_EXIST.message(subscriberId), SUBSCRIBER_WITH_ID_NOT_EXIST.status);
             }
             try {
                 meterReadings = await this.getMeterReadingsBySID(subscriber.subscriber, managementCompanyId);
@@ -37,7 +38,7 @@ export class PublicUtilityService {
                 publicUtility: await this.getPUAmount(meterReadings.meterReadings, tariffs)
             })
         }
-        return result;
+        return { publicUtilities: result };
     }
 
     private async getSubscriber(subscriberId: number) {
@@ -46,7 +47,7 @@ export class PublicUtilityService {
                 ReferenceGetSubscriber.topic, { id: subscriberId }
             );
         } catch (e) {
-            throw new RMQException(CANT_GET_SUBSCRIBER_WITH_ID + subscriberId, HttpStatus.NOT_FOUND);
+            throw new RMQException(SUBSCRIBER_WITH_ID_NOT_EXIST.message(subscriberId), SUBSCRIBER_WITH_ID_NOT_EXIST.status);
         }
     }
 
@@ -85,16 +86,16 @@ export class PublicUtilityService {
         const temp = [];
         for (const meterReading of meterReadings) {
             const difference = meterReading.meterReadings.reading;
-            const currentTariff = tariffs.filter((obj) => obj.typeOfServiceId === meterReading.typeOfServiceId);
-            if (currentTariff[0]) {
+            const currentTariff = tariffs.find((obj) => obj.typeOfServiceId === meterReading.typeOfServiceId);
+            if (currentTariff) {
                 temp.push({
                     tariff:
-                        currentTariff[0].multiplyingFactor
+                        currentTariff.multiplyingFactor
                             ?
-                            currentTariff[0].norm * currentTariff[0].multiplyingFactor
+                            currentTariff.norm * currentTariff.multiplyingFactor
                             :
-                            currentTariff[0].norm,
-                    amountConsumed: difference,
+                            currentTariff.norm,
+                    publicUtility: difference,
                     typeOfServiceId: meterReading.typeOfServiceId
                 });
             } else throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);

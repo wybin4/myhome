@@ -1,10 +1,11 @@
-import { GetSinglePaymentDocument, ReferenceGetSubscriber } from "@myhome/contracts";
+import { GetSinglePaymentDocument, ReferenceGetSubscribers } from "@myhome/contracts";
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentRepository } from "./single-payment-document.repository";
 import { SinglePaymentDocumentEntity } from "./single-payment-document.entity";
 import { CalculationState } from "@myhome/interfaces";
-import { RMQException, SUBSCRIBER_WITH_ID_NOT_EXIST } from "@myhome/constants";
+import { RMQException, SUBSCRIBERS_NOT_EXIST } from "@myhome/constants";
+import { GetSinglePaymentDocumentSaga } from "./sagas/get-single-payment-document.saga";
 
 @Injectable()
 export class SinglePaymentDocumentService {
@@ -13,22 +14,14 @@ export class SinglePaymentDocumentService {
         private readonly singlePaymentDocumentRepository: SinglePaymentDocumentRepository
     ) { }
 
-    // public async buyCourse(userId: string, courseId: string) {
-    //     const existedUser = await this.userRepository.findUserById(userId);
-    //     if (!existedUser) {
-    //         throw new Error('Такого пользователя нет');
-    //     }
-    //     const userEntity = new UserEntity(existedUser);
-    //     const saga = new BuyCourseSaga(userEntity, courseId, this.rmqService);
-    //     const { user, paymentLink } = await saga.getState().pay();
-    //     await this.updateUser(user);
-    //     return { paymentLink };
-    // }
-
     async getSinglePaymentDocument(dto: GetSinglePaymentDocument.Request) {
-        const SPDs = []
+        const SPDEntities: SinglePaymentDocumentEntity[] = [];
+        const { subscribers } = (await this.checkSubscribers(dto.subscriberIds));
+        if (!subscribers.length) {
+            throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
+        }
+        const subscriberIds = subscribers.map(obj => obj.id);
         for (const subscriberId of dto.subscriberIds) {
-            await this.checkSubscriber(subscriberId);
             const SPDEntity =
                 new SinglePaymentDocumentEntity({
                     managementCompanyId: dto.managementCompanyId,
@@ -36,22 +29,37 @@ export class SinglePaymentDocumentService {
                     createdAt: new Date(),
                     status: CalculationState.Started
                 });
-            const newSPD = await this.singlePaymentDocumentRepository.createSinglePaymentDocument(SPDEntity);
-            SPDs.push(newSPD);
+            SPDEntities.push(SPDEntity);
         }
-        return { singlePaymentDocument: SPDs };
+
+        const savedSPDEntities = await this.singlePaymentDocumentRepository.createMany(SPDEntities);
+
+        const saga = new GetSinglePaymentDocumentSaga(
+            savedSPDEntities,
+            this.rmqSerivce,
+            subscriberIds,
+            dto.managementCompanyId,
+            dto.houseId
+        );
+
+        const { detailIds, singlePaymentDocuments } = await saga.getState().calculateDetails(
+            subscriberIds, dto.managementCompanyId, dto.houseId
+        );
+
+        await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocuments);
+        return { singlePaymentDocuments: singlePaymentDocuments };
     }
 
-    private async checkSubscriber(subscriberId: number) {
+    private async checkSubscribers(subscriberIds: number[]) {
         try {
-            await this.rmqSerivce.send
+            return await this.rmqSerivce.send
                 <
-                    ReferenceGetSubscriber.Request,
-                    ReferenceGetSubscriber.Response
+                    ReferenceGetSubscribers.Request,
+                    ReferenceGetSubscribers.Response
                 >
-                (ReferenceGetSubscriber.topic, { id: subscriberId });
+                (ReferenceGetSubscribers.topic, { ids: subscriberIds });
         } catch (e) {
-            throw new RMQException(SUBSCRIBER_WITH_ID_NOT_EXIST.message(subscriberId), SUBSCRIBER_WITH_ID_NOT_EXIST.status);
+            throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
         }
     }
 }

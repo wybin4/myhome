@@ -1,9 +1,10 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DocumentDetailRepository } from "../document-detail/document-detail.repository";
-import { GetCommonHouseNeeds, ReferenceGetAllTypesOfService, ReferenceGetApartmentsBySubscribers, ReferenceGetHouse, ReferenceGetMeterReadingByHID, ReferenceGetSubscribersByHouse } from "@myhome/contracts";
-import { CANT_GET_SUBSCRIBERS_BY_HOUSE_ID, FAILED_TO_GET_INDIVIDUAL_READINGS, HOME_NOT_EXIST, RMQException } from "@myhome/constants";
+import { GetCommonHouseNeeds, ReferenceGetAllTariffs, ReferenceGetAllTypesOfService, ReferenceGetApartmentsBySubscribers, ReferenceGetHouse, ReferenceGetMeterReadingByHID, ReferenceGetSubscribersByHouse } from "@myhome/contracts";
+import { CANT_GET_SUBSCRIBERS_BY_HOUSE_ID, FAILED_TO_GET_INDIVIDUAL_READINGS, HOME_NOT_EXIST, RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { PublicUtilityService } from "../public-utility/public-utility.service";
+import { ICommonHouseNeedTariff, TariffAndNormType } from "@myhome/interfaces";
 
 @Injectable()
 export class CommonHouseNeedService {
@@ -13,7 +14,7 @@ export class CommonHouseNeedService {
         private readonly publicUtilityService: PublicUtilityService
     ) { }
 
-    public async getCommonHouseNeed({ subscriberIds, houseId }: GetCommonHouseNeeds.Request) {
+    public async getCommonHouseNeed({ subscriberIds, houseId }: GetCommonHouseNeeds.Request): Promise<GetCommonHouseNeeds.Response> {
         const house = await this.getManagementCID(houseId);
         const managementCompanyId = house.house.managementCompanyId;
 
@@ -34,12 +35,22 @@ export class CommonHouseNeedService {
         }
         const apartmentEntities = await this.getApartmentsBySubscribers(subscriberIds);
 
+        let tariffs: Array<ICommonHouseNeedTariff>;
+        try {
+            tariffs = await this.getCommonHouseNeedTariffs(managementCompanyId) as unknown as Array<ICommonHouseNeedTariff>;
+        }
+        catch (e) {
+            throw new RMQException(e.message, e.code);
+        }
+
         for (const apartmentEntity of apartmentEntities.apartments) {
             const temp = [];
             for (const diff of difference) {
+                const currentTariff = tariffs.find((obj) => obj.typeOfServiceId === diff.typeOfServiceId);
                 temp.push({
                     commonHouseNeed: diff.difference * apartmentEntity.livingArea / house.house.floorSpace,
-                    typeOfServiceId: diff.typeOfServiceId
+                    typeOfServiceId: diff.typeOfServiceId,
+                    tariff: currentTariff.multiplier
                 });
             }
             result.push({
@@ -47,7 +58,23 @@ export class CommonHouseNeedService {
                 commonHouseNeeds: temp
             })
         }
-        return result;
+        return { commonHouseNeeds: result };
+    }
+
+    private async getCommonHouseNeedTariffs(houseId: number) {
+        try {
+            return await this.rmqService.send
+                <
+                    ReferenceGetAllTariffs.Request,
+                    ReferenceGetAllTariffs.Response
+                >
+                (
+                    ReferenceGetAllTariffs.topic,
+                    { houseId: houseId, type: TariffAndNormType.CommonHouseNeedTariff }
+                );
+        } catch (e) {
+            throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
     }
 
     private async getApartmentsBySubscribers(subscriberIds: number[]): Promise<ReferenceGetApartmentsBySubscribers.Response> {
@@ -116,19 +143,19 @@ export class CommonHouseNeedService {
         if (temp) {
             subscriberIds = temp.subscriberIds;
         } else throw new RMQException(CANT_GET_SUBSCRIBERS_BY_HOUSE_ID.message, CANT_GET_SUBSCRIBERS_BY_HOUSE_ID.status);
-        const publicUtilities = await this.publicUtilityService.getPublicUtility({ subscriberIds, managementCompanyId });
+        const { publicUtilities } = await this.publicUtilityService.getPublicUtility({ subscriberIds, managementCompanyId });
         const typesOfService = (await this.getAllTypesOfService()).typesOfService.map(obj => obj.id);
         const amountConsumed = [];
         for (const tos of typesOfService) {
             let temp: {
                 tariff: number,
-                amountConsumed: number,
+                publicUtility: number,
                 typeOfServiceId: number
             };
             let sum = 0;
             for (const pu of publicUtilities) {
                 temp = pu.publicUtility.find((obj) => obj.typeOfServiceId === tos);
-                if (temp) { sum += temp.amountConsumed; }
+                if (temp) { sum += temp.publicUtility; }
             }
             if (sum > 0) {
                 amountConsumed.push({

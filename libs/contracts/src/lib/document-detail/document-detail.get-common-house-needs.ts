@@ -1,11 +1,9 @@
-import { IDocumentDetail } from "@myhome/interfaces";
 import { IsNumber } from "class-validator";
 
 export namespace GetCommonHouseNeeds {
     export const topic = 'document-detail.get-common-house-needs.command';
 
     export class Request {
-        @IsNumber()
         subscriberIds!: number[];
 
         @IsNumber()
@@ -13,6 +11,17 @@ export namespace GetCommonHouseNeeds {
     }
 
     export class Response {
-        commonHouseNeeds!: IDocumentDetail[];
+        commonHouseNeeds!: IGetCommonHouseNeed[];
     }
+}
+
+export interface IGetCommonHouseNeed {
+    subscriberId: number;
+    commonHouseNeeds: [
+        {
+            tariff: number,
+            commonHouseNeed: number,
+            typeOfServiceId: number
+        }
+    ]
 }

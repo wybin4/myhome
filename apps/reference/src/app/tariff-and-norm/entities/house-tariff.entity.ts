@@ -15,7 +15,7 @@ export class CommonHouseNeedTariffEntity implements ICommonHouseNeedTariff {
     @Column({ nullable: false })
     unitId: number;
 
-    @Column({ nullable: false })
+    @Column('double', { nullable: false })
     multiplier: number;
 
     constructor(data?: Partial<CommonHouseNeedTariffEntity>) {

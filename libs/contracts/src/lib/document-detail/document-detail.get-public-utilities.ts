@@ -1,11 +1,9 @@
-import { IDocumentDetail } from "@myhome/interfaces";
 import { IsNumber } from "class-validator";
 
 export namespace GetPublicUtilities {
     export const topic = 'document-detail.get-public-utilities.command';
 
     export class Request {
-        @IsNumber()
         subscriberIds!: number[];
 
         @IsNumber()
@@ -13,6 +11,17 @@ export namespace GetPublicUtilities {
     }
 
     export class Response {
-        publicUtilities!: IDocumentDetail[];
+        publicUtilities!: IGetPublicUtility[];
     }
+}
+
+export interface IGetPublicUtility {
+    subscriberId: number,
+    publicUtility: [
+        {
+            tariff: number,
+            publicUtility: number,
+            typeOfServiceId: number
+        }
+    ]
 }

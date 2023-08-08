@@ -1,15 +1,15 @@
 import { Body, Controller, HttpStatus } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
-import { ReferenceAddSubscriber, ReferenceGetManagementCompany, ReferenceGetSubscriber, ReferenceGetSubscribersByHouse, ReferenceUpdateSubscriber } from '@myhome/contracts';
+import { ReferenceAddSubscriber, ReferenceGetManagementCompany, ReferenceGetSubscriber, ReferenceGetSubscribers, ReferenceGetSubscribersByHouse, ReferenceUpdateSubscriber } from '@myhome/contracts';
 import { SubscriberRepository } from '../repositories/subscriber.repository';
 import { SubscriberEntity } from '../entities/subscriber.entity';
-import { APART_NOT_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_NOT_EXIST } from '@myhome/constants';
+import { APART_NOT_EXIST, SUBSCRIBERS_NOT_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_NOT_EXIST } from '@myhome/constants';
 import { ApartmentRepository } from '../repositories/apartment.repository';
 import { SubscriberStatus } from '@myhome/interfaces';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 import { HouseRepository } from '../repositories/house.repository';
 
-@Controller()
+@Controller('subscribers')
 export class SubscriberController {
 	constructor(
 		private readonly subscriberRepository: SubscriberRepository,
@@ -90,5 +90,19 @@ export class SubscriberController {
 		const apartments = await this.apartmentRepository.findAllByHouse(houseId);
 		const apartmentIds = apartments.map(obj => obj.id);
 		return { subscriberIds: await this.subscriberRepository.findSubscriberIdsByApartmentIds(apartmentIds) };
+	}
+
+	@RMQValidate()
+	@RMQRoute(ReferenceGetSubscribers.topic)
+	async getSubscribers(@Body() { ids }: ReferenceGetSubscribers.Request) {
+		const subscribers = await this.subscriberRepository.findSubscribers(ids);
+		if (!subscribers.length) {
+			throw new RMQError(SUBSCRIBERS_NOT_EXIST.message, ERROR_TYPE.RMQ, SUBSCRIBERS_NOT_EXIST.status);
+		}
+		const gettedSubscribers = [];
+		for (const subscriber of subscribers) {
+			gettedSubscribers.push(new SubscriberEntity(subscriber));
+		}
+		return { subscribers: gettedSubscribers };
 	}
 }

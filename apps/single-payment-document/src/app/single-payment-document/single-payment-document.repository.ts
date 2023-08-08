@@ -14,8 +14,29 @@ export class SinglePaymentDocumentRepository {
         return this.singlePaymentDocumentRepository.save(SinglePaymentDocument);
     }
 
+    async createMany(entities: SinglePaymentDocumentEntity[]): Promise<SinglePaymentDocumentEntity[]> {
+        return this.singlePaymentDocumentRepository.save(entities);
+    }
+
     async findSinglePaymentDocumentById(id: number) {
         return this.singlePaymentDocumentRepository.findOne({ where: { id } });
     }
 
+    async update(singlePaymentDocument: SinglePaymentDocumentEntity) {
+        const { id, ...rest } = singlePaymentDocument;
+        return this.singlePaymentDocumentRepository.update(id, rest);
+    }
+    async updateMany(singlePaymentDocuments: SinglePaymentDocumentEntity[]) {
+        const updatePromises = singlePaymentDocuments.map(async (doc) => {
+            const { id, ...rest } = doc;
+            return this.singlePaymentDocumentRepository
+                .createQueryBuilder()
+                .update(SinglePaymentDocumentEntity)
+                .set(rest)
+                .where('id = :id', { id })
+                .execute();
+        });
+
+        return Promise.all(updatePromises);
+    }
 }

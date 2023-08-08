@@ -12,9 +12,10 @@ export class CommonHouseNeedController {
 
     @RMQValidate()
     @RMQRoute(GetCommonHouseNeeds.topic)
-    async getCommonHouseNeed(@Body() dto: GetCommonHouseNeeds.Request) {
+    async getCommonHouseNeed(@Body() dto: GetCommonHouseNeeds.Request)
+        : Promise<GetCommonHouseNeeds.Response> {
         try {
-            return this.commonHouseNeedService.getCommonHouseNeed(dto);
+            return await this.commonHouseNeedService.getCommonHouseNeed(dto);
         }
         catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);

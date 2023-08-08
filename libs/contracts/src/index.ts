@@ -10,6 +10,7 @@ export * from './lib/reference/subscriber/reference.get-house';
 export * from './lib/reference/subscriber/reference.get-apartments-by-subscribers';
 export * from './lib/reference/subscriber/reference.get-apartment';
 export * from './lib/reference/subscriber/reference.get-subscriber';
+export * from './lib/reference/subscriber/reference.get-subscribers';
 export * from './lib/reference/subscriber/reference.get-subscribers-by-house';
 export * from './lib/reference/subscriber/reference.get-apartments-by-subscribers';
 export * from './lib/reference/subscriber/reference.get-management-company';

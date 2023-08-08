@@ -8,7 +8,7 @@ export abstract class GetSinglePaymentDocumentSagaState {
         this.saga = saga;
     }
 
-    public abstract calculateDetails(subscriberIds: number[], managementCompanyId?: number, houseId?: number): Promise<{ detailIds: number[], singlePaymentDocument: SinglePaymentDocumentEntity }>;
-    public abstract calculateDebtAndPenalty(): Promise<{ singlePaymentDocument: SinglePaymentDocumentEntity }>;
-    public abstract cancell(): Promise<{ singlePaymentDocument: SinglePaymentDocumentEntity }>;
+    public abstract calculateDetails(subscriberIds: number[], managementCompanyId?: number, houseId?: number): Promise<{ detailIds: number[], singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
+    public abstract calculateDebtAndPenalty(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
+    public abstract cancell(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
 }

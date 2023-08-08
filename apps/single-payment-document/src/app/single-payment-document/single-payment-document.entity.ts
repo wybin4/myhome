@@ -54,4 +54,9 @@ export class SinglePaymentDocumentEntity implements ISinglePaymentDocument {
         this.status = status;
         return this;
     }
+
+    public setAmount(amount: number) {
+        this.amount = amount;
+        return this;
+    }
 }

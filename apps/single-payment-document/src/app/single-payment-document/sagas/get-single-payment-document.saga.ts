@@ -8,10 +8,12 @@ export class GetSinglePaymentDocumentSaga {
 	private state: GetSinglePaymentDocumentSagaState;
 
 	constructor(
-		public singlePaymentDocument: SinglePaymentDocumentEntity,
+		public singlePaymentDocuments: SinglePaymentDocumentEntity[],
 		public rmqService: RMQService,
 		public subscriberIds: number[], public managementCompanyId?: number, public houseId?: number
-	) { }
+	) {
+		this.setState(CalculationState.Started);
+	}
 
 	setState(state: CalculationState) {
 		switch (state) {
@@ -29,7 +31,7 @@ export class GetSinglePaymentDocumentSaga {
 				break;
 		}
 		this.state.setContext(this);
-		this.singlePaymentDocument.setStatus(state);
+		this.singlePaymentDocuments.map(obj => obj.setStatus(state));
 	}
 
 	getState() {

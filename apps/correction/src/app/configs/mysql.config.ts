@@ -4,6 +4,7 @@ import { DebtEntity } from '../debt/debt.entity';
 import { PenaltyEntity } from '../penalty/entities/penalty.entity';
 import { DepositEntity } from '../deposit/deposit.entity';
 import { PenaltyRuleEntity } from '../penalty/entities/penalty-rule.entity';
+import { PenaltyCalculationRuleEntity } from '../penalty/entities/penalty-calculation-rule.entity';
 
 export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
   type: 'mysql',
@@ -13,6 +14,6 @@ export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptio
   password: configService.get('MYSQL_PASSWORD'),
   database: configService.get('MYSQL_DATABASE'),
   synchronize: true,
-  entities: [DebtEntity, DepositEntity, PenaltyEntity, PenaltyRuleEntity],
+  entities: [DebtEntity, DepositEntity, PenaltyEntity, PenaltyRuleEntity, PenaltyCalculationRuleEntity],
   autoLoadEntities: true
 });

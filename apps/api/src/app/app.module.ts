@@ -15,6 +15,7 @@ import { TariffAndNormController } from './controllers/reference/tariff-and-norm
 import { AppealController } from './controllers/appeal/appeal.controller';
 import { NotificationController } from './controllers/notification/notification.controller';
 import { SinglePaymentDocumentController } from './controllers/single-payment-document/single-payment-document.controller';
+import { PenaltyController } from './controllers/correction/penalty.controller';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { SinglePaymentDocumentController } from './controllers/single-payment-do
       TariffAndNormController,
       AppealController,
       NotificationController,
-      SinglePaymentDocumentController
+      SinglePaymentDocumentController,
+      PenaltyController
     ],
 })
 export class AppModule { }

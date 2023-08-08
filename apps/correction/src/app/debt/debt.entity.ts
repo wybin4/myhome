@@ -1,4 +1,4 @@
-import { IDebt, IDebtDetail } from '@myhome/interfaces';
+import { IDebt } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { JsonTransformer } from '@myhome/constants';
 
@@ -15,14 +15,14 @@ export class DebtEntity implements IDebt {
         transformer: new JsonTransformer(),
         nullable: false
     })
-    outstandingDebt: IDebtDetail[];
+    outstandingDebt: string;
 
     @Column({
         type: 'json',
         transformer: new JsonTransformer(),
         nullable: false
     })
-    originalDebt: IDebtDetail[];
+    originalDebt: string;
 
     @Column({ nullable: false })
     createdAt: Date;

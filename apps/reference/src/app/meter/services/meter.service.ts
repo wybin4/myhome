@@ -94,7 +94,7 @@ export class MeterService {
                 }
                 typeOfService = await this.typeOfServicesRepository.findTypeOfServiceById(dto.typeOfServiceId);
                 if (!typeOfService) {
-                    throw new RMQError(TYPE_OF_SERVICE_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQError(TYPE_OF_SERVICE_NOT_EXIST.message, ERROR_TYPE.RMQ, TYPE_OF_SERVICE_NOT_EXIST.status);
                 }
                 existedMeter = await this.generalMeterRepository.findIndividualMeterByFNumber(dto.factoryNumber);
                 if (existedMeter) {
@@ -116,7 +116,7 @@ export class MeterService {
                 }
                 typeOfService = await this.typeOfServicesRepository.findTypeOfServiceById(dto.typeOfServiceId);
                 if (!typeOfService) {
-                    throw new RMQError(TYPE_OF_SERVICE_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQError(TYPE_OF_SERVICE_NOT_EXIST.message, ERROR_TYPE.RMQ, TYPE_OF_SERVICE_NOT_EXIST.status);
                 }
                 existedMeter = await this.individualMeterRepository.findIndividualMeterByFNumber(dto.factoryNumber);
                 if (existedMeter) {

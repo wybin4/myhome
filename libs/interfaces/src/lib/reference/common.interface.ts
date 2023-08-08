@@ -1,9 +1,9 @@
 export interface IUnit {
-    id: number;
+    id?: number;
     name: string;
 }
 
 export interface ITypeOfService {
-    id: number;
+    id?: number;
     name: string;
 }

@@ -1,7 +1,15 @@
+import { IDebt } from "@myhome/interfaces";
+import { IsArray } from "class-validator";
+
 export namespace CorrectionGetDebt {
-    export const topic = 'document-detail.get-debt.query';
+    export const topic = 'correction.get-debt.query';
 
-    export class Request { }
+    export class Request {
+        @IsArray()
+        subscriberIds!: number[];
+    }
 
-    export class Response { }
+    export class Response {
+        debts!: IDebt[];
+    }
 }

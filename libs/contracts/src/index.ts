@@ -31,7 +31,8 @@ export * from './lib/reference/tariff-and-norm/reference.add-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.get-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.get-all-tariffs';
 
-export * from './lib/reference/common/reference.get-all-types-of-serive';
+export * from './lib/reference/common/reference.get-type-of-service';
+export * from './lib/reference/common/reference.get-all-types-of-service';
 
 export * from './lib/email/email.register';
 
@@ -51,3 +52,7 @@ export * from './lib/single-payment-document/single-payment-document.get-single-
 export * from './lib/correction/correction.get-debt';
 export * from './lib/correction/correction.get-deposit';
 export * from './lib/correction/correction.get-penalty';
+export * from './lib/correction/correction.add-debt';
+export * from './lib/correction/correction.add-deposit';
+export * from './lib/correction/correction.add-penalty';
+export * from './lib/correction/correction.add-penalty-calculation-rule';

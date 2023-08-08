@@ -44,5 +44,6 @@ export * from './lib/notification/notification.read-notification';
 
 export * from './lib/document-detail/document-detail.get-public-utilities';
 export * from './lib/document-detail/document-detail.get-common-house-needs';
+export * from './lib/document-detail/document-detail.delete-document-details';
 
 export * from './lib/single-payment-document/single-payment-document.get-single-payment-document';

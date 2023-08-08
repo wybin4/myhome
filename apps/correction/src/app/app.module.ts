@@ -5,6 +5,8 @@ import { getRMQConfig } from './configs/rmq.config';
 import { getMySQLConfig } from './configs/mysql.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DebtModule } from './debt/debt.module';
+import { PenaltyModule } from './penalty/penalty.module';
+import { DepositModule } from './deposit/deposit.module';
 
 @Module({
   imports: [
@@ -14,7 +16,9 @@ import { DebtModule } from './debt/debt.module';
       useFactory: (configService: ConfigService) => getMySQLConfig(configService),
       inject: [ConfigService],
     }),
-    DebtModule
+    DebtModule,
+    PenaltyModule,
+    DepositModule
   ],
 })
 export class AppModule { }

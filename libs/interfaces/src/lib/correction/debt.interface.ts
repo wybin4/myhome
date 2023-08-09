@@ -1,12 +1,12 @@
 export interface IDebt {
-    id?: number;
+    _id?: string;
     singlePaymentDocumentId: number;
-    outstandingDebt: string; // на самом деле IDebtDetail[]
-    originalDebt: string; // на самом деле IDebtDetail[]
+    outstandingDebt: IDebtDetail[];
+    originalDebt: IDebtDetail[];
     createdAt: Date;
 }
 
 export interface IDebtDetail {
-    typeOfPenaltyRuleId: number;
+    penaltyRuleId: string;
     amount: number;
 }

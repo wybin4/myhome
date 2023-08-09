@@ -1,46 +1,17 @@
-import { IDebt } from '@myhome/interfaces';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-import { JsonTransformer } from '@myhome/constants';
+import {  IDebt, IDebtDetail } from '@myhome/interfaces';
 
-@Entity('debts')
 export class DebtEntity implements IDebt {
-    @PrimaryGeneratedColumn()
-    id: number;
-
-    @Column({ nullable: false })
+    _id?: string;
     singlePaymentDocumentId: number;
-
-    @Column({
-        type: 'json',
-        transformer: new JsonTransformer(),
-        nullable: false
-    })
-    outstandingDebt: string;
-
-    @Column({
-        type: 'json',
-        transformer: new JsonTransformer(),
-        nullable: false
-    })
-    originalDebt: string;
-
-    @Column({ nullable: false })
+    outstandingDebt: IDebtDetail[];
+    originalDebt: IDebtDetail[];
     createdAt: Date;
 
-
-    constructor(data?: Partial<DebtEntity>) {
-        if (data) {
-            Object.assign(this, data);
-        }
+    constructor(debt: IDebt) {
+        this._id = debt._id;
+        this.singlePaymentDocumentId = debt.singlePaymentDocumentId;
+        this.outstandingDebt = debt.outstandingDebt;
+        this.originalDebt = debt.originalDebt;
+        this.createdAt = debt.createdAt;
     }
-
-    public get() {
-        return {
-            singlePaymentDocumentId: this.singlePaymentDocumentId,
-            outstandingDebt: this.outstandingDebt,
-            originalDebt: this.originalDebt,
-            createdAt: this.createdAt,
-        }
-    }
-
 }

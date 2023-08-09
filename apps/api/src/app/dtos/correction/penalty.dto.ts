@@ -12,4 +12,7 @@ export class AddPenaltyCalculationRuleDto {
 
     @IsString()
     penaltyRuleId!: string;
+
+    @IsNumber()
+    priority!: number;
 }

@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError, RMQService } from "nestjs-rmq";
 import { PenaltyRepository } from "./repositories/penalty.repository";
 import { AccountUserInfo, CorrectionAddPenaltyCalculationRule, CorrectionGetPenalty, ReferenceGetTypesOfService } from "@myhome/contracts";
-import { MANAG_COMP_NOT_EXIST, PENALTY_RULE_NOT_EXIST, RMQException } from "@myhome/constants";
+import { MANAG_COMP_NOT_EXIST, PENALTY_CALCULATION_WITH_PRIORITY_ALREADY_EXIST, PENALTY_RULE_NOT_EXIST, RMQException } from "@myhome/constants";
 import { UserRole } from "@myhome/interfaces";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { PenaltyRuleRepository } from "./repositories/penalty-rule.repository";
@@ -29,9 +29,18 @@ export class PenaltyService {
         const { typesOfService } = await this.checkTypesOfService(dto.typeOfServiceIds);
         const typeOfServiceIds = typesOfService.map(obj => obj.id);
 
+        const result = await this.penaltyRuleRepository.findByManagementCIDAndPriority(dto.managementCompanyId, dto.priority);
+        if (result) {
+            throw new RMQException(
+                PENALTY_CALCULATION_WITH_PRIORITY_ALREADY_EXIST.message(dto.priority),
+                PENALTY_CALCULATION_WITH_PRIORITY_ALREADY_EXIST.status
+            );
+        }
+
         const penaltyCalculationRule = {
             managementCompanyId: dto.managementCompanyId,
-            typeOfServiceIds: typeOfServiceIds
+            typeOfServiceIds: typeOfServiceIds,
+            priority: dto.priority
         };
         const penaltyRuleEntity = new PenaltyRuleEntity(penaltyRule).addCalculationRule(penaltyCalculationRule);
 

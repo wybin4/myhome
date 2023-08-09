@@ -25,7 +25,7 @@ export class DebtService {
             throw new RMQException(PENALTY_RULES_NOT_EXIST.message, PENALTY_RULES_NOT_EXIST.status);
         }
         const penaltyCalcRuleGroups = penaltyRuleGroups.map(obj => obj.penaltyCalculationRules);
-        const filteredObjects: { typeOfServiceIds: number[], managementCompanyId: number, _id?: string }[] = [];
+        let filteredObjects: { typeOfServiceIds: number[], managementCompanyId: number, _id?: string, priority: number }[] = [];
         for (const level of penaltyCalcRuleGroups) {
             const filteredLevel = level.filter(obj => obj.managementCompanyId === dto.managementCompanyId);
             filteredObjects.push(...filteredLevel);
@@ -33,6 +33,11 @@ export class DebtService {
 
         const debts: IDebtDetail[] = [];
 
+        const spdAmount = dto.spdAmount.map(obj => obj.amount);
+        const totalSPDAmount = spdAmount.reduce((a, b) => a + b, 0);
+        let totalDebt = totalSPDAmount - dto.paymentAmount;
+
+        // Проверка, есть ли все типы услуг, поступающие из ЕПД в таблице с правилами расчёта пени
         for (const dd of dto.spdAmount) {
             const current = filteredObjects.find(obj => obj.typeOfServiceIds.includes(dd.typeOfServiceId));
             if (!current) {
@@ -41,21 +46,20 @@ export class DebtService {
                     PENALTY_CALCULATION_RULES_NOT_CONFIGURED.status
                 );
             }
-            const ruleId = current._id;
-            const currentDebt = debts.find(obj => obj.penaltyRuleId === ruleId);
-            if (!currentDebt) {
-                debts.push({
-                    penaltyRuleId: ruleId,
-                    amount: dd.amount
-                })
-            } else {
-                debts.map(obj => {
-                    if (obj.penaltyRuleId === ruleId) {
-                        obj.amount += dd.amount;
-                    }
-                    return obj;
-                })
-            }
+        }
+
+        filteredObjects = filteredObjects.sort((a, b) => a.priority - b.priority);
+
+        for (const fObject of filteredObjects) {
+            const currentSPDAmounts = dto.spdAmount.filter(obj => fObject.typeOfServiceIds.includes(obj.typeOfServiceId));
+            const amounts = currentSPDAmounts.map(obj => obj.amount);
+            const totalAmount = amounts.reduce((a, b) => a + b, 0);
+
+            debts.push({
+                penaltyRuleId: fObject._id,
+                amount: totalDebt > 0 ? totalAmount - totalDebt : 0
+            })
+            totalDebt -= totalAmount;
         }
 
         const debt = {
@@ -66,7 +70,6 @@ export class DebtService {
         };
         const newDebtEntity = new DebtEntity(debt);
         const newDebt = await this.debtRepository.create(newDebtEntity);
-
 
         return { debt: newDebt }
     }

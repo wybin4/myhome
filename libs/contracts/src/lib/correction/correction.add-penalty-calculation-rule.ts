@@ -13,6 +13,9 @@ export namespace CorrectionAddPenaltyCalculationRule {
 
         @IsString()
         penaltyRuleId!: string;
+
+        @IsNumber()
+        priority!: number;
     }
 
     export class Response {

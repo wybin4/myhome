@@ -8,7 +8,7 @@ import { IPenaltyRule } from '@myhome/interfaces';
 @Injectable()
 export class PenaltyRuleRepository {
     constructor(
-        @InjectModel(PenaltyRule.name) private readonly penaltyRuleModel: Model<PenaltyRule>
+        @InjectModel(PenaltyRule.name) private readonly penaltyRuleModel: Model<PenaltyRule>,
     ) { }
     async create(penaltyRule: PenaltyRuleEntity) {
         const newPenaltyRule = new this.penaltyRuleModel(penaltyRule);
@@ -25,5 +25,18 @@ export class PenaltyRuleRepository {
     }
     async findAll(): Promise<IPenaltyRule[]> {
         return this.penaltyRuleModel.find().exec();
+    }
+    async findByManagementCIDAndPriority(
+        managementCompanyId: number,
+        priority: number,
+    ): Promise<PenaltyRule | null> {
+        return this.penaltyRuleModel.findOne({
+            'penaltyCalculationRules': {
+                $elemMatch: {
+                    managementCompanyId,
+                    priority,
+                },
+            },
+        }).exec();
     }
 }

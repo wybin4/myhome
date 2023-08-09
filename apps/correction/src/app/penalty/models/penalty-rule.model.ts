@@ -27,6 +27,9 @@ export class PenaltyCalculationRule extends Document implements IPenaltyCalculat
 
     @Prop({ required: true })
     managementCompanyId: number;
+
+    @Prop({ required: true })
+    priority: number;
 }
 
 export const PenaltyCalculationRuleSchema = SchemaFactory.createForClass(PenaltyCalculationRule);

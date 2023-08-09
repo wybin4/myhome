@@ -24,4 +24,5 @@ export interface IPenaltyCalculationRule {
     _id?: string;
     typeOfServiceIds: number[];
     managementCompanyId: number;
+    priority: number;
 }

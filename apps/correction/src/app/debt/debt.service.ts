@@ -17,6 +17,6 @@ export class DebtService {
     }
 
     public async addDebt(dto: CorrectionAddDebt.Request) {
-        ;
+        dto.managementCompanyId
     }
 }

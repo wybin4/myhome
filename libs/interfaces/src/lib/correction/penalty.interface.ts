@@ -7,9 +7,9 @@ export interface IPenalty {
 }
 
 export interface IPenaltyRule {
-    id?: number;
+    _id?: string;
     description: string;
-    penaltyRule: string; // на самом деле IPenaltyRuleDetail[]
+    penaltyRule: IPenaltyRuleDetail[];
 }
 
 export interface IPenaltyRuleDetail {
@@ -23,5 +23,5 @@ export interface IPenaltyCalculationRule {
     id?: number;
     typeOfServiceId: number;
     managementCompanyId: number;
-    penaltyRuleId: number;
+    penaltyRuleId: string;
 }

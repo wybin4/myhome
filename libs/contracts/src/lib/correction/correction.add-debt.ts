@@ -13,6 +13,9 @@ export namespace CorrectionAddDebt {
 
         @IsArray()
         spdAmount!: ICorrectionAddDebt[];
+
+        @IsNumber()
+        managementCompanyId!: number;
     }
 
     export class Response {

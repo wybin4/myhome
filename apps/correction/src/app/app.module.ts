@@ -7,6 +7,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DebtModule } from './debt/debt.module';
 import { PenaltyModule } from './penalty/penalty.module';
 import { DepositModule } from './deposit/deposit.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { getMongoConfig } from './configs/mongo.config';
 
 @Module({
   imports: [
@@ -16,6 +18,7 @@ import { DepositModule } from './deposit/deposit.module';
       useFactory: (configService: ConfigService) => getMySQLConfig(configService),
       inject: [ConfigService],
     }),
+    MongooseModule.forRootAsync(getMongoConfig()),
     DebtModule,
     PenaltyModule,
     DepositModule

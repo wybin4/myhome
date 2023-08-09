@@ -13,7 +13,7 @@ export class PenaltyCalculationRuleEntity implements IPenaltyCalculationRule {
     managementCompanyId: number;
 
     @Column({ nullable: false })
-    penaltyRuleId: number;
+    penaltyRuleId: string;
 
     constructor(data?: Partial<IPenaltyCalculationRule>) {
         if (data) {

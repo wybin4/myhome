@@ -12,7 +12,7 @@ export namespace CorrectionAddPenaltyCalculationRule {
         managementCompanyId!: number;
 
         @IsNumber()
-        penaltyRuleId!: number;
+        penaltyRuleId!: string;
     }
 
     export class Response {

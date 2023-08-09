@@ -1,33 +1,13 @@
-import { JsonTransformer } from '@myhome/constants';
-import { IPenaltyRule } from '@myhome/interfaces';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { IPenaltyRule, IPenaltyRuleDetail } from '@myhome/interfaces';
 
-@Entity('penalty_rules')
 export class PenaltyRuleEntity implements IPenaltyRule {
-    @PrimaryGeneratedColumn()
-    id: number;
-
-    @Column({ type: 'varchar', length: 500, nullable: false })
+    _id?: string;
     description: string;
+    penaltyRule: IPenaltyRuleDetail[];
 
-    @Column({
-        type: 'json',
-        transformer: new JsonTransformer(),
-        nullable: true
-    })
-    penaltyRule: string;
-
-
-    constructor(data?: Partial<PenaltyRuleEntity>) {
-        if (data) {
-            Object.assign(this, data);
-        }
+    constructor(penaltyRule: IPenaltyRule) {
+        this._id = penaltyRule._id;
+        this.description = penaltyRule.description;
+        this.penaltyRule = penaltyRule.penaltyRule;
     }
-
-    public get() {
-        return {
-            description: this.description,
-        }
-    }
-
 }

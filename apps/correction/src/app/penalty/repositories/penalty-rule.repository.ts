@@ -9,17 +9,17 @@ export class PenaltyRuleRepository {
     constructor(
         @InjectModel(PenaltyRule.name) private readonly penaltyRuleModel: Model<PenaltyRule>
     ) { }
-    async createPenaltyRule(penaltyRule: PenaltyRuleEntity) {
+    async create(penaltyRule: PenaltyRuleEntity) {
         const newPenaltyRule = new this.penaltyRuleModel(penaltyRule);
         return newPenaltyRule.save();
     }
-    async findPenaltyRuleById(_id: string) {
+    async findById(_id: string) {
         return this.penaltyRuleModel.findById(_id).exec();
     }
-    async deletePenaltyRule(_id: string) {
+    async delete(_id: string) {
         this.penaltyRuleModel.deleteOne({ _id }).exec();
     }
-    async updatePenaltyRule({ _id, ...rest }: PenaltyRuleEntity) {
+    async update({ _id, ...rest }: PenaltyRuleEntity) {
         return this.penaltyRuleModel.updateOne({ _id }, { $set: { ...rest } }).exec();
     }
 }

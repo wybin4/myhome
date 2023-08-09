@@ -1,13 +1,12 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError, RMQService } from "nestjs-rmq";
 import { PenaltyRepository } from "./repositories/penalty.repository";
-import { AccountUserInfo, CorrectionAddPenaltyCalculationRule, CorrectionGetPenalty, ReferenceGetTypeOfService } from "@myhome/contracts";
-import { PenaltyCalculationRuleEntity } from "./entities/penalty-calculation-rule.entity";
-import { MANAG_COMP_NOT_EXIST, PENALTY_RULE_NOT_EXIST, RMQException, TYPE_OF_SERVICE_NOT_EXIST } from "@myhome/constants";
+import { AccountUserInfo, CorrectionAddPenaltyCalculationRule, CorrectionGetPenalty, ReferenceGetTypesOfService } from "@myhome/contracts";
+import { MANAG_COMP_NOT_EXIST, PENALTY_RULE_NOT_EXIST, RMQException } from "@myhome/constants";
 import { UserRole } from "@myhome/interfaces";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { PenaltyRuleRepository } from "./repositories/penalty-rule.repository";
-import { PenaltyCalculationRuleRepository } from "./repositories/penalty-calculation-rule.repository";
+import { PenaltyRuleEntity } from "./entities/penalty-rule.entity";
 
 @Injectable()
 export class PenaltyService {
@@ -15,7 +14,6 @@ export class PenaltyService {
         private readonly rmqService: RMQService,
         private readonly penaltyRepository: PenaltyRepository,
         private readonly penaltyRuleRepository: PenaltyRuleRepository,
-        private readonly penaltyCalculationRuleRepository: PenaltyCalculationRuleRepository,
     ) { }
 
     public async getPenalty(dto: CorrectionGetPenalty.Request) {
@@ -23,17 +21,22 @@ export class PenaltyService {
     }
 
     public async addPenaltyCalculationRule(dto: CorrectionAddPenaltyCalculationRule.Request) {
-        const newEntity = new PenaltyCalculationRuleEntity(dto);
-
-        await this.checkManagementCompany(dto.managementCompanyId);
-        await this.checkTypeOfService(dto.typeOfServiceId);
-        const penaltyRule = await this.penaltyRuleRepository.findPenaltyRuleById(dto.penaltyRuleId);
+        const penaltyRule = await this.penaltyRuleRepository.findById(dto.penaltyRuleId);
         if (!penaltyRule) {
             throw new RMQException(PENALTY_RULE_NOT_EXIST.message, PENALTY_RULE_NOT_EXIST.status);
         }
+        await this.checkManagementCompany(dto.managementCompanyId);
+        const { typesOfService } = await this.checkTypesOfService(dto.typeOfServiceIds);
+        const typeOfServiceIds = typesOfService.map(obj => obj.id);
 
-        const newPCR = await this.penaltyCalculationRuleRepository.create(newEntity);
-        return { penaltyCalculationRule: newPCR };
+        const penaltyCalculationRule = {
+            managementCompanyId: dto.managementCompanyId,
+            typeOfServiceIds: typeOfServiceIds
+        };
+        const penaltyRuleEntity = new PenaltyRuleEntity(penaltyRule).addCalculationRule(penaltyCalculationRule);
+
+        await this.penaltyRuleRepository.update(await penaltyRuleEntity);
+        return { penaltyCalculationRule: penaltyCalculationRule }
     }
 
     private async checkManagementCompany(managementCompanyId: number) {
@@ -49,16 +52,16 @@ export class PenaltyService {
         }
     }
 
-    private async checkTypeOfService(typeOfServiceId: number) {
+    private async checkTypesOfService(typeOfServiceIds: number[]) {
         try {
-            await this.rmqService.send
+            return await this.rmqService.send
                 <
-                    ReferenceGetTypeOfService.Request,
-                    ReferenceGetTypeOfService.Response
+                    ReferenceGetTypesOfService.Request,
+                    ReferenceGetTypesOfService.Response
                 >
-                (ReferenceGetTypeOfService.topic, { id: typeOfServiceId });
+                (ReferenceGetTypesOfService.topic, { typeOfServiceIds: typeOfServiceIds });
         } catch (e) {
-            throw new RMQError(TYPE_OF_SERVICE_NOT_EXIST.message, ERROR_TYPE.RMQ, TYPE_OF_SERVICE_NOT_EXIST.status);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 

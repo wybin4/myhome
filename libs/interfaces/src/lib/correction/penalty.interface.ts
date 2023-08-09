@@ -10,6 +10,7 @@ export interface IPenaltyRule {
     _id?: string;
     description: string;
     penaltyRule: IPenaltyRuleDetail[];
+    penaltyCalculationRules: IPenaltyCalculationRule[];
 }
 
 export interface IPenaltyRuleDetail {
@@ -20,8 +21,7 @@ export interface IPenaltyRuleDetail {
 }
 
 export interface IPenaltyCalculationRule {
-    id?: number;
-    typeOfServiceId: number;
+    _id?: string;
+    typeOfServiceIds: number[];
     managementCompanyId: number;
-    penaltyRuleId: string;
 }

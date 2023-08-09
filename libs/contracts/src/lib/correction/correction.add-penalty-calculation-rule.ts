@@ -1,17 +1,17 @@
 import { IPenaltyCalculationRule } from "@myhome/interfaces";
-import { IsNumber } from "class-validator";
+import { IsArray, IsNumber, IsString } from "class-validator";
 
 export namespace CorrectionAddPenaltyCalculationRule {
     export const topic = 'correction.add-penalty-calculation-rule.command';
 
     export class Request {
-        @IsNumber()
-        typeOfServiceId!: number;
+        @IsArray()
+        typeOfServiceIds!: number[];
 
         @IsNumber()
         managementCompanyId!: number;
 
-        @IsNumber()
+        @IsString()
         penaltyRuleId!: string;
     }
 

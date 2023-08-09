@@ -1,15 +1,15 @@
-import { IsNumber } from "class-validator";
+import { IsArray, IsNumber, IsString } from "class-validator";
 
 export class AddPenaltyCalculationRuleDto {
     @IsNumber()
     id?: number;
 
-    @IsNumber()
-    typeOfServiceId: number;
+    @IsArray()
+    typeOfServiceIds!: number[];
 
     @IsNumber()
-    managementCompanyId: number;
+    managementCompanyId!: number;
 
-    @IsNumber()
-    penaltyRuleId: number;
+    @IsString()
+    penaltyRuleId!: string;
 }

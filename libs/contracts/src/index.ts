@@ -32,6 +32,7 @@ export * from './lib/reference/tariff-and-norm/reference.get-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.get-all-tariffs';
 
 export * from './lib/reference/common/reference.get-type-of-service';
+export * from './lib/reference/common/reference.get-types-of-service';
 export * from './lib/reference/common/reference.get-all-types-of-service';
 
 export * from './lib/email/email.register';

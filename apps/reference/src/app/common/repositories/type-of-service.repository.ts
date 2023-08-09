@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { TypeOfServiceEntity } from '../entities/type-of-service.entity';
 
 @Injectable()
@@ -21,4 +21,13 @@ export class TypeOfServiceRepository {
     async findAllTypesOfService() {
         return this.typeOfServiceRepository.find();
     }
+
+    async findTypesOfServiceById(typeOfServiceIds: number[]) {
+        return this.typeOfServiceRepository.find({
+            where: {
+                id: In(typeOfServiceIds),
+            },
+        });
+    }
+
 }

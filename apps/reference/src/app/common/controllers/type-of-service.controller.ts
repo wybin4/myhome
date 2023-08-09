@@ -1,5 +1,5 @@
 import { TYPES_OF_SERVICE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST } from "@myhome/constants";
-import { ReferenceGetAllTypesOfService, ReferenceGetTypeOfService } from "@myhome/contracts";
+import { ReferenceGetAllTypesOfService, ReferenceGetTypeOfService, ReferenceGetTypesOfService } from "@myhome/contracts";
 import { Body, Controller } from "@nestjs/common";
 import { RMQValidate, RMQRoute, RMQError } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
@@ -35,6 +35,20 @@ export class TypeOfServiceController {
         }
         const gettedTypeOfService = new TypeOfServiceEntity(typeOfService).getTypeOfService();
         return { typeOfService: gettedTypeOfService };
+    }
+
+    @RMQValidate()
+    @RMQRoute(ReferenceGetTypesOfService.topic)
+    async getTypesOfService(@Body() { typeOfServiceIds }: ReferenceGetTypesOfService.Request): Promise<ReferenceGetTypesOfService.Response> {
+        const typesOfService = await this.typeOfServiceRepository.findTypesOfServiceById(typeOfServiceIds);
+        if (!typesOfService) {
+            throw new RMQError(TYPES_OF_SERVICE_NOT_EXIST.message, ERROR_TYPE.RMQ, TYPES_OF_SERVICE_NOT_EXIST.status);
+        }
+        const gettedTypesOfService = [];
+        for (const typeOfService of typesOfService) {
+            gettedTypesOfService.push(new TypeOfServiceEntity(typeOfService));
+        }
+        return { typesOfService: gettedTypesOfService };
     }
 }
 

@@ -5,20 +5,18 @@ import { PenaltyRepository } from "./repositories/penalty.repository";
 import { PenaltyEntity } from "./entities/penalty.entity";
 import { PenaltyRuleRepository } from "./repositories/penalty-rule.repository";
 import { PenaltyRuleSeeder } from "./penalty-rule.seed";
-import { PenaltyCalculationRuleEntity } from "./entities/penalty-calculation-rule.entity";
-import { PenaltyCalculationRuleRepository } from "./repositories/penalty-calculation-rule.repository";
 import { MongooseModule } from "@nestjs/mongoose";
 import { PenaltyRule, PenaltyRuleSchema } from "./models/penalty-rule.model";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([PenaltyEntity, PenaltyCalculationRuleEntity]),
+        TypeOrmModule.forFeature([PenaltyEntity]),
         MongooseModule.forFeature([{ name: PenaltyRule.name, schema: PenaltyRuleSchema }]),
     ],
-    providers: [PenaltyService, PenaltyRepository, PenaltyRuleRepository, PenaltyCalculationRuleRepository, PenaltyRuleSeeder],
+    providers: [PenaltyService, PenaltyRepository, PenaltyRuleRepository, PenaltyRuleSeeder],
     controllers: [PenaltyController],
-    exports: [PenaltyRepository, PenaltyRuleRepository, PenaltyCalculationRuleRepository],
+    exports: [PenaltyRepository, PenaltyRuleRepository],
 
 })
 export class PenaltyModule implements OnModuleInit {

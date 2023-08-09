@@ -3,6 +3,7 @@ import { PenaltyRuleEntity } from '../entities/penalty-rule.entity';
 import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { PenaltyRule } from '../models/penalty-rule.model';
+import { IPenaltyRule } from '@myhome/interfaces';
 
 @Injectable()
 export class PenaltyRuleRepository {
@@ -21,5 +22,8 @@ export class PenaltyRuleRepository {
     }
     async update({ _id, ...rest }: PenaltyRuleEntity) {
         return this.penaltyRuleModel.updateOne({ _id }, { $set: { ...rest } }).exec();
+    }
+    async findAll(): Promise<IPenaltyRule[]> {
+        return this.penaltyRuleModel.find().exec();
     }
 }

@@ -1,7 +1,7 @@
 export interface IDebt {
     _id?: string;
     singlePaymentDocumentId: number;
-    outstandingDebt: IDebtDetail[];
+    debtHistory: IDebtHistory[];
     originalDebt: IDebtDetail[];
     createdAt: Date;
 }
@@ -9,4 +9,9 @@ export interface IDebt {
 export interface IDebtDetail {
     penaltyRuleId: string;
     amount: number;
+}
+
+export interface IDebtHistory {
+    outstandingDebt: IDebtDetail[];
+    date: Date;
 }

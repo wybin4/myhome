@@ -64,7 +64,10 @@ export class DebtService {
 
         const debt = {
             singlePaymentDocumentId: dto.singlePaymentDocumentId,
-            outstandingDebt: debts,
+            debtHistory: [{
+                outstandingDebt: debts,
+                date: new Date()
+            }],
             originalDebt: debts,
             createdAt: new Date(),
         };

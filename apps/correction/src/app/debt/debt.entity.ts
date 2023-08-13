@@ -1,16 +1,16 @@
-import {  IDebt, IDebtDetail } from '@myhome/interfaces';
+import { IDebt, IDebtDetail, IDebtHistory } from '@myhome/interfaces';
 
 export class DebtEntity implements IDebt {
     _id?: string;
     singlePaymentDocumentId: number;
-    outstandingDebt: IDebtDetail[];
+    debtHistory: IDebtHistory[];
     originalDebt: IDebtDetail[];
     createdAt: Date;
 
     constructor(debt: IDebt) {
         this._id = debt._id;
         this.singlePaymentDocumentId = debt.singlePaymentDocumentId;
-        this.outstandingDebt = debt.outstandingDebt;
+        this.debtHistory = debt.debtHistory;
         this.originalDebt = debt.originalDebt;
         this.createdAt = debt.createdAt;
     }

@@ -1,4 +1,4 @@
-import { IDebt, IDebtDetail } from '@myhome/interfaces';
+import { IDebt, IDebtDetail, IDebtHistory } from '@myhome/interfaces';
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
@@ -15,12 +15,23 @@ export class DebtDetail extends Document implements IDebtDetail {
 export const DebtDetailSchema = SchemaFactory.createForClass(DebtDetail);
 
 @Schema()
+export class DebtHistory extends Document implements IDebtHistory {
+    @Prop({ type: [DebtDetailSchema] })
+    outstandingDebt: IDebtDetail[];
+
+    @Prop({ required: true })
+    date: Date;
+}
+
+export const DebtHistorySchema = SchemaFactory.createForClass(DebtHistory);
+
+@Schema()
 export class Debt extends Document implements IDebt {
     @Prop({ required: true })
     singlePaymentDocumentId: number;
 
-    @Prop({ type: [DebtDetailSchema] })
-    outstandingDebt: IDebtDetail[];
+    @Prop({ type: [DebtHistorySchema] })
+    debtHistory: IDebtHistory[];
 
     @Prop({ type: [DebtDetailSchema] })
     originalDebt: IDebtDetail[];

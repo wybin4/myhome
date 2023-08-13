@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DebtRepository } from "./debt.repository";
-import { CorrectionAddDebt, CorrectionGetDebt } from "@myhome/contracts";
+import { CorrectionAddDebt, CorrectionGetDebt, CorrectionUpdateDebt } from "@myhome/contracts";
 import { PenaltyRuleRepository } from "../penalty/repositories/penalty-rule.repository";
 import { PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, RMQException } from "@myhome/constants";
 import { IDebtDetail } from "@myhome/interfaces";
@@ -17,6 +17,12 @@ export class DebtService {
 
     public async getDebt(dto: CorrectionGetDebt.Request) {
         ;
+    }
+
+    public async updateDebt(dto: CorrectionUpdateDebt.Request) {
+        // Здесь нужно найти соответствующий долг по SPDId
+        // Получить новую сумму долга вычитанием из предыдущей debtHistory пришедшей суммы по приоритету
+        // Затем в его debtHistory запушить получившуюся сумму с new Date()
     }
 
     public async addDebt(dto: CorrectionAddDebt.Request) {

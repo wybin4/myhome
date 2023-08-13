@@ -50,10 +50,11 @@ export * from './lib/document-detail/document-detail.delete-document-details';
 
 export * from './lib/single-payment-document/single-payment-document.get-single-payment-document';
 
-export * from './lib/correction/correction.get-debt';
-export * from './lib/correction/correction.get-deposit';
-export * from './lib/correction/correction.get-penalty';
-export * from './lib/correction/correction.add-debt';
-export * from './lib/correction/correction.add-deposit';
-export * from './lib/correction/correction.add-penalty';
-export * from './lib/correction/correction.add-penalty-calculation-rule';
+export * from './lib/correction/debt/correction.get-debt';
+export * from './lib/correction/debt/correction.add-debt';
+export * from './lib/correction/debt/correction.update-debt';
+export * from './lib/correction/deposit/correction.get-deposit';
+export * from './lib/correction/deposit/correction.add-deposit';
+export * from './lib/correction/penalty/correction.add-penalty-calculation-rule';
+export * from './lib/correction/penalty/correction.get-penalty';
+export * from './lib/correction/penalty/correction.add-penalty';

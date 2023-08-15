@@ -14,4 +14,6 @@ export interface IDebtDetail {
 export interface IDebtHistory {
     outstandingDebt: IDebtDetail[];
     date: Date;
+    originalPenalty?: number; // Во всех, кроме последней записи
+    outstandingPenalty?: number; // Во всех, кроме последней записи
 }

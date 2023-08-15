@@ -1,6 +1,5 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { PenaltyEntity } from '../penalty/entities/penalty.entity';
 import { DepositEntity } from '../deposit/deposit.entity';
 
 export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
@@ -11,6 +10,6 @@ export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptio
   password: configService.get('MYSQL_PASSWORD'),
   database: configService.get('MYSQL_DATABASE'),
   synchronize: true,
-  entities: [DepositEntity, PenaltyEntity],
+  entities: [DepositEntity],
   autoLoadEntities: true
 });

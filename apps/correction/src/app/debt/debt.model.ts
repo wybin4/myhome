@@ -21,6 +21,12 @@ export class DebtHistory extends Document implements IDebtHistory {
 
     @Prop({ required: true })
     date: Date;
+
+    @Prop({ required: false })
+    originalPenalty?: number;
+
+    @Prop({ required: false })
+    outstandingPenalty?: number;
 }
 
 export const DebtHistorySchema = SchemaFactory.createForClass(DebtHistory);

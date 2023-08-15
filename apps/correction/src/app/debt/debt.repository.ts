@@ -1,6 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { DebtEntity } from './debt.entity';
 import { Debt } from './debt.model';
 
@@ -15,6 +15,10 @@ export class DebtRepository {
     }
     async findById(_id: string) {
         return this.debtModel.findById(_id).exec();
+    }
+    async findMany(ids: string[]) {
+        const objectIds = ids.map(id => new Types.ObjectId(id));
+        return this.debtModel.find({ _id: { $in: objectIds } }).exec();
     }
     async delete(_id: string) {
         this.debtModel.deleteOne({ _id }).exec();

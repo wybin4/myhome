@@ -1,4 +1,4 @@
-import { HttpStatus, NotFoundException, ConflictException, InternalServerErrorException, UnprocessableEntityException, BadRequestException } from "@nestjs/common";
+import { HttpStatus, NotFoundException, ConflictException, InternalServerErrorException, UnprocessableEntityException, BadRequestException, GatewayTimeoutException } from "@nestjs/common";
 
 export function CatchError(e) {
     if (e.code === HttpStatus.NOT_FOUND) {
@@ -9,5 +9,8 @@ export function CatchError(e) {
         throw new UnprocessableEntityException(e.message);
     } else if (e.code === HttpStatus.BAD_REQUEST) {
         throw new BadRequestException(e.message);
-    } else throw new InternalServerErrorException(e.message);
+    } else if (e.code === HttpStatus.GATEWAY_TIMEOUT) {
+        throw new GatewayTimeoutException(e.message);
+    }
+    else throw new InternalServerErrorException(e.message);
 }

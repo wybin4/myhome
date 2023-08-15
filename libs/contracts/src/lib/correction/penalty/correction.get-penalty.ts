@@ -1,4 +1,4 @@
-import { IDebt, IPenalty } from "@myhome/interfaces";
+import { IPenalty } from "@myhome/interfaces";
 import { IsArray } from "class-validator";
 
 export namespace CorrectionGetPenalty {
@@ -7,7 +7,7 @@ export namespace CorrectionGetPenalty {
 
     export class Request {
         @IsArray()
-        debts!: IDebt[];
+        debtIds!: string[];
         // @IsArray()
         // subscriberIds!: number[];
     }

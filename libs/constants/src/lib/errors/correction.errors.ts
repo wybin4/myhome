@@ -16,3 +16,15 @@ export const PENALTY_CALCULATION_WITH_PRIORITY_ALREADY_EXIST = {
     message: (priority: number) => `Правило расчёта пени с приоритетом ${priority} уже существует`,
     status: HttpStatus.BAD_REQUEST
 }
+export const CANT_GET_KEY_RATE = {
+    message: 'Невозможно получить данные о ключевой ставке',
+    status: HttpStatus.GATEWAY_TIMEOUT
+}
+export const CANT_GET_CURRENT_RULE = {
+    message: (penaltyRuleId: string) => `Невозможно получить правило расчёта пени с id=`,
+    status: HttpStatus.NOT_FOUND
+}
+export const CANT_DIVIDE_INTO_RULE_DIVIDER = {
+    message: 'Невозможно разделить на этот делитель',
+    status: HttpStatus.BAD_GATEWAY
+}

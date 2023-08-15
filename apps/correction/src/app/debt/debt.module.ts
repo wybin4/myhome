@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, forwardRef } from "@nestjs/common";
 import { PenaltyModule } from "../penalty/penalty.module";
 import { DebtController } from "./debt.controller";
 import { DebtRepository } from "./debt.repository";
@@ -10,7 +10,7 @@ import { Debt, DebtSchema } from "./debt.model";
 @Module({
     imports: [
         MongooseModule.forFeature([{ name: Debt.name, schema: DebtSchema }]),
-        PenaltyModule,
+        forwardRef(() => PenaltyModule),
     ],
     providers: [DebtService, DebtRepository],
     controllers: [DebtController],

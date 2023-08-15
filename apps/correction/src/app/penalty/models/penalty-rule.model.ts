@@ -14,7 +14,7 @@ export class PenaltyRuleDetail extends Document implements IPenaltyRuleDetail {
     @Prop({ required: true })
     start: number;
 
-    @Prop({ required: false })
+    @Prop({ required: true })
     end: number;
 }
 

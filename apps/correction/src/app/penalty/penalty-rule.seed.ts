@@ -45,7 +45,7 @@ export class PenaltyRuleSeeder {
                         "divider": 130,
                         "designation": "1/130",
                         "start": 91,
-                        "end": null
+                        "end": 1095
                     }
                 ]
             },
@@ -56,7 +56,7 @@ export class PenaltyRuleSeeder {
                         "divider": 300,
                         "designation": "1/300",
                         "start": 1,
-                        "end": null
+                        "end": 1095
                     }
                 ]
             }

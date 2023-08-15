@@ -16,6 +16,9 @@ export class DebtRepository {
     async findById(_id: string) {
         return this.debtModel.findById(_id).exec();
     }
+    async findBySPDId(singlePaymentDocumentId: number) {
+        return this.debtModel.findOne({ singlePaymentDocumentId }).exec();
+    }
     async findMany(ids: string[]) {
         const objectIds = ids.map(id => new Types.ObjectId(id));
         return this.debtModel.find({ _id: { $in: objectIds } }).exec();

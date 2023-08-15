@@ -21,8 +21,9 @@ export class DebtController {
         }
     }
 
-    @RMQValidate()
-    @RMQRoute(CorrectionUpdateDebt.topic)
+    @Post('update-debt')
+    // @RMQValidate()
+    // @RMQRoute(CorrectionUpdateDebt.topic)
     async updateDebt(@Body() dto: CorrectionUpdateDebt.Request) {
         try {
             return await this.debtService.updateDebt(dto);

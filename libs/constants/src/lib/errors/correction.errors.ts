@@ -21,10 +21,18 @@ export const CANT_GET_KEY_RATE = {
     status: HttpStatus.GATEWAY_TIMEOUT
 }
 export const CANT_GET_CURRENT_RULE = {
-    message: (penaltyRuleId: string) => `Невозможно получить правило расчёта пени с id=`,
+    message: (penaltyRuleId: string) => `Невозможно получить правило расчёта пени с id=${penaltyRuleId}`,
     status: HttpStatus.NOT_FOUND
 }
 export const CANT_DIVIDE_INTO_RULE_DIVIDER = {
     message: 'Невозможно разделить на этот делитель',
     status: HttpStatus.BAD_GATEWAY
+}
+export const CANT_GET_DEBT_BY_THIS_SPD_ID = {
+    message: (SPDId: number) => `Невозможно получить долг по ЕПД с id=${SPDId}`,
+    status: HttpStatus.NOT_FOUND
+}
+export const PRIORITY_NOT_EXIST = {
+    message: 'Для правил расчёта пени не настроен приоритет',
+    status: HttpStatus.NOT_FOUND
 }

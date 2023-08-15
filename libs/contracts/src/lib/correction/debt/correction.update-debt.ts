@@ -9,6 +9,9 @@ export namespace CorrectionUpdateDebt {
         singlePaymentDocumentId!: number;
 
         @IsNumber()
+        managementCompanyId!: number;
+
+        @IsNumber()
         amount!: number;
     }
 

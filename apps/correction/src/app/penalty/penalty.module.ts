@@ -1,11 +1,13 @@
 import { Logger, Module, OnModuleInit, forwardRef } from "@nestjs/common";
 import { PenaltyController } from "./penalty.controller";
-import { PenaltyService } from "./penalty.service";
+import { PenaltyService } from "./services/penalty.service";
 import { PenaltyRuleRepository } from "./repositories/penalty-rule.repository";
 import { PenaltyRuleSeeder } from "./penalty-rule.seed";
 import { MongooseModule } from "@nestjs/mongoose";
 import { PenaltyRule, PenaltyRuleSchema } from "./models/penalty-rule.model";
 import { DebtModule } from "../debt/debt.module";
+import { PenaltyRuleService } from "./services/penalty-rule.service";
+import { CBRService } from "./services/cbr.service";
 
 @Module({
     imports: [
@@ -14,7 +16,7 @@ import { DebtModule } from "../debt/debt.module";
         forwardRef(() => DebtModule),
 
     ],
-    providers: [PenaltyService, PenaltyRuleRepository, PenaltyRuleSeeder],
+    providers: [PenaltyService, PenaltyRuleService, CBRService, PenaltyRuleRepository, PenaltyRuleSeeder],
     controllers: [PenaltyController],
     exports: [PenaltyRuleRepository],
 

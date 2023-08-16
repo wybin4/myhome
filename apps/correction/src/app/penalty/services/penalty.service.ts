@@ -1,44 +1,18 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
-import { RMQError, RMQService } from "nestjs-rmq";
-import { AccountUserInfo, CorrectionAddPenaltyCalculationRule, CorrectionGetPenalty, ReferenceGetTypesOfService } from "@myhome/contracts";
-import { CANT_DIVIDE_INTO_RULE_DIVIDER, CANT_GET_CURRENT_RULE, CANT_GET_KEY_RATE, MANAG_COMP_NOT_EXIST, PENALTY_CALCULATION_WITH_PRIORITY_ALREADY_EXIST, PENALTY_RULE_NOT_EXIST, RMQException } from "@myhome/constants";
-import { IDebt, IDebtDetail, IPenaltyRule, IPenaltyRuleDetail, UserRole } from "@myhome/interfaces";
-import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
-import { PenaltyRuleRepository } from "./repositories/penalty-rule.repository";
-import { PenaltyRuleEntity } from "./entities/penalty-rule.entity";
-import { DebtRepository } from "../debt/debt.repository";
-import { createClientAsync } from 'soap';
+import { RMQException, CANT_GET_CURRENT_RULE, CANT_DIVIDE_INTO_RULE_DIVIDER, CANT_GET_KEY_RATE } from "@myhome/constants";
+import { CorrectionGetPenalty } from "@myhome/contracts";
+import { IPenaltyRuleDetail, IDebtDetail, IPenaltyRule, IDebt } from "@myhome/interfaces";
+import { Injectable } from "@nestjs/common";
+import { DebtRepository } from "../../debt/debt.repository";
+import { CBRService } from "./cbr.service";
+import { PenaltyRuleService } from "./penalty-rule.service";
 
 @Injectable()
 export class PenaltyService {
     constructor(
-        private readonly rmqService: RMQService,
-        private readonly penaltyRuleRepository: PenaltyRuleRepository,
         private readonly debtRepository: DebtRepository,
+        private readonly penaltyRuleService: PenaltyRuleService,
+        private readonly cbrService: CBRService,
     ) { }
-
-    private async getAllPenaltyRules() {
-        return await this.penaltyRuleRepository.findAll();
-    }
-
-    private async getKeyRates(startDate: Date, endDate: Date): Promise<[{ period: Date, value: number }]> {
-        const url = 'https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx?WSDL';
-        const client = await createClientAsync(url);
-
-        const params = {
-            fromDate: startDate.toISOString(),
-            ToDate: endDate.toISOString(),
-        };
-
-        const result = await client.KeyRateXMLAsync(params);
-
-        const keyRates = result[0].KeyRateXMLResult.KeyRate.KR.map((rcdKR) => ({
-            period: new Date(Date.parse(rcdKR.DT)),
-            value: parseFloat(rcdKR.Rate),
-        }));
-
-        return keyRates;
-    }
 
     private getCountOfDays(startDate: Date, endDate: Date) {
         const timeDifference = endDate.getTime() - startDate.getTime();
@@ -95,16 +69,16 @@ export class PenaltyService {
         return outputArray;
     }
 
-
-    private calculatePenaltyByOneDebt(
+    public calculatePenaltyByOneDebt(
         debt: IDebtDetail[],
         penaltyRules: IPenaltyRule[],
         startOfDebt: Date,
+        endOfDebt: Date,
         keyRate: number,
         partOfDebt: boolean,
         payedDays?: number
     ) {
-        const currentDate = new Date();
+        const currentDate = endOfDebt;
         const difference = this.getCountOfDays(startOfDebt, currentDate);
         let penalty = 0, dividers: { divider: number, days: number }[];
 
@@ -137,10 +111,20 @@ export class PenaltyService {
         let keyRateData: [{ period: Date, value: number }];
         let keyRate: number, partOfDebt: boolean, payedDays: number;
 
-        const penaltyRules = await this.getAllPenaltyRules();
+        const penaltyRules = await this.penaltyRuleService.getAllPenaltyRules();
         const debts: IDebt[] = await this.debtRepository.findMany(dto.debtIds);
 
         const result = [];
+        const today = new Date();
+        const lastMonth = new Date(today.setMonth(today.getMonth() - 1));
+        // keyRate = 8.5; // ЗАГЛУШКА
+        // Получаем ключевую ставку
+        try {
+            keyRateData = await this.cbrService.getKeyRates(lastMonth, today);
+            keyRate = keyRateData[0].value;
+        } catch (e) {
+            throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
+        }
 
         for (const debt of debts) {
             // Получаем пени за уже закрытые части долга
@@ -156,20 +140,11 @@ export class PenaltyService {
             // Получаем задолженность для расчитываемой пени
             const currentDebt = debt.debtHistory[0];
 
-            // Получаем ключевую ставку для конкретного долга по его датам
-            try {
-                keyRateData = await this.getKeyRates(currentDebt.date, new Date());
-                keyRate = keyRateData[0].value;
-            } catch (e) {
-                throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
-            }
-            // keyRate = 8.5; // ЗАГЛУШКА
-
             // По последнему невыплаченному долгу расчитываем пени
             const currentPenalty = this.calculatePenaltyByOneDebt(
                 currentDebt.outstandingDebt,
                 penaltyRules,
-                debt.debtHistory[debt.debtHistory.length - 1].date, keyRate, partOfDebt, payedDays
+                debt.debtHistory[debt.debtHistory.length - 1].date, new Date(), keyRate, partOfDebt, payedDays
             );
 
             result.push({
@@ -180,59 +155,4 @@ export class PenaltyService {
 
         return result;
     }
-
-    public async addPenaltyCalculationRule(dto: CorrectionAddPenaltyCalculationRule.Request) {
-        const penaltyRule = await this.penaltyRuleRepository.findById(dto.penaltyRuleId);
-        if (!penaltyRule) {
-            throw new RMQException(PENALTY_RULE_NOT_EXIST.message, PENALTY_RULE_NOT_EXIST.status);
-        }
-        await this.checkManagementCompany(dto.managementCompanyId);
-        const { typesOfService } = await this.checkTypesOfService(dto.typeOfServiceIds);
-        const typeOfServiceIds = typesOfService.map(obj => obj.id);
-
-        const result = await this.penaltyRuleRepository.findByManagementCIDAndPriority(dto.managementCompanyId, dto.priority);
-        if (result) {
-            throw new RMQException(
-                PENALTY_CALCULATION_WITH_PRIORITY_ALREADY_EXIST.message(dto.priority),
-                PENALTY_CALCULATION_WITH_PRIORITY_ALREADY_EXIST.status
-            );
-        }
-
-        const penaltyCalculationRule = {
-            managementCompanyId: dto.managementCompanyId,
-            typeOfServiceIds: typeOfServiceIds,
-            priority: dto.priority
-        };
-        const penaltyRuleEntity = new PenaltyRuleEntity(penaltyRule).addCalculationRule(penaltyCalculationRule);
-
-        await this.penaltyRuleRepository.update(await penaltyRuleEntity);
-        return { penaltyCalculationRule: penaltyCalculationRule }
-    }
-
-    private async checkManagementCompany(managementCompanyId: number) {
-        try {
-            await this.rmqService.send
-                <
-                    AccountUserInfo.Request,
-                    AccountUserInfo.Response
-                >
-                (AccountUserInfo.topic, { id: managementCompanyId, role: UserRole.ManagementCompany });
-        } catch (e) {
-            throw new RMQError(MANAG_COMP_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
-        }
-    }
-
-    private async checkTypesOfService(typeOfServiceIds: number[]) {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetTypesOfService.Request,
-                    ReferenceGetTypesOfService.Response
-                >
-                (ReferenceGetTypesOfService.topic, { typeOfServiceIds: typeOfServiceIds });
-        } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
-        }
-    }
-
 }

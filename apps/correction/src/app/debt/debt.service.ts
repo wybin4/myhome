@@ -3,16 +3,22 @@ import { RMQService } from "nestjs-rmq";
 import { DebtRepository } from "./debt.repository";
 import { AccountUserInfo, CheckSinglePaymentDocument, CorrectionAddDebt, CorrectionGetDebt, CorrectionUpdateDebt } from "@myhome/contracts";
 import { PenaltyRuleRepository } from "../penalty/repositories/penalty-rule.repository";
-import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_SPD, MANAG_COMP_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
-import { IDebtDetail, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
+import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_KEY_RATE, CANT_GET_SPD, MANAG_COMP_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
+import { IDebtDetail, IDebtHistory, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
 import { DebtEntity } from "./debt.entity";
+import { PenaltyService } from "../penalty/services/penalty.service";
+import { PenaltyRuleService } from "../penalty/services/penalty-rule.service";
+import { CBRService } from "../penalty/services/cbr.service";
 
 @Injectable()
 export class DebtService {
     constructor(
         private readonly rmqService: RMQService,
         private readonly debtRepository: DebtRepository,
-        private readonly penaltyRuleRepository: PenaltyRuleRepository
+        private readonly penaltyRuleRepository: PenaltyRuleRepository,
+        private readonly penaltyService: PenaltyService,
+        private readonly penaltyRuleService: PenaltyRuleService,
+        private readonly cbrService: CBRService,
     ) { }
 
     public async getDebt(dto: CorrectionGetDebt.Request) {
@@ -31,37 +37,77 @@ export class DebtService {
             );
         }
 
-        let paymentAmount = dto.amount;
-        const newDebt: IDebtDetail[] = [];
+        // Если есть что-то в массиве debt.debtHistory
+        if (debt.debtHistory.length) {
+            let paymentAmount = dto.amount;
+            const newDebt: IDebtDetail[] = [];
 
-        // Получить новую сумму долга вычитанием из предыдущей debtHistory пришедшей суммы по приоритету
-        await this.checkManagementCompany(dto.managementCompanyId);
-        const priorities = await this.getPriorityWithId(dto.managementCompanyId);
-        const lastDebtState = debt.debtHistory[0].outstandingDebt;
-        for (const priority of priorities) {
-            const oldDebt = lastDebtState.find(obj => String(obj.penaltyRuleId) === String(priority._id));
-            let currAmount = oldDebt.amount; const prevAmount = oldDebt.amount;
-            if (currAmount && paymentAmount > 0) {
-                currAmount -= paymentAmount;
-                if (currAmount < 0) {
-                    currAmount = 0;
-                }
-                paymentAmount -= prevAmount;
-                newDebt.push({
-                    amount: currAmount,
-                    penaltyRuleId: priority._id
-                });
-            } else newDebt.push({ ...oldDebt });
+            // Для предыдущей суммы долга вычисляем и фиксируем пени
+            const lastDebtInHis: IDebtHistory = JSON.parse(JSON.stringify(debt.debtHistory[0]));
+            lastDebtInHis.date = new Date(lastDebtInHis.date);
+            let penalty: number;
+            try {
+                penalty = await this.getPenaltyByHistory(lastDebtInHis, new Date());
+            } catch (e) {
+                throw new RMQException(e.message, e.status);
+            }
+            debt.debtHistory[0].originalPenalty = penalty;
+            debt.debtHistory[0].outstandingPenalty = penalty;
+
+            // Получить новую сумму долга вычитанием из предыдущей debtHistory пришедшей суммы по приоритету
+            await this.checkManagementCompany(dto.managementCompanyId);
+            const priorities = await this.getPriorityWithId(dto.managementCompanyId);
+            const lastDebtState: IDebtDetail[] = JSON.parse(JSON.stringify(debt.debtHistory[0].outstandingDebt));
+            for (const priority of priorities) {
+                const oldDebt = lastDebtState.find(obj => String(obj.penaltyRuleId) === String(priority._id));
+                if (oldDebt && paymentAmount > 0) {
+                    let currAmount = oldDebt.amount; const prevAmount = oldDebt.amount;
+                    currAmount -= paymentAmount;
+                    if (currAmount < 0) {
+                        currAmount = 0;
+                    }
+                    paymentAmount -= prevAmount;
+                    newDebt.push({
+                        amount: currAmount,
+                        penaltyRuleId: priority._id
+                    });
+                } else if (paymentAmount <= 0 && oldDebt) newDebt.push({ ...oldDebt });
+            }
+
+            // Затем в его debtHistory запушить получившуюся сумму с new Date()
+            debt.debtHistory.unshift({
+                outstandingDebt: newDebt,
+                date: new Date(),
+            });
+            // Сохраняем модель
+            await debt.save();
+
+            return { debt: debt };
+        } else return { debt: [] };
+    }
+
+    private async getPenaltyByHistory(debtHistory: IDebtHistory, endDate: Date) {
+        // Получаем все правила вычисления пени
+        const penaltyRules = await this.penaltyRuleService.getAllPenaltyRules();
+        // Получаем ключевую ставку
+        let keyRateData: [{ period: Date, value: number }];
+        let keyRate: number;
+        try {
+            keyRateData = await this.cbrService.getKeyRates(debtHistory.date, new Date());
+            keyRate = keyRateData[0].value;
+        } catch (e) {
+            throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
         }
+        // keyRate = 12; ЗАГЛУШКА!!!!!!!!!
 
-        // Затем в его debtHistory запушить получившуюся сумму с new Date()
-        debt.debtHistory.unshift({
-            outstandingDebt: newDebt,
-            date: new Date(),
-        });
-        await debt.save();
-
-        return { debt: debt };
+        return this.penaltyService.calculatePenaltyByOneDebt(
+            debtHistory.outstandingDebt,
+            penaltyRules,
+            debtHistory.date,
+            endDate,
+            keyRate,
+            false
+        );
     }
 
     private async getPriority(managementCompanyId: number) {

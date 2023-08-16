@@ -1,13 +1,11 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { RMQError, RMQService } from "nestjs-rmq";
+import { RMQService } from "nestjs-rmq";
 import { DebtRepository } from "./debt.repository";
-import { AccountUserInfo, CorrectionAddDebt, CorrectionGetDebt, CorrectionUpdateDebt } from "@myhome/contracts";
+import { AccountUserInfo, CheckSinglePaymentDocument, CorrectionAddDebt, CorrectionGetDebt, CorrectionUpdateDebt } from "@myhome/contracts";
 import { PenaltyRuleRepository } from "../penalty/repositories/penalty-rule.repository";
-import { CANT_GET_DEBT_BY_THIS_SPD_ID, MANAG_COMP_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
+import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_SPD, MANAG_COMP_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
 import { IDebtDetail, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
 import { DebtEntity } from "./debt.entity";
-import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
-import { ObjectId } from "typeorm";
 
 @Injectable()
 export class DebtService {
@@ -23,8 +21,8 @@ export class DebtService {
 
     // Функция уплаты долга или его части
     public async updateDebt(dto: CorrectionUpdateDebt.Request) {
+        await this.checkSPD(dto.singlePaymentDocumentId);
         // Ищем соответствующий долг по SPDId
-        // ПРОВЕРКА SPDID!!!!!!!!!!!
         const debt = await this.debtRepository.findBySPDId(dto.singlePaymentDocumentId);
         if (!debt) {
             throw new RMQException(
@@ -39,17 +37,21 @@ export class DebtService {
         // Получить новую сумму долга вычитанием из предыдущей debtHistory пришедшей суммы по приоритету
         await this.checkManagementCompany(dto.managementCompanyId);
         const priorities = await this.getPriorityWithId(dto.managementCompanyId);
+        const lastDebtState = debt.debtHistory[0].outstandingDebt;
         for (const priority of priorities) {
-            const oldDebt = debt.debtHistory[0].outstandingDebt.find(obj => String(obj.penaltyRuleId) === String(priority._id));
-            if (oldDebt && paymentAmount > 0) {
-                const prevDebt = oldDebt.amount;
-                oldDebt.amount -= paymentAmount;
-                if (oldDebt.amount < 0) {
-                    oldDebt.amount = 0;
+            const oldDebt = lastDebtState.find(obj => String(obj.penaltyRuleId) === String(priority._id));
+            let currAmount = oldDebt.amount; const prevAmount = oldDebt.amount;
+            if (currAmount && paymentAmount > 0) {
+                currAmount -= paymentAmount;
+                if (currAmount < 0) {
+                    currAmount = 0;
                 }
-                paymentAmount -= prevDebt;
-                newDebt.push(oldDebt);
-            } else newDebt.push(oldDebt);
+                paymentAmount -= prevAmount;
+                newDebt.push({
+                    amount: currAmount,
+                    penaltyRuleId: priority._id
+                });
+            } else newDebt.push({ ...oldDebt });
         }
 
         // Затем в его debtHistory запушить получившуюся сумму с new Date()
@@ -58,6 +60,8 @@ export class DebtService {
             date: new Date(),
         });
         await debt.save();
+
+        return { debt: debt };
     }
 
     private async getPriority(managementCompanyId: number) {
@@ -171,6 +175,19 @@ export class DebtService {
                 (AccountUserInfo.topic, { id: managementCompanyId, role: UserRole.ManagementCompany });
         } catch (e) {
             throw new RMQException(MANAG_COMP_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    private async checkSPD(spdId: number) {
+        try {
+            await this.rmqService.send
+                <
+                    CheckSinglePaymentDocument.Request,
+                    CheckSinglePaymentDocument.Response
+                >
+                (CheckSinglePaymentDocument.topic, { id: spdId });
+        } catch (e) {
+            throw new RMQException(CANT_GET_SPD.message(spdId), CANT_GET_SPD.status);
         }
     }
 }

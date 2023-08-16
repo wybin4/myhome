@@ -1,10 +1,10 @@
-import { DeleteDocumentDetails, GetSinglePaymentDocument, ReferenceGetSubscribers } from "@myhome/contracts";
+import { CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, ReferenceGetSubscribers } from "@myhome/contracts";
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentRepository } from "./single-payment-document.repository";
 import { SinglePaymentDocumentEntity } from "./single-payment-document.entity";
 import { CalculationState } from "@myhome/interfaces";
-import { CANT_DELETE_DOCUMENT_DETAILS, RMQException, SUBSCRIBERS_NOT_EXIST } from "@myhome/constants";
+import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, RMQException, SUBSCRIBERS_NOT_EXIST } from "@myhome/constants";
 import { GetSinglePaymentDocumentSaga } from "./sagas/get-single-payment-document.saga";
 
 @Injectable()
@@ -13,6 +13,15 @@ export class SinglePaymentDocumentService {
         private readonly rmqSerivce: RMQService,
         private readonly singlePaymentDocumentRepository: SinglePaymentDocumentRepository
     ) { }
+
+    async checkSinglePaymentDocument({ id }: CheckSinglePaymentDocument.Request) {
+        const singlePaymentDocument = await this.singlePaymentDocumentRepository.findSinglePaymentDocumentById(id);
+        if (!singlePaymentDocument) {
+            throw new RMQException(CANT_GET_SPD.message(id), CANT_GET_SPD.status);
+        }
+        const gettedHouse = new SinglePaymentDocumentEntity(singlePaymentDocument).get();
+        return { singlePaymentDocument: gettedHouse };
+    }
 
     async getSinglePaymentDocument(dto: GetSinglePaymentDocument.Request) {
         const SPDEntities: SinglePaymentDocumentEntity[] = [];

@@ -2,7 +2,7 @@ import { ISinglePaymentDocument, RequireHomeOrManagementCompany } from "@myhome/
 import { IsArray } from "class-validator";
 
 export namespace GetSinglePaymentDocument {
-    export const topic = 'document-detail.get-single-payment-document.command';
+    export const topic = 'single-payment-document.get-single-payment-document.command';
 
     export class Request {
         @IsArray()

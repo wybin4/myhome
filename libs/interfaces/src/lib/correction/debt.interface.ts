@@ -7,11 +7,13 @@ export interface IDebt {
 }
 
 export interface IDebtDetail {
+    _id?: string;
     penaltyRuleId: string;
     amount: number;
 }
 
 export interface IDebtHistory {
+    _id?: string;
     outstandingDebt: IDebtDetail[];
     date: Date;
     originalPenalty?: number; // Во всех, кроме последней записи

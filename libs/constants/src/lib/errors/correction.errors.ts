@@ -36,3 +36,11 @@ export const PRIORITY_NOT_EXIST = {
     message: 'Для правил расчёта пени не настроен приоритет',
     status: HttpStatus.NOT_FOUND
 }
+export const DEBT_NOT_EXIST = {
+    message: 'Такой долг не существует',
+    status: HttpStatus.NOT_FOUND
+}
+export const DEPOSIT_NOT_EXIST = {
+    message: 'Такой аванс не существует',
+    status: HttpStatus.NOT_FOUND
+}

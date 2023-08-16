@@ -14,4 +14,13 @@ export class DebtEntity implements IDebt {
         this.originalDebt = debt.originalDebt;
         this.createdAt = debt.createdAt;
     }
+
+    public async get() {
+        return {
+            singlePaymentDocumentId: this.singlePaymentDocumentId,
+            debtHistory: this.debtHistory,
+            originalDebt: this.originalDebt,
+            createdAt: this.createdAt,
+        }
+    }
 }

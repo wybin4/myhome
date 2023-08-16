@@ -1,6 +1,6 @@
 import { RMQException, CANT_GET_CURRENT_RULE, CANT_DIVIDE_INTO_RULE_DIVIDER, CANT_GET_KEY_RATE } from "@myhome/constants";
 import { CorrectionGetPenalty } from "@myhome/contracts";
-import { IPenaltyRuleDetail, IDebtDetail, IPenaltyRule, IDebt } from "@myhome/interfaces";
+import { IPenaltyRuleDetail, IDebtDetail, IPenaltyRule, IDebt, IDebtHistory } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
 import { DebtRepository } from "../../debt/debt.repository";
 import { CBRService } from "./cbr.service";
@@ -67,6 +67,30 @@ export class PenaltyService {
         }
 
         return outputArray;
+    }
+
+    public async getPenaltyByHistory(debtHistory: IDebtHistory, endDate: Date) {
+        // Получаем все правила вычисления пени
+        const penaltyRules = await this.penaltyRuleService.getAllPenaltyRules();
+        // Получаем ключевую ставку
+        let keyRateData: [{ period: Date, value: number }];
+        let keyRate: number;
+        try {
+            keyRateData = await this.cbrService.getKeyRates(debtHistory.date, new Date());
+            keyRate = keyRateData[0].value;
+        } catch (e) {
+            throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
+        }
+        // keyRate = 12; ЗАГЛУШКА!!!!!!!!!
+
+        return this.calculatePenaltyByOneDebt(
+            debtHistory.outstandingDebt,
+            penaltyRules,
+            debtHistory.date,
+            endDate,
+            keyRate,
+            false
+        );
     }
 
     public calculatePenaltyByOneDebt(

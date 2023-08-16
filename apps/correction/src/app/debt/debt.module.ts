@@ -6,16 +6,13 @@ import { DebtService } from "./debt.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Debt, DebtSchema } from "./debt.model";
 import { PenaltyService } from "../penalty/services/penalty.service";
-import { PenaltyRuleService } from "../penalty/services/penalty-rule.service";
-import { CBRService } from "../penalty/services/cbr.service";
-
 
 @Module({
     imports: [
         MongooseModule.forFeature([{ name: Debt.name, schema: DebtSchema }]),
         forwardRef(() => PenaltyModule),
     ],
-    providers: [DebtService, DebtRepository, PenaltyService, PenaltyRuleService, CBRService],
+    providers: [DebtService, DebtRepository, PenaltyService],
     controllers: [DebtController],
     exports: [DebtRepository],
 })

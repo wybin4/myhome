@@ -10,7 +10,7 @@ import { GetSinglePaymentDocumentSaga } from "./sagas/get-single-payment-documen
 @Injectable()
 export class SinglePaymentDocumentService {
     constructor(
-        private readonly rmqSerivce: RMQService,
+        private readonly rmqService: RMQService,
         private readonly singlePaymentDocumentRepository: SinglePaymentDocumentRepository
     ) { }
 
@@ -45,7 +45,7 @@ export class SinglePaymentDocumentService {
 
         const saga = new GetSinglePaymentDocumentSaga(
             savedSPDEntities,
-            this.rmqSerivce,
+            this.rmqService,
             subscriberIds,
             dto.managementCompanyId,
             dto.houseId
@@ -57,24 +57,26 @@ export class SinglePaymentDocumentService {
             );
         await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithAmount);
 
-        // try {
-        //     const { singlePaymentDocuments: singlePaymentDocumentsWithDebtAndPenalty } =
-        //         await saga.getState().calculateDebtAndPenalty(
-        //             detailIds
-        //         );
-        //     await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithDebtAndPenalty);
-        // }
-        // catch (e) {
-        //     await this.revertCalculateDetails(detailIds);
-        //     throw new RMQException(e.message, e.status);
-        // }
-
-        return { singlePaymentDocuments: [] };
+        try {
+            console.log(await saga.getState().calculateDebtAndPenalty(
+                detailIds
+            ))
+            // const { singlePaymentDocuments: singlePaymentDocumentsWithDebtAndPenalty } =
+            // await saga.getState().calculateDebtAndPenalty(
+            //     detailIds
+            // );
+            // await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithDebtAndPenalty);
+            // return { singlePaymentDocuments: singlePaymentDocumentsWithDebtAndPenalty };
+        }
+        catch (e) {
+            await this.revertCalculateDetails(detailIds);
+            throw new RMQException(e.message, e.status);
+        }
     }
 
-    public async revertCalculateDetails(detailIds: number[]) {
+    private async revertCalculateDetails(detailIds: number[]) {
         try {
-            return await this.rmqSerivce.send
+            return await this.rmqService.send
                 <
                     DeleteDocumentDetails.Request,
                     DeleteDocumentDetails.Response
@@ -87,7 +89,7 @@ export class SinglePaymentDocumentService {
 
     private async checkSubscribers(subscriberIds: number[]) {
         try {
-            return await this.rmqSerivce.send
+            return await this.rmqService.send
                 <
                     ReferenceGetSubscribers.Request,
                     ReferenceGetSubscribers.Response

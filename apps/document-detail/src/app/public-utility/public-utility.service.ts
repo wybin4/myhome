@@ -3,12 +3,10 @@ import { RMQService } from "nestjs-rmq";
 import { IGetMeterReading, IMunicipalTariff, ISubscriber, MeterType, TariffAndNormType } from "@myhome/interfaces";
 import { GetPublicUtilities, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscriber } from "@myhome/contracts";
 import { RMQException, SUBSCRIBER_WITH_ID_NOT_EXIST, TARIFFS_NOT_EXIST } from "@myhome/constants";
-import { DocumentDetailRepository } from "../document-detail/document-detail.repository";
 
 @Injectable()
 export class PublicUtilityService {
     constructor(
-        private readonly documentDetailRepository: DocumentDetailRepository,
         private readonly rmqService: RMQService,
     ) { }
 
@@ -95,7 +93,7 @@ export class PublicUtilityService {
                             currentTariff.norm * currentTariff.multiplyingFactor
                             :
                             currentTariff.norm,
-                    publicUtility: difference,
+                    amountConsumed: difference,
                     typeOfServiceId: meterReading.typeOfServiceId
                 });
             } else throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);

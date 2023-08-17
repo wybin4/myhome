@@ -1,7 +1,7 @@
-import { IDocumentDetail } from '@myhome/interfaces';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { IDocumentDetail } from "@myhome/interfaces";
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 
-@Entity('document_details')
+@Entity('document-details')
 export class DocumentDetailEntity implements IDocumentDetail {
     @PrimaryGeneratedColumn()
     id: number;
@@ -24,7 +24,7 @@ export class DocumentDetailEntity implements IDocumentDetail {
         }
     }
 
-    public get() {
+    public getDocumentDetail() {
         return {
             typeOfServiceId: this.typeOfServiceId,
             tariff: this.tariff,
@@ -32,5 +32,4 @@ export class DocumentDetailEntity implements IDocumentDetail {
             singlePaymentDocumentId: this.singlePaymentDocumentId,
         }
     }
-
 }

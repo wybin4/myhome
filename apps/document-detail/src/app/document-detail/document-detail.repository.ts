@@ -7,15 +7,23 @@ import { DocumentDetailEntity } from './document-detail.entity';
 export class DocumentDetailRepository {
     constructor(
         @InjectRepository(DocumentDetailEntity)
-        private readonly documentDetailRepository: Repository<DocumentDetailEntity>,
+        private readonly detailRepository: Repository<DocumentDetailEntity>,
     ) { }
 
-    async createDocumentDetail(DocumentDetail: DocumentDetailEntity) {
-        return this.documentDetailRepository.save(DocumentDetail);
+    async create(DocumentDetail: DocumentDetailEntity) {
+        return this.detailRepository.save(DocumentDetail);
     }
 
-    async findDocumentDetailById(id: number) {
-        return this.documentDetailRepository.findOne({ where: { id } });
+    async findById(id: number) {
+        return this.detailRepository.findOne({ where: { id } });
+    }
+
+    async deleteMany(ids: number[]) {
+        return this.detailRepository.delete(ids);
+    }
+
+    async createMany(entities: DocumentDetailEntity[]): Promise<DocumentDetailEntity[]> {
+        return this.detailRepository.save(entities);
     }
 
 }

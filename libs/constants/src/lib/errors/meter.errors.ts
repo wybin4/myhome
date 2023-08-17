@@ -33,6 +33,6 @@ export const FAILED_TO_GET_CURRENT_READINGS = {
     status: HttpStatus.NOT_FOUND,
 };
 export const FAILED_TO_GET_INDIVIDUAL_READINGS = {
-    message: 'Невозможно получить показания индивидуальных счётчиков для аналогичного типа услуги',
+    message: 'Невозможно получить показания индивидуальных счётчиков для такой услуги',
     status: HttpStatus.NOT_FOUND,
 };

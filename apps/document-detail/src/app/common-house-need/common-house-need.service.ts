@@ -1,6 +1,5 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { DocumentDetailRepository } from "../document-detail/document-detail.repository";
 import { GetCommonHouseNeeds, ReferenceGetAllTariffs, ReferenceGetAllTypesOfService, ReferenceGetApartmentsBySubscribers, ReferenceGetHouse, ReferenceGetMeterReadingByHID, ReferenceGetSubscribersByHouse } from "@myhome/contracts";
 import { CANT_GET_SUBSCRIBERS_BY_HOUSE_ID, FAILED_TO_GET_INDIVIDUAL_READINGS, HOME_NOT_EXIST, RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { PublicUtilityService } from "../public-utility/public-utility.service";
@@ -9,7 +8,6 @@ import { ICommonHouseNeedTariff, TariffAndNormType } from "@myhome/interfaces";
 @Injectable()
 export class CommonHouseNeedService {
     constructor(
-        private readonly documentDetailRepository: DocumentDetailRepository,
         private readonly rmqService: RMQService,
         private readonly publicUtilityService: PublicUtilityService
     ) { }
@@ -48,7 +46,7 @@ export class CommonHouseNeedService {
             for (const diff of difference) {
                 const currentTariff = tariffs.find((obj) => obj.typeOfServiceId === diff.typeOfServiceId);
                 temp.push({
-                    commonHouseNeed: diff.difference * apartmentEntity.livingArea / house.house.floorSpace,
+                    amountConsumed: diff.difference * apartmentEntity.livingArea / house.house.floorSpace,
                     typeOfServiceId: diff.typeOfServiceId,
                     tariff: currentTariff.multiplier
                 });
@@ -149,13 +147,13 @@ export class CommonHouseNeedService {
         for (const tos of typesOfService) {
             let temp: {
                 tariff: number,
-                publicUtility: number,
+                amountConsumed: number,
                 typeOfServiceId: number
             };
             let sum = 0;
             for (const pu of publicUtilities) {
                 temp = pu.publicUtility.find((obj) => obj.typeOfServiceId === tos);
-                if (temp) { sum += temp.publicUtility; }
+                if (temp) { sum += temp.amountConsumed; }
             }
             if (sum > 0) {
                 amountConsumed.push({

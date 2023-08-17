@@ -20,7 +20,7 @@ export interface IGetCommonHouseNeed {
     commonHouseNeeds: [
         {
             tariff: number,
-            commonHouseNeed: number,
+            amountConsumed: number,
             typeOfServiceId: number
         }
     ]

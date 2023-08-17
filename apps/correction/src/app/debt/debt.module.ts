@@ -24,7 +24,7 @@ import { PenaltyRuleRepository } from "./repositories/penalty-rule.repository";
         PenaltyService, PenaltyRuleService, CBRService, PenaltyRuleRepository, PenaltyRuleSeeder
     ],
     controllers: [DebtController, PenaltyController],
-    exports: [DebtRepository, PenaltyRuleRepository],
+    exports: [DebtRepository, PenaltyRuleRepository, PenaltyService, DebtService],
 })
 
 export class DebtModule implements OnModuleInit {

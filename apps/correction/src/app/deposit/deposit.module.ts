@@ -11,7 +11,7 @@ import { DepositEntity } from "./deposit.entity";
     ],
     providers: [DepositService, DepositRepository],
     controllers: [DepositController],
-    exports: [DepositRepository],
+    exports: [DepositRepository, DepositService],
 
 })
 export class DepositModule { }

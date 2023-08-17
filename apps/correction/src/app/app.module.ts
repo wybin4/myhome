@@ -8,6 +8,7 @@ import { DebtModule } from './debt/debt.module';
 import { DepositModule } from './deposit/deposit.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { getMongoConfig } from './configs/mongo.config';
+import { CorrectionService } from './correction.service';
 
 @Module({
   imports: [
@@ -21,5 +22,7 @@ import { getMongoConfig } from './configs/mongo.config';
     DebtModule,
     DepositModule
   ],
+  providers: [CorrectionService],
+
 })
 export class AppModule { }

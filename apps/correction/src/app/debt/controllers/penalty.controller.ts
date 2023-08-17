@@ -1,9 +1,9 @@
-import { PenaltyService } from './services/penalty.service';
+import { PenaltyService } from '../services/penalty.service';
 import { CorrectionAddPenaltyCalculationRule, CorrectionGetPenalty } from '@myhome/contracts';
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
-import { PenaltyRuleService } from './services/penalty-rule.service';
+import { PenaltyRuleService } from '../services/penalty-rule.service';
 
 @Controller('penalty')
 export class PenaltyController {
@@ -12,9 +12,8 @@ export class PenaltyController {
         private readonly penaltyRuleService: PenaltyRuleService,
     ) { }
 
-    @Post('get-penalty')
-    // @RMQValidate()
-    // @RMQRoute(CorrectionGetPenalty.topic)
+    @RMQValidate()
+    @RMQRoute(CorrectionGetPenalty.topic)
     async getPenalty(@Body() dto: CorrectionGetPenalty.Request) {
         try {
             return await this.penaltyService.getPenalty(dto);

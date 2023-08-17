@@ -2,7 +2,7 @@ import { RMQException, CANT_GET_CURRENT_RULE, CANT_DIVIDE_INTO_RULE_DIVIDER, CAN
 import { CorrectionGetPenalty } from "@myhome/contracts";
 import { IPenaltyRuleDetail, IDebtDetail, IPenaltyRule, IDebt, IDebtHistory } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
-import { DebtRepository } from "../../debt/debt.repository";
+import { DebtRepository } from "../repositories/debt.repository";
 import { CBRService } from "./cbr.service";
 import { PenaltyRuleService } from "./penalty-rule.service";
 

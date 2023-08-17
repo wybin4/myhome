@@ -1,12 +1,12 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { DebtRepository } from "./debt.repository";
+import { DebtRepository } from "../repositories/debt.repository";
 import { AccountUserInfo, CheckSinglePaymentDocument, CorrectionAddDebt, CorrectionGetDebt, CorrectionCalculateDebts, CorrectionUpdateDebt } from "@myhome/contracts";
-import { PenaltyRuleRepository } from "../penalty/repositories/penalty-rule.repository";
+import { PenaltyRuleRepository } from "../repositories/penalty-rule.repository";
 import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_SPD, DEBT_NOT_EXIST, MANAG_COMP_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
 import { IDebtDetail, IDebtHistory, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
-import { DebtEntity } from "./debt.entity";
-import { PenaltyService } from "../penalty/services/penalty.service";
+import { DebtEntity } from "../entities/debt.entity";
+import { PenaltyService } from "./penalty.service";
 
 @Injectable()
 export class DebtService {

@@ -2,7 +2,6 @@ import { IPenaltyCalculationRule, IPenaltyRule, IPenaltyRuleDetail } from '@myho
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-
 @Schema()
 export class PenaltyRuleDetail extends Document implements IPenaltyRuleDetail {
     @Prop({ required: true })

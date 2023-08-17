@@ -6,8 +6,9 @@ import { CalculationState, IDocumentDetail } from "@myhome/interfaces";
 import { AddDocumentDetails, GetCommonHouseNeeds, GetPublicUtilities } from "@myhome/contracts";
 
 export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDocumentSagaState {
-    private async getDebt() {
 
+    private async getDebt() {
+        
     }
 
     private async addDocumentDetails(details: IDocumentDetail[]) {

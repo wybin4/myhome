@@ -1,8 +1,8 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
-import { DebtEntity } from './debt.entity';
-import { Debt } from './debt.model';
+import { DebtEntity } from '../entities/debt.entity';
+import { Debt } from '../models/debt.model';
 import { ObjectId } from 'typeorm';
 import { IDebtDetail } from '@myhome/interfaces';
 

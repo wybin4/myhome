@@ -2,7 +2,6 @@ import { IDebt, IDebtDetail, IDebtHistory } from '@myhome/interfaces';
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-
 @Schema()
 export class DebtDetail extends Document implements IDebtDetail {
     @Prop({ required: true })

@@ -5,7 +5,6 @@ import { getRMQConfig } from './configs/rmq.config';
 import { getMySQLConfig } from './configs/mysql.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DebtModule } from './debt/debt.module';
-import { PenaltyModule } from './penalty/penalty.module';
 import { DepositModule } from './deposit/deposit.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { getMongoConfig } from './configs/mongo.config';
@@ -20,7 +19,6 @@ import { getMongoConfig } from './configs/mongo.config';
     }),
     MongooseModule.forRootAsync(getMongoConfig()),
     DebtModule,
-    PenaltyModule,
     DepositModule
   ],
 })

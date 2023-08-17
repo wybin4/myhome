@@ -5,10 +5,12 @@ import { HttpStatus } from "@nestjs/common";
 import { CalculationState, IDocumentDetail } from "@myhome/interfaces";
 import { AddDocumentDetails, GetCommonHouseNeeds, GetPublicUtilities } from "@myhome/contracts";
 
-
 export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDocumentSagaState {
+    private async getDebt() {
 
-    public async addDocumentDetails(details: IDocumentDetail[]) {
+    }
+
+    private async addDocumentDetails(details: IDocumentDetail[]) {
         try {
             return await this.saga.rmqService.send
                 <

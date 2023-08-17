@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DebtRepository } from "./debt.repository";
-import { AccountUserInfo, CheckSinglePaymentDocument, CorrectionAddDebt, CorrectionGetDebt, CorrectionUpdateDebt } from "@myhome/contracts";
+import { AccountUserInfo, CheckSinglePaymentDocument, CorrectionAddDebt, CorrectionGetDebt, CorrectionCalculateDebts, CorrectionUpdateDebt } from "@myhome/contracts";
 import { PenaltyRuleRepository } from "../penalty/repositories/penalty-rule.repository";
 import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_SPD, DEBT_NOT_EXIST, MANAG_COMP_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
 import { IDebtDetail, IDebtHistory, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
@@ -16,6 +16,31 @@ export class DebtService {
         private readonly penaltyRuleRepository: PenaltyRuleRepository,
         private readonly penaltyService: PenaltyService,
     ) { }
+
+    public async calculateDebts({ subscriberSPDs }: CorrectionCalculateDebts.Request): Promise<CorrectionCalculateDebts.Response> {
+        const subscribersDebt = [];
+        // Для каждого абонента находим его незакрытые долги по SPDIds
+        for (const subscriber of subscriberSPDs) {
+            // Т.е. те, где в debtHistory последняя запись ненулевая - outstandingDebt.amount != 0
+            const spdsWithNonZeroAmount = await this.debtRepository.findSPDsWithNonZeroAmount(subscriber.spdIds);
+            const debts = [];
+
+            // Долги по одному ЕПД в разных категориях
+            for (const spd of spdsWithNonZeroAmount) {
+                const amounts = spd.outstandingDebt.map(obj => obj.amount);
+                const debt = amounts.reduce((a, b) => a + b, 0);
+                debts.push(debt);
+            }
+
+            // Долги абонента по всем ЕПД
+            subscribersDebt.push({
+                subscriberId: subscriber.subscriberId,
+                debt: debts.reduce((a, b) => a + b, 0)
+            });
+        }
+
+        return { debts: subscribersDebt };
+    }
 
     public async getDebt({ id }: CorrectionGetDebt.Request) {
         const debt = await this.debtRepository.findById(id);

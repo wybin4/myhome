@@ -55,6 +55,7 @@ export * from './lib/single-payment-document/check-single-payment-document';
 export * from './lib/correction/debt/correction.get-debt';
 export * from './lib/correction/debt/correction.add-debt';
 export * from './lib/correction/debt/correction.update-debt';
+export * from './lib/correction/debt/correction.calculate-debts';
 export * from './lib/correction/deposit/correction.get-deposit';
 export * from './lib/correction/deposit/correction.add-deposit';
 export * from './lib/correction/penalty/correction.add-penalty-calculation-rule';

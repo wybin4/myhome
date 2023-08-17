@@ -3,6 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
 import { DebtEntity } from './debt.entity';
 import { Debt } from './debt.model';
+import { ObjectId } from 'typeorm';
+import { IDebtDetail } from '@myhome/interfaces';
 
 @Injectable()
 export class DebtRepository {
@@ -28,5 +30,28 @@ export class DebtRepository {
     }
     async update({ _id, ...rest }: DebtEntity) {
         return this.debtModel.updateOne({ _id }, { $set: { ...rest } }).exec();
+    }
+    async findSPDsWithNonZeroAmount(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, outstandingDebt: IDebtDetail[] }[]> {
+        return this.debtModel.aggregate([
+            {
+                $match: {
+                    singlePaymentDocumentId: { $in: spdIds },
+                    'debtHistory.0.outstandingDebt': {
+                        $elemMatch: {
+                            'amount': { $ne: 0 }
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    singlePaymentDocumentId: '$singlePaymentDocumentId',
+                    outstandingDebt: {
+                        $arrayElemAt: ['$debtHistory.outstandingDebt', 0]
+                    },
+                },
+            },
+        ]).exec();
     }
 }

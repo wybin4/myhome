@@ -54,4 +54,27 @@ export class DebtRepository {
             },
         ]).exec();
     }
+    async findSPDsWithNonZeroPenalty(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, outstandingPenalty: number }[]> {
+        return this.debtModel.aggregate([
+            {
+                $match: {
+                    singlePaymentDocumentId: { $in: spdIds },
+                    'debtHistory.': {
+                        $elemMatch: {
+                            'outstandingPenalty': { $ne: 0 }
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    singlePaymentDocumentId: '$singlePaymentDocumentId',
+                    outstandingPenalty: {
+                        $arrayElemAt: ['$debtHistory.outstandingPenalty', 0]
+                    },
+                },
+            },
+        ]).exec();
+    }
 }

@@ -3,12 +3,21 @@ import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
 import { CANT_ADD_DOCUMENT_DETAILS, RMQException } from "@myhome/constants";
 import { HttpStatus } from "@nestjs/common";
 import { CalculationState, IDocumentDetail } from "@myhome/interfaces";
-import { AddDocumentDetails, GetCommonHouseNeeds, GetPublicUtilities } from "@myhome/contracts";
+import { AddDocumentDetails, GetCommonHouseNeeds, GetCorrection, GetPublicUtilities } from "@myhome/contracts";
 
 export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDocumentSagaState {
 
-    private async getDebt() {
-        
+    private async getCorrection(dto) { // ИСПРАВИТЬ!!!!!!!!!!
+        try {
+            return await this.saga.rmqService.send
+                <
+                    GetCorrection.Request,
+                    GetCorrection.Response
+                >
+                (GetCorrection.topic, { dto });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
     }
 
     private async addDocumentDetails(details: IDocumentDetail[]) {

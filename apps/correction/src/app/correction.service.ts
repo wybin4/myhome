@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { DebtService } from "./debt/services/debt.service";
 import { PenaltyService } from "./debt/services/penalty.service";
 import { DepositService } from "./deposit/deposit.service";
-import { ICalculateDebtsRequest } from "@myhome/contracts";
+import { GetCorrection } from "@myhome/contracts";
 
 @Injectable()
 export class CorrectionService {
@@ -12,13 +12,13 @@ export class CorrectionService {
         private readonly depositService: DepositService,
     ) { }
 
-    async getAllData(subscriberSPDs: ICalculateDebtsRequest[]) {
+    async getCorrection({ subscriberSPDs }: GetCorrection.Request) {
         const debtData = await this.debtService.calculateDebts({ subscriberSPDs: subscriberSPDs });
-        // const penaltyData = await this.penaltyService.getPenaltyData();
+        const penaltyData = await this.penaltyService.calculatePenalties({ subscriberSPDs: subscriberSPDs });
         // const depositData = await this.depositService.getDepositData();
 
         return {
-            // penalty: penaltyData,
+            penalty: penaltyData,
             debt: debtData,
             // deposit: depositData,
         };

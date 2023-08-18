@@ -1,3 +1,4 @@
+import { ICalculatedDebt, IGetCorrection } from "@myhome/interfaces";
 import { IsArray } from "class-validator";
 
 export namespace CorrectionCalculateDebts {
@@ -5,20 +6,10 @@ export namespace CorrectionCalculateDebts {
 
     export class Request {
         @IsArray()
-        subscriberSPDs!: ICalculateDebtsRequest[];
+        subscriberSPDs!: IGetCorrection[];
     }
 
     export class Response {
-        debts!: ICalculateDebtsResponse[];
+        debts!: ICalculatedDebt[];
     }
-}
-
-export interface ICalculateDebtsRequest {
-    subscriberId: number;
-    spdIds: number[];
-}
-
-export interface ICalculateDebtsResponse {
-    subscriberId: number;
-    debt: number
 }

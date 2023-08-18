@@ -1,5 +1,5 @@
 import { RMQException, CANT_GET_CURRENT_RULE, CANT_DIVIDE_INTO_RULE_DIVIDER, CANT_GET_KEY_RATE } from "@myhome/constants";
-import { CorrectionGetPenalty } from "@myhome/contracts";
+import { CorrectionCalculatePenalties, CorrectionGetPenalty } from "@myhome/contracts";
 import { IPenaltyRuleDetail, IDebtDetail, IPenaltyRule, IDebt, IDebtHistory } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
 import { DebtRepository } from "../repositories/debt.repository";
@@ -13,6 +13,31 @@ export class PenaltyService {
         private readonly penaltyRuleService: PenaltyRuleService,
         private readonly cbrService: CBRService,
     ) { }
+
+    async calculatePenalties({ subscriberSPDs }: CorrectionCalculatePenalties.Request) {
+        const subscribersPenalty = [];
+        // Для каждого абонента находим его незакрытые пени по SPDIds
+        for (const subscriber of subscriberSPDs) {
+            // Т.е. те, где в debtHistory последняя запись ненулевая - outstandingDebt.amount != 0
+            const spdsWithNonZeroAmount = await this.debtRepository.findSPDsWithNonZeroPenalty(subscriber.spdIds);
+            let penalty = 0;
+
+            // Пени по конкретным ЕПД
+            for (const spd of spdsWithNonZeroAmount) {
+                if (spd.outstandingPenalty) {
+                    penalty += spd.outstandingPenalty;
+                }
+            }
+
+            // Пени абонента по всем ЕПД
+            subscribersPenalty.push({
+                subscriberId: subscriber.subscriberId,
+                penalty: penalty
+            });
+        }
+
+        return { penalties: subscribersPenalty };
+    }
 
     private getCountOfDays(startDate: Date, endDate: Date) {
         const timeDifference = endDate.getTime() - startDate.getTime();

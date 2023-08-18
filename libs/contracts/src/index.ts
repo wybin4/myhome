@@ -61,3 +61,5 @@ export * from './lib/correction/deposit/correction.add-deposit';
 export * from './lib/correction/penalty/correction.add-penalty-calculation-rule';
 export * from './lib/correction/penalty/correction.get-penalty';
 export * from './lib/correction/penalty/correction.add-penalty';
+export * from './lib/correction/penalty/correction.calculate-penalties';
+export * from './lib/correction/correction.get-correction';

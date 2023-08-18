@@ -9,6 +9,7 @@ import { DepositModule } from './deposit/deposit.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { getMongoConfig } from './configs/mongo.config';
 import { CorrectionService } from './correction.service';
+import { CorrectionController } from './correction.controller';
 
 @Module({
   imports: [
@@ -23,6 +24,6 @@ import { CorrectionService } from './correction.service';
     DepositModule
   ],
   providers: [CorrectionService],
-
+  controllers: [CorrectionController],
 })
 export class AppModule { }

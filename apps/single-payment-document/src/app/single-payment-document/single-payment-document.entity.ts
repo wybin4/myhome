@@ -59,4 +59,10 @@ export class SinglePaymentDocumentEntity implements ISinglePaymentDocument {
         this.amount = amount;
         return this;
     }
+
+    public setCorrection(debt: number, penalty: number) {
+        this.debt = debt;
+        this.penalty = penalty;
+        return this;
+    }
 }

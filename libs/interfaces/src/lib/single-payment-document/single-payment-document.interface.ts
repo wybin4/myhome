@@ -11,7 +11,7 @@ export interface ISinglePaymentDocument {
 export enum CalculationState {
     Started = 'Started',
     DetailsCalculated = 'DetailsCalculated',
-    DebtAndPenaltiesCalculated = 'DebtAndPenaltiesCalculated',
+    CorrectionsCalculated = 'CorrectionsCalculated',
     Calculated = 'Calculated',
     Cancelled = 'Cancelled',
 }

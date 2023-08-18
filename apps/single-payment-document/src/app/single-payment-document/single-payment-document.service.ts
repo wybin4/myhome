@@ -57,16 +57,15 @@ export class SinglePaymentDocumentService {
             );
         await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithAmount);
 
+        // По subscriberIds получаем все их spdIds
+        const subscriberSPDs = await this.singlePaymentDocumentRepository.getSPDIdsBySubscriberIds(subscriberIds);
         try {
-            console.log(await saga.getState().calculateDebtAndPenalty(
-                detailIds
-            ))
-            // const { singlePaymentDocuments: singlePaymentDocumentsWithDebtAndPenalty } =
-            // await saga.getState().calculateDebtAndPenalty(
-            //     detailIds
-            // );
-            // await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithDebtAndPenalty);
-            // return { singlePaymentDocuments: singlePaymentDocumentsWithDebtAndPenalty };
+            const { singlePaymentDocuments: singlePaymentDocumentsWithDebtAndPenalty } =
+                await saga.getState().calculateDebtAndPenalty(
+                    subscriberSPDs
+                );
+            await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithDebtAndPenalty);
+            return { singlePaymentDocuments: singlePaymentDocumentsWithDebtAndPenalty };
         }
         catch (e) {
             await this.revertCalculateDetails(detailIds);

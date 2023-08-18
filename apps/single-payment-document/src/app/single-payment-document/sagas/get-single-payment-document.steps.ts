@@ -2,24 +2,10 @@ import { GetSinglePaymentDocumentSagaState } from "./get-single-payment-document
 import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
 import { CANT_ADD_DOCUMENT_DETAILS, RMQException } from "@myhome/constants";
 import { HttpStatus } from "@nestjs/common";
-import { CalculationState, IDocumentDetail } from "@myhome/interfaces";
+import { CalculationState, IDocumentDetail, IGetCorrection } from "@myhome/interfaces";
 import { AddDocumentDetails, GetCommonHouseNeeds, GetCorrection, GetPublicUtilities } from "@myhome/contracts";
 
 export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDocumentSagaState {
-
-    private async getCorrection(dto) { // ИСПРАВИТЬ!!!!!!!!!!
-        try {
-            return await this.saga.rmqService.send
-                <
-                    GetCorrection.Request,
-                    GetCorrection.Response
-                >
-                (GetCorrection.topic, { dto });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
-    }
-
     private async addDocumentDetails(details: IDocumentDetail[]) {
         try {
             return await this.saga.rmqService.send
@@ -91,11 +77,11 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
             });
         }
 
-        this.saga.setState(CalculationState.DetailsCalculated);
         this.saga.singlePaymentDocuments.map(spd => {
             const currSum = sum.find(s => spd.subscriberId === s.subscriberId);
             spd.setAmount(currSum.sum);
         });
+        this.saga.setState(CalculationState.DetailsCalculated);
 
         // Добавляем details в базу и на выход получаем detailIds
         let detailIds: number[];
@@ -119,19 +105,37 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
 }
 
 export class GetSinglePaymentDocumentSagaStateDetailsCalculated extends GetSinglePaymentDocumentSagaState {
+    private async getCorrection(subscriberSPDs: IGetCorrection[]) {
+        try {
+            return await this.saga.rmqService.send
+                <
+                    GetCorrection.Request,
+                    GetCorrection.Response
+                >
+                (GetCorrection.topic, { subscriberSPDs: subscriberSPDs });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
+    }
     public calculateDetails(): Promise<{ detailIds: number[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("ЕПД уже в процессе расчёта", HttpStatus.BAD_REQUEST);
     }
-    public calculateDebtAndPenalty(detailIds: number[]): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
-        console.log(detailIds);
-        return;
+    public async calculateDebtAndPenalty(subscriberSPDs: IGetCorrection[]): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+        const { debts, penalties } = await this.getCorrection(subscriberSPDs);
+        this.saga.singlePaymentDocuments.map(spd => {
+            const currDebt = debts.find(d => spd.subscriberId === d.subscriberId);
+            const currPenalty = penalties.find(p => spd.subscriberId === p.subscriberId);
+            spd.setCorrection(currDebt.debt, currPenalty.penalty);
+        });
+        this.saga.setState(CalculationState.CorrectionsCalculated);
+        return { singlePaymentDocuments: this.saga.singlePaymentDocuments };
     }
     public cancell(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("Нельзя отменить расчёт в процессе", HttpStatus.BAD_REQUEST);
     }
 }
 
-export class GetSinglePaymentDocumentSagaStateDebtAndPenaltiesCalculated extends GetSinglePaymentDocumentSagaState {
+export class GetSinglePaymentDocumentSagaStateCorrectionsCalculated extends GetSinglePaymentDocumentSagaState {
     public calculateDetails(): Promise<{ detailIds: number[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("Нельзя сделать перерасчёт уже рассчитанного ЕПД", HttpStatus.BAD_REQUEST);
     }

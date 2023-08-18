@@ -12,15 +12,15 @@ export class CorrectionService {
         private readonly depositService: DepositService,
     ) { }
 
-    async getCorrection({ subscriberSPDs }: GetCorrection.Request) {
-        const debtData = await this.debtService.calculateDebts({ subscriberSPDs: subscriberSPDs });
+    async getCorrection({ subscriberSPDs }: GetCorrection.Request): Promise<GetCorrection.Response> {
+        const { debts: debtData } = await this.debtService.calculateDebts({ subscriberSPDs: subscriberSPDs });
         const penaltyData = await this.penaltyService.getCombinedPenaltyData(subscriberSPDs);
         // const depositData = await this.depositService.getDepositData();
 
         return {
-            penalty: penaltyData,
-            debt: debtData,
-            // deposit: depositData,
+            penalties: penaltyData,
+            debts: debtData,
+            // deposits: depositData,
         };
     }
 }

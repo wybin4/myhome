@@ -1,6 +1,6 @@
 import { RMQService } from 'nestjs-rmq';
 import { GetSinglePaymentDocumentSagaState } from './get-single-payment-document.state';
-import { GetSinglePaymentDocumentSagaStateCancelled, GetSinglePaymentDocumentSagaStateDebtAndPenaltiesCalculated, GetSinglePaymentDocumentSagaStateDetailsCalculated, GetSinglePaymentDocumentSagaStateStarted } from './get-single-payment-document.steps';
+import { GetSinglePaymentDocumentSagaStateCancelled, GetSinglePaymentDocumentSagaStateCorrectionsCalculated, GetSinglePaymentDocumentSagaStateDetailsCalculated, GetSinglePaymentDocumentSagaStateStarted } from './get-single-payment-document.steps';
 import { CalculationState } from '@myhome/interfaces';
 import { SinglePaymentDocumentEntity } from '../single-payment-document.entity';
 
@@ -23,8 +23,8 @@ export class GetSinglePaymentDocumentSaga {
 			case CalculationState.DetailsCalculated:
 				this.state = new GetSinglePaymentDocumentSagaStateDetailsCalculated();
 				break;
-			case CalculationState.DebtAndPenaltiesCalculated:
-				this.state = new GetSinglePaymentDocumentSagaStateDebtAndPenaltiesCalculated();
+			case CalculationState.CorrectionsCalculated:
+				this.state = new GetSinglePaymentDocumentSagaStateCorrectionsCalculated();
 				break;
 			case CalculationState.Cancelled:
 				this.state = new GetSinglePaymentDocumentSagaStateCancelled();

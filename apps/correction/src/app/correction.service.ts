@@ -14,7 +14,7 @@ export class CorrectionService {
 
     async getCorrection({ subscriberSPDs }: GetCorrection.Request) {
         const debtData = await this.debtService.calculateDebts({ subscriberSPDs: subscriberSPDs });
-        const penaltyData = await this.penaltyService.calculatePenalties({ subscriberSPDs: subscriberSPDs });
+        const penaltyData = await this.penaltyService.getCombinedPenaltyData(subscriberSPDs);
         // const depositData = await this.depositService.getDepositData();
 
         return {

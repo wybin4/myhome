@@ -22,7 +22,7 @@ export class DebtService {
         // Для каждого абонента находим его незакрытые долги по SPDIds
         for (const subscriber of subscriberSPDs) {
             // Т.е. те, где в debtHistory последняя запись ненулевая - outstandingDebt.amount != 0
-            const spdsWithNonZeroAmount = await this.debtRepository.findSPDsWithNonZeroAmount(subscriber.spdIds);
+            const spdsWithNonZeroAmount = await this.debtRepository.findSPDsWithOutstandingDebt(subscriber.spdIds);
             const debts = [];
 
             // Долги по одному ЕПД в разных категориях

@@ -4,7 +4,7 @@ import { Model, Types } from 'mongoose';
 import { DebtEntity } from '../entities/debt.entity';
 import { Debt } from '../models/debt.model';
 import { ObjectId } from 'typeorm';
-import { IDebtDetail } from '@myhome/interfaces';
+import { IDebtDetail, IDebtHistory } from '@myhome/interfaces';
 
 @Injectable()
 export class DebtRepository {
@@ -31,7 +31,7 @@ export class DebtRepository {
     async update({ _id, ...rest }: DebtEntity) {
         return this.debtModel.updateOne({ _id }, { $set: { ...rest } }).exec();
     }
-    async findSPDsWithNonZeroAmount(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, outstandingDebt: IDebtDetail[] }[]> {
+    async findSPDsWithOutstandingDebt(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, outstandingDebt: IDebtDetail[] }[]> {
         return this.debtModel.aggregate([
             {
                 $match: {
@@ -54,6 +54,29 @@ export class DebtRepository {
             },
         ]).exec();
     }
+
+    async findSPDsWithDebtHistory(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, debtHistory: IDebtHistory[] }[]> {
+        return this.debtModel.aggregate([
+            {
+                $match: {
+                    singlePaymentDocumentId: { $in: spdIds },
+                    'debtHistory.0.outstandingDebt': {
+                        $elemMatch: {
+                            'amount': { $ne: 0 }
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    singlePaymentDocumentId: '$singlePaymentDocumentId',
+                    debtHistory: '$debtHistory'
+                },
+            },
+        ]).exec();
+    }
+
     async findSPDsWithNonZeroPenalty(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, outstandingPenalty: number }[]> {
         return this.debtModel.aggregate([
             {

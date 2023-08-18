@@ -1,6 +1,5 @@
 import { RMQException, CANT_GET_CURRENT_RULE, CANT_DIVIDE_INTO_RULE_DIVIDER, CANT_GET_KEY_RATE } from "@myhome/constants";
-import { CorrectionCalculatePenalties, CorrectionGetPenalty } from "@myhome/contracts";
-import { IPenaltyRuleDetail, IDebtDetail, IPenaltyRule, IDebt, IDebtHistory } from "@myhome/interfaces";
+import { IPenaltyRuleDetail, IDebtDetail, IPenaltyRule, IDebtHistory, IGetCorrection, ICalculatedPenalty } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
 import { DebtRepository } from "../repositories/debt.repository";
 import { CBRService } from "./cbr.service";
@@ -14,8 +13,28 @@ export class PenaltyService {
         private readonly cbrService: CBRService,
     ) { }
 
-    async calculatePenalties({ subscriberSPDs }: CorrectionCalculatePenalties.Request) {
-        const subscribersPenalty = [];
+    async getCombinedPenaltyData(subscriberSPDs: IGetCorrection[]): Promise<{ subscriberId: number; penalty: number; }[]> {
+        const penaltyDataByDebts = await this.calculatePenalties(subscriberSPDs);
+        const penaltyDataByPenalty = await this.getFixedPenalties(subscriberSPDs);
+
+        const combinedPenaltyData = penaltyDataByDebts.map(debtItem => {
+            const penaltyItem = penaltyDataByPenalty.find(penaltyItem => penaltyItem.subscriberId === debtItem.subscriberId);
+            if (penaltyItem) {
+                return {
+                    subscriberId: debtItem.subscriberId,
+                    penalty: debtItem.penalty + penaltyItem.penalty
+                };
+            } else {
+                return debtItem;
+            }
+        });
+
+        return combinedPenaltyData;
+    }
+
+    // Функция для получения пени по закрытым долгам
+    async getFixedPenalties(subscriberSPDs: IGetCorrection[]): Promise<ICalculatedPenalty[]> {
+        const subscribersPenalty: ICalculatedPenalty[] = [];
         // Для каждого абонента находим его незакрытые пени по SPDIds
         for (const subscriber of subscriberSPDs) {
             // Т.е. те, где в debtHistory последняя запись ненулевая - outstandingDebt.amount != 0
@@ -36,7 +55,7 @@ export class PenaltyService {
             });
         }
 
-        return { penalties: subscribersPenalty };
+        return subscribersPenalty;
     }
 
     private getCountOfDays(startDate: Date, endDate: Date) {
@@ -118,7 +137,7 @@ export class PenaltyService {
         );
     }
 
-    public calculatePenaltyByOneDebt(
+    private calculatePenaltyByOneDebt(
         debt: IDebtDetail[],
         penaltyRules: IPenaltyRule[],
         startOfDebt: Date,
@@ -126,7 +145,7 @@ export class PenaltyService {
         keyRate: number,
         partOfDebt: boolean,
         payedDays?: number
-    ) {
+    ): number {
         const currentDate = endOfDebt;
         const difference = this.getCountOfDays(startOfDebt, currentDate);
         let penalty = 0, dividers: { divider: number, days: number }[];
@@ -156,52 +175,77 @@ export class PenaltyService {
         return penalty;
     }
 
-    public async getPenalty(dto: CorrectionGetPenalty.Request) {
-        let keyRateData: [{ period: Date, value: number }];
-        let keyRate: number, partOfDebt: boolean, payedDays: number;
+    async calculatePenalties(subscriberSPDs: IGetCorrection[]): Promise<{ subscriberId: number; penalty: number }[]> {
+        const subscribersPenalty: { subscriberId: number; penalty: number }[] = [];
 
+        // Получаем правила расчёта пени
         const penaltyRules = await this.penaltyRuleService.getAllPenaltyRules();
-        const debts: IDebt[] = await this.debtRepository.findMany(dto.debtIds);
 
-        const result = [];
+        // Получаем ключевую ставку
+        let keyRateData: [{ period: Date, value: number }];
+        let keyRate: number;
         const today = new Date();
         const lastMonth = new Date(today.setMonth(today.getMonth() - 1));
-        // keyRate = 8.5; // ЗАГЛУШКА
-        // Получаем ключевую ставку
         try {
             keyRateData = await this.cbrService.getKeyRates(lastMonth, today);
             keyRate = keyRateData[0].value;
         } catch (e) {
             throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
         }
+        // let keyRate = 12;
 
-        for (const debt of debts) {
+
+        // Для каждого абонента находим его незакрытые долги по SPDIds
+        for (const subscriber of subscriberSPDs) {
+            const spdsWithNonZeroAmount = await this.debtRepository.findSPDsWithDebtHistory(subscriber.spdIds);
+            let penalty = 0;
+
+            for (const spd of spdsWithNonZeroAmount) {
+                const temp = await this.calculatePenalty(spd.debtHistory, penaltyRules, keyRate);
+                if (temp) {
+                    penalty += temp;
+                }
+            }
+
+            // Пени абонента по всем ЕПД
+            subscribersPenalty.push({
+                subscriberId: subscriber.subscriberId,
+                penalty: penalty
+            });
+        }
+
+        return subscribersPenalty;
+    }
+
+    // Функция для расчёта пени по незакрытым долгам
+    private async calculatePenalty(
+        debtHistory: IDebtHistory[],
+        penaltyRules: IPenaltyRule[],
+        keyRate: number
+    ): Promise<number> {
+        let partOfDebt: boolean, payedDays: number
+        if (debtHistory.length) {
             // Получаем пени за уже закрытые части долга
-            const fixedPenalties = debt.debtHistory.slice(1).map(obj => obj.outstandingPenalty);
+            const fixedPenalties = debtHistory.slice(1).map(obj => obj.outstandingPenalty);
             if (!fixedPenalties.length) partOfDebt = false; else {
                 payedDays = this.getCountOfDays(
-                    debt.debtHistory[debt.debtHistory.length - 1].date,
-                    debt.debtHistory[0].date,
+                    debtHistory[debtHistory.length - 1].date,
+                    debtHistory[0].date,
                 );
                 partOfDebt = true;
             }
-            const sumFixedPenalties = fixedPenalties.reduce((a, b) => a + b, 0);
+
             // Получаем задолженность для расчитываемой пени
-            const currentDebt = debt.debtHistory[0];
+            const currentDebt = debtHistory[0];
 
             // По последнему невыплаченному долгу расчитываем пени
             const currentPenalty = this.calculatePenaltyByOneDebt(
                 currentDebt.outstandingDebt,
                 penaltyRules,
-                debt.debtHistory[debt.debtHistory.length - 1].date, new Date(), keyRate, partOfDebt, payedDays
+                debtHistory[debtHistory.length - 1].date, new Date(), keyRate, partOfDebt, payedDays
             );
 
-            result.push({
-                penalty: currentPenalty + sumFixedPenalties,
-                singlePaymentDocumentId: debt.singlePaymentDocumentId
-            });
+            return currentPenalty;
         }
-
-        return result;
     }
 }

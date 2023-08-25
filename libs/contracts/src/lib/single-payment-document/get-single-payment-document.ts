@@ -1,4 +1,4 @@
-import { ISinglePaymentDocument, RequireHomeOrManagementCompany } from "@myhome/interfaces";
+import { RequireHomeOrManagementCompany } from "@myhome/interfaces";
 import { IsArray } from "class-validator";
 
 export namespace GetSinglePaymentDocument {
@@ -16,6 +16,6 @@ export namespace GetSinglePaymentDocument {
     }
 
     export class Response {
-        singlePaymentDocument!: ISinglePaymentDocument[];
+        pdfBuffer!: string;
     }
 }

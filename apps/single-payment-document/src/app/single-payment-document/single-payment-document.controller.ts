@@ -1,4 +1,4 @@
-import { SinglePaymentDocumentService } from './single-payment-document.service';
+import { SinglePaymentDocumentService } from './services/single-payment-document.service';
 import { GetSinglePaymentDocument, CheckSinglePaymentDocument } from '@myhome/contracts';
 import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
@@ -13,7 +13,11 @@ export class SinglePaymentDocumentController {
     @RMQValidate()
     @RMQRoute(GetSinglePaymentDocument.topic)
     async getSinglePaymentDocument(@Body() dto: GetSinglePaymentDocument.Request) {
-        return this.singlePaymentDocumentService.getSinglePaymentDocument(dto);
+        try {
+            return { pdfBuffer: await this.singlePaymentDocumentService.getSinglePaymentDocument(dto) };
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 
     @RMQValidate()

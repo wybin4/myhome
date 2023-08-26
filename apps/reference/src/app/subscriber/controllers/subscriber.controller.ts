@@ -1,11 +1,11 @@
 import { Body, Controller, HttpStatus } from '@nestjs/common';
-import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
-import { ReferenceAddSubscriber, ReferenceGetManagementCompany, ReferenceGetSubscriber, ReferenceGetSubscribers, ReferenceGetSubscribersByHouse, ReferenceUpdateSubscriber } from '@myhome/contracts';
+import { RMQError, RMQRoute, RMQService, RMQValidate } from 'nestjs-rmq';
+import { AccountUsersInfo, ReferenceAddSubscriber, ReferenceGetManagementCompany, ReferenceGetSubscriber, ReferenceGetSubscribers, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByHouse, ReferenceUpdateSubscriber } from '@myhome/contracts';
 import { SubscriberRepository } from '../repositories/subscriber.repository';
 import { SubscriberEntity } from '../entities/subscriber.entity';
-import { APART_NOT_EXIST, SUBSCRIBERS_NOT_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_NOT_EXIST } from '@myhome/constants';
+import { APARTS_NOT_EXIST, APART_NOT_EXIST, HOUSES_NOT_EXIST, RMQException, SUBSCRIBERS_NOT_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_NOT_EXIST } from '@myhome/constants';
 import { ApartmentRepository } from '../repositories/apartment.repository';
-import { SubscriberStatus } from '@myhome/interfaces';
+import { ISubscriberAllInfo, SubscriberStatus, UserRole } from '@myhome/interfaces';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 import { HouseRepository } from '../repositories/house.repository';
 
@@ -15,6 +15,7 @@ export class SubscriberController {
 		private readonly subscriberRepository: SubscriberRepository,
 		private readonly apartmentRepository: ApartmentRepository,
 		private readonly houseRepository: HouseRepository,
+		private readonly rmqService: RMQService,
 	) { }
 
 	@RMQValidate()
@@ -104,5 +105,61 @@ export class SubscriberController {
 			gettedSubscribers.push(new SubscriberEntity(subscriber));
 		}
 		return { subscribers: gettedSubscribers };
+	}
+
+	@RMQValidate()
+	@RMQRoute(ReferenceGetSubscribersAllInfo.topic)
+	async getSubscribersAllInfo(@Body() { ids }: ReferenceGetSubscribersAllInfo.Request) {
+		const subscribers = await this.subscriberRepository.findSubscribers(ids);
+		if (!subscribers.length) {
+			throw new RMQError(SUBSCRIBERS_NOT_EXIST.message, ERROR_TYPE.RMQ, SUBSCRIBERS_NOT_EXIST.status);
+		}
+
+		const apartmentIds = subscribers.map(obj => obj.apartmentId);
+		const apartments = await this.apartmentRepository.findApartmentsWithSubscribers(apartmentIds);
+		if (!apartments.length) {
+			throw new RMQError(APARTS_NOT_EXIST.message, ERROR_TYPE.RMQ, APARTS_NOT_EXIST.status);
+		}
+
+		const houseIds = apartments.map(obj => obj.houseId);
+		const houses = await this.houseRepository.findHouses(houseIds);
+		if (!houses.length) {
+			throw new RMQError(HOUSES_NOT_EXIST.message, ERROR_TYPE.RMQ, HOUSES_NOT_EXIST.status);
+		}
+
+		const ownerIds = subscribers.map(obj => obj.ownerId);
+		const { profiles: owners } = await this.getOwners(ownerIds);
+
+		const subscribersInfo: ISubscriberAllInfo[] = [];
+
+		for (const subscriber of subscribers) {
+			const currentApart = apartments.find(obj => obj.id === subscriber.apartmentId);
+			const currentOwner = owners.find(obj => obj.id === subscriber.ownerId);
+			const currentHouse = houses.find(obj => obj.id === currentApart.houseId);
+
+			subscribersInfo.push({
+				name: currentOwner.name,
+				address: currentHouse.street + ', дом № ' + currentHouse.houseNumber + ', кв. ' + currentApart.apartmentNumber,
+				personalAccount: subscriber.personalAccount,
+				apartmentArea: currentApart.totalArea,
+				livingArea: currentApart.livingArea,
+				numberOfRegistered: currentApart.numberOfRegistered
+			});
+		}
+
+		return { subscribers: subscribersInfo };
+	}
+
+	private async getOwners(ownerIds: number[]) {
+		try {
+			return await this.rmqService.send
+				<
+					AccountUsersInfo.Request,
+					AccountUsersInfo.Response
+				>
+				(AccountUsersInfo.topic, { ids: ownerIds, role: UserRole.Owner });
+		} catch (e) {
+			throw new RMQException(e.message, e.status);
+		}
 	}
 }

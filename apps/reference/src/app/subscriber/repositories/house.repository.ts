@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { HouseEntity } from '../entities/house.entity';
 
 @Injectable()
@@ -25,5 +25,13 @@ export class HouseRepository {
     async updateHouse(house: HouseEntity) {
         await this.houseRepository.update(house.id, house);
         return this.findHouseById(house.id);
+    }
+
+    async findHouses(ids: number[]) {
+        return this.houseRepository.find({
+            where: {
+                id: In(ids),
+            }
+        });
     }
 }

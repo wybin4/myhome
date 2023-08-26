@@ -1,6 +1,7 @@
 export * from './lib/account/account.login';
 export * from './lib/account/account.register';
 export * from './lib/account/account.user-info';
+export * from './lib/account/account.users-info';
 export * from './lib/account/account.change-profile';
 
 export * from './lib/reference/subscriber/reference.add-house';
@@ -11,6 +12,7 @@ export * from './lib/reference/subscriber/reference.get-apartments-by-subscriber
 export * from './lib/reference/subscriber/reference.get-apartment';
 export * from './lib/reference/subscriber/reference.get-subscriber';
 export * from './lib/reference/subscriber/reference.get-subscribers';
+export * from './lib/reference/subscriber/reference.get-subscribers-all-info';
 export * from './lib/reference/subscriber/reference.get-subscribers-by-house';
 export * from './lib/reference/subscriber/reference.get-apartments-by-subscribers';
 export * from './lib/reference/subscriber/reference.get-management-company';

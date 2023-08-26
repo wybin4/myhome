@@ -17,70 +17,9 @@ export class PdfService {
     private arialBold = join(__dirname, '.', 'assets', 'Arial-Bold.ttf');
     private arial = join(__dirname, '.', 'assets', 'Arial.ttf');
 
-    private services: ISpdService[] = [
-        {
-            title: 'Жилищные услуги',
-            titleColSpan: 4,
-            titleAlign: 'left',
-            titleBold: true,
-            servicesBold: true,
-            services: ['635.18', '231.41', '866.59', '', '', '866.59', '866.59']
-        },
-        {
-            title: 'СодОбщИмущ',
-            titleColSpan: 1,
-            titleAlign: 'left',
-            services: ['м2', '29.53', '', '7.31', '215.86', '', '215.86', '', '', '215.86', '215.86']
-        },
-        {
-            title: 'Коммунальные услуги',
-            titleColSpan: 4,
-            titleAlign: 'left',
-            titleBold: true,
-            servicesBold: true,
-            services: ['848.46', '', '848.46', '', '', '', '848.46', '848.46']
-        },
-        {
-            title: 'Итого к оплате за расчетный период:',
-            titleColSpan: 4,
-            titleAlign: 'right',
-            titleBold: true,
-            services: ['', '', '1715.05', 'x', '', '1715.05', '1715.05']
-        },
-        {
-            title: 'Всего с учетом пени:',
-            titleColSpan: 8,
-            titleAlign: 'right',
-            titleBold: true,
-            servicesBold: true,
-            services: ['1715.05', '1715.05']
-        },
-    ];
-
-    private readings: ISpdReading[][] = [[
-        {
-            reading: 'Теп.эн.СОИД',
-            readingAlign: 'left',
-        }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
-        {
-            reading: 'Гкал',
-            readingAlign: 'center',
-        },
-        {
-            reading: '29.53/2299.2',
-            readingAlign: 'right',
-        }, { reading: '', readingAlign: 'left' },
-        {
-            reading: '0.001',
-            readingAlign: 'right',
-        },
-        {
-            reading: '0.594',
-            readingAlign: 'right',
-        }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
-    ]];
-
-    async generatePdf(): Promise<Buffer> {
+    async generatePdf(
+        house: ISpdHouse, managementC: ISpdManagementCompany, subscriber: ISpdSubscriber
+    ): Promise<Buffer> {
         const qrCodeText = "ST00012|Name=ООО 'Служба 100'|PersonalAcc=40703810552090063242|BankName=Юго-Западный Банк ПАО 'Сбербанк России'|BIC=046025302|CorrespAcc=30102110600000000602|Sum=171505|PayeeINN=6368082584|DocDate=2023-07-28|lastName=ИВАНОВ|firstName=ИВАН|middleName=ИВАНОВИЧ|payerAddress=Малюгина, дом № 14, кв. 125|persAcc=97472855|paymPeriod=07.2023|category=0|serviceName=30581|Fine=0";
         // Генерация QR-кода в виде Buffer
         const qr: ISpdQR = {
@@ -107,34 +46,93 @@ export class PdfService {
 р/сч 42712810522090113212 в Юго-Западный Банк ПАО 'Сбербанк России' БИК 046015632 к/с 30102810610000000602`
         }
 
-        const subscriber: ISpdSubscriber = {
-            name: 'ИВАНОВ ИВАН ИВАНОВИЧ',
-            address: 'Малюгина, дом № 15, кв. 145',
-            personalAccount: 97442835,
-            apartmentArea: 65.4,
-            livingArea: 56.7,
-            numberOfRegistered: 2,
-        }
+        // const subscriber: ISpdSubscriber = {
+        //     name: 'ИВАНОВ ИВАН ИВАНОВИЧ',
+        //     address: 'Малюгина, дом № 15, кв. 145',
+        //     personalAccount: '97442835',
+        //     apartmentArea: 65.4,
+        //     livingArea: 56.7,
+        //     numberOfRegistered: 2,
+        // }
 
-        const managementC: ISpdManagementCompany = {
-            name: "ООО 'УК Мой дом'",
-            address: 'Малюгина, дом № 15',
-            phone: '242-23-95',
-            email: 'myhouse@mail.ru'
-        }
+        // const managementC: ISpdManagementCompany = {
+        //     name: "ООО 'УК Мой дом'",
+        //     address: 'Малюгина, дом № 15',
+        //     phone: '242-23-95',
+        //     email: 'myhouse@mail.ru'
+        // }
 
         const spd: ISpd = {
             amount: 1582.71, month: 'Август 2023 г.', penalty: 0, deposit: 0, debt: 0,
-        }
-
-        const house: ISpdHouse = {
-            livingArea: 2011.5, noLivingArea: 287.7, commonArea: 449.7
         }
 
         const payment: ISpdPayment = {
             amount: 1532.18,
             payedAt: new Date('03.07.2023')
         }
+
+        const services: ISpdService[] = [
+            {
+                title: 'Жилищные услуги',
+                titleColSpan: 4,
+                titleAlign: 'left',
+                titleBold: true,
+                servicesBold: true,
+                services: ['635.18', '231.41', '866.59', '', '', '866.59', '866.59']
+            },
+            {
+                title: 'СодОбщИмущ',
+                titleColSpan: 1,
+                titleAlign: 'left',
+                services: ['м2', '29.53', '', '7.31', '215.86', '', '215.86', '', '', '215.86', '215.86']
+            },
+            {
+                title: 'Коммунальные услуги',
+                titleColSpan: 4,
+                titleAlign: 'left',
+                titleBold: true,
+                servicesBold: true,
+                services: ['848.46', '', '848.46', '', '', '', '848.46', '848.46']
+            },
+            {
+                title: 'Итого к оплате за расчетный период:',
+                titleColSpan: 4,
+                titleAlign: 'right',
+                titleBold: true,
+                services: ['', '', '1715.05', 'x', '', '1715.05', '1715.05']
+            },
+            {
+                title: 'Всего с учетом пени:',
+                titleColSpan: 8,
+                titleAlign: 'right',
+                titleBold: true,
+                servicesBold: true,
+                services: ['1715.05', '1715.05']
+            },
+        ];
+
+        const readings: ISpdReading[][] = [[
+            {
+                reading: 'Теп.эн.СОИД',
+                readingAlign: 'left',
+            }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
+            {
+                reading: 'Гкал',
+                readingAlign: 'center',
+            },
+            {
+                reading: '29.53/2299.2',
+                readingAlign: 'right',
+            }, { reading: '', readingAlign: 'left' },
+            {
+                reading: '0.001',
+                readingAlign: 'right',
+            },
+            {
+                reading: '0.594',
+                readingAlign: 'right',
+            }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
+        ]];
 
         try {
             const pdfBuffer: Buffer = await new Promise(resolve => {
@@ -143,7 +141,7 @@ export class PdfService {
                 const top = new Top(this.arial, this.arialBold, doc);
                 top.getTop(qr, barcode, operator, subscriber, managementC, spd);
 
-                const bottom = new Bottom(this.arial, this.arialBold, doc, this.services, this.readings);
+                const bottom = new Bottom(this.arial, this.arialBold, doc, services, readings);
                 bottom.getLow(operator, barcodeText, subscriber, spd, house, payment);
 
                 const buffer = [];
@@ -260,7 +258,7 @@ class Top {
 
     private getThirdTopZone(
         MCNumber: number,
-        personalAccount: number,
+        personalAccount: string,
         name: string,
         apartment: string,
         month: string,

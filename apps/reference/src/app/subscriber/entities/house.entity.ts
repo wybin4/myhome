@@ -23,7 +23,13 @@ export class HouseEntity implements IHouse {
     houseNumber: string;
 
     @Column('double', { nullable: false })
-    floorSpace: number;
+    livingArea: number;
+
+    @Column('double', { nullable: false })
+    noLivingArea: number;
+
+    @Column('double', { nullable: false })
+    commonArea: number;
 
     constructor(data?: Partial<HouseEntity>) {
         if (data) {
@@ -42,7 +48,9 @@ export class HouseEntity implements IHouse {
             city: this.city,
             street: this.street,
             houseNumber: this.houseNumber,
-            floorSpace: this.floorSpace
+            livingArea: this.livingArea,
+            noLivingArea: this.noLivingArea,
+            commonArea: this.commonArea
         }
     }
 }

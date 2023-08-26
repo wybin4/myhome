@@ -4,5 +4,7 @@ export interface IHouse {
     city: string;
     street: string;
     houseNumber: string;
-    floorSpace: number;
+    livingArea: number;
+    noLivingArea: number;
+    commonArea: number;
 }

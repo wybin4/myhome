@@ -18,7 +18,13 @@ export namespace ReferenceAddHouse {
         houseNumber!: string;
 
         @IsNumber()
-        floorSpace!: number;
+        livingArea!: number;
+
+        @IsNumber()
+        noLivingArea!: number;
+
+        @IsNumber()
+        commonArea!: number;
     }
 
     export class Response {

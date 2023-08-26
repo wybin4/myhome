@@ -16,7 +16,7 @@ export class SinglePaymentDocumentController {
                 GetSinglePaymentDocument.Request,
                 GetSinglePaymentDocument.Response
             >(GetSinglePaymentDocument.topic, dto);
-            const pdf = Buffer.from(pdfBuffer);
+            const pdf = Buffer.from(pdfBuffer, 'binary');
             // Установка заголовков для отправки файла
             res.set({
                 'Content-Type': 'application/pdf',

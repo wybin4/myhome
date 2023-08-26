@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { AdminEntity } from '../entities/user.entity';
 
 @Injectable()
@@ -24,6 +24,14 @@ export class AdminRepository {
 
     async deleteUser(email: string) {
         await this.adminRepository.delete({ email });
+    }
+
+    async findUsers(ids: number[]) {
+        return this.adminRepository.find({
+            where: {
+                id: In(ids),
+            }
+        });
     }
 
 }

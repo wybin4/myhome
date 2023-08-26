@@ -1,12 +1,12 @@
-import { Body, Controller, HttpStatus, NotFoundException } from '@nestjs/common';
+import { Body, Controller, HttpStatus } from '@nestjs/common';
 import { AdminRepository } from './repositories/admin.repository';
 import { OwnerRepository } from './repositories/owner.repository';
 import { ManagementCompanyRepository } from './repositories/management-company.repository';
-import { AccountUserInfo } from '@myhome/contracts';
+import { AccountUserInfo, AccountUsersInfo } from '@myhome/contracts';
 import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
 import { UserEntity } from './entities/user.entity';
 import { UserRole } from '@myhome/interfaces';
-import { ADMIN_NOT_EXIST, INCORRECT_USER_ROLE, MANAG_COMP_NOT_EXIST, OWNER_NOT_EXIST } from '@myhome/constants';
+import { ADMINS_NOT_EXIST, ADMIN_NOT_EXIST, INCORRECT_USER_ROLE, MANAG_COMPS_NOT_EXIST, MANAG_COMP_NOT_EXIST, OWNERS_NOT_EXIST, OWNER_NOT_EXIST } from '@myhome/constants';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
 @Controller()
@@ -47,6 +47,45 @@ export class UserQueries {
 				throw new RMQError(INCORRECT_USER_ROLE, ERROR_TYPE.RMQ, HttpStatus.UNPROCESSABLE_ENTITY);
 		}
 		return { profile };
+	}
+
+	@RMQValidate()
+	@RMQRoute(AccountUsersInfo.topic)
+	async usersInfo(@Body() { ids, role }: AccountUsersInfo.Request): Promise<AccountUsersInfo.Response> {
+		let users: UserEntity[];
+		const profiles = [];
+		switch (role) {
+			case UserRole.Admin:
+				users = await this.adminRepository.findUsers(ids);
+				if (!users.length) {
+					throw new RMQError(ADMINS_NOT_EXIST.message, ERROR_TYPE.RMQ, ADMINS_NOT_EXIST.status);
+				}
+				for (const user of users) {
+					profiles.push(new UserEntity(user));
+				}
+				break;
+			case UserRole.Owner:
+				users = await this.ownerRepository.findUsers(ids);
+				if (!users.length) {
+					throw new RMQError(OWNERS_NOT_EXIST.message, ERROR_TYPE.RMQ, OWNERS_NOT_EXIST.status);
+				}
+				for (const user of users) {
+					profiles.push(new UserEntity(user));
+				}
+				break;
+			case UserRole.ManagementCompany:
+				users = await this.managementCompanyRepository.findUsers(ids);
+				if (!users.length) {
+					throw new RMQError(MANAG_COMPS_NOT_EXIST.message, ERROR_TYPE.RMQ, MANAG_COMPS_NOT_EXIST.status);
+				}
+				for (const user of users) {
+					profiles.push(new UserEntity(user));
+				}
+				break;
+			default:
+				throw new RMQError(INCORRECT_USER_ROLE, ERROR_TYPE.RMQ, HttpStatus.UNPROCESSABLE_ENTITY);
+		}
+		return { profiles: profiles };
 	}
 
 }

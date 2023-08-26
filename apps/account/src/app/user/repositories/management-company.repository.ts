@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ManagementCompanyEntity } from '../entities/user.entity';
 
 
@@ -30,6 +30,14 @@ export class ManagementCompanyRepository {
     async updateUser(user: ManagementCompanyEntity) {
         await this.managementCompanyRepository.update(user.id, user);
         return this.findUserById(user.id);
+    }
+
+    async findUsers(ids: number[]) {
+        return this.managementCompanyRepository.find({
+            where: {
+                id: In(ids),
+            }
+        });
     }
 }
 

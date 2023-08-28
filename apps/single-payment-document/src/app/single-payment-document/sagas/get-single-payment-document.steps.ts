@@ -105,14 +105,14 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
 }
 
 export class GetSinglePaymentDocumentSagaStateDetailsCalculated extends GetSinglePaymentDocumentSagaState {
-    private async getCorrection(subscriberSPDs: IGetCorrection[]) {
+    private async getCorrection(subscriberSPDs: IGetCorrection[], keyRate?: number) {
         try {
             return await this.saga.rmqService.send
                 <
                     GetCorrection.Request,
                     GetCorrection.Response
                 >
-                (GetCorrection.topic, { subscriberSPDs: subscriberSPDs });
+                (GetCorrection.topic, { subscriberSPDs: subscriberSPDs, keyRate: keyRate });
         } catch (e) {
             throw new RMQException(e.message, e.status);
         }
@@ -120,8 +120,8 @@ export class GetSinglePaymentDocumentSagaStateDetailsCalculated extends GetSingl
     public calculateDetails(): Promise<{ detailIds: number[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("ЕПД уже в процессе расчёта", HttpStatus.BAD_REQUEST);
     }
-    public async calculateDebtAndPenalty(subscriberSPDs: IGetCorrection[]): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
-        const { debts, penalties } = await this.getCorrection(subscriberSPDs);
+    public async calculateDebtAndPenalty(subscriberSPDs: IGetCorrection[], keyRate?: number): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+        const { debts, penalties } = await this.getCorrection(subscriberSPDs, keyRate);
         this.saga.singlePaymentDocuments.map(spd => {
             const currDebt = debts.find(d => spd.subscriberId === d.subscriberId);
             const currPenalty = penalties.find(p => spd.subscriberId === p.subscriberId);

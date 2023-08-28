@@ -46,7 +46,7 @@ export class CommonHouseNeedService {
             for (const diff of difference) {
                 const currentTariff = tariffs.find((obj) => obj.typeOfServiceId === diff.typeOfServiceId);
                 temp.push({
-                    amountConsumed: diff.difference * apartmentEntity.livingArea / house.house.floorSpace,
+                    amountConsumed: diff.difference * apartmentEntity.livingArea / house.house.livingArea,
                     typeOfServiceId: diff.typeOfServiceId,
                     tariff: currentTariff.multiplier
                 });

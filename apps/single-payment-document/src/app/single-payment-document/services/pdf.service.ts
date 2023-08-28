@@ -18,7 +18,7 @@ export class PdfService {
     private arial = join(__dirname, '.', 'assets', 'Arial.ttf');
 
     async generatePdf(
-        house: ISpdHouse, managementC: ISpdManagementCompany, subscriber: ISpdSubscriber
+        house: ISpdHouse, managementC: ISpdManagementCompany, subscribers: ISpdSubscriber[]
     ): Promise<Buffer> {
         const qrCodeText = "ST00012|Name=ООО 'Служба 100'|PersonalAcc=40703810552090063242|BankName=Юго-Западный Банк ПАО 'Сбербанк России'|BIC=046025302|CorrespAcc=30102110600000000602|Sum=171505|PayeeINN=6368082584|DocDate=2023-07-28|lastName=ИВАНОВ|firstName=ИВАН|middleName=ИВАНОВИЧ|payerAddress=Малюгина, дом № 14, кв. 125|persAcc=97472855|paymPeriod=07.2023|category=0|serviceName=30581|Fine=0";
         // Генерация QR-кода в виде Buffer
@@ -138,11 +138,20 @@ export class PdfService {
             const pdfBuffer: Buffer = await new Promise(resolve => {
                 const doc = new PDFDocument.default({ compress: false, size: 'A2', layout: 'portrait' });
 
-                const top = new Top(this.arial, this.arialBold, doc);
-                top.getTop(qr, barcode, operator, subscriber, managementC, spd);
+                let count = 0;
+                for (const subscriber of subscribers) {
+                    count++;
 
-                const bottom = new Bottom(this.arial, this.arialBold, doc, services, readings);
-                bottom.getLow(operator, barcodeText, subscriber, spd, house, payment);
+                    const top = new Top(this.arial, this.arialBold, doc);
+                    top.getTop(qr, barcode, operator, subscriber, managementC, spd);
+
+                    const bottom = new Bottom(this.arial, this.arialBold, doc, services, readings);
+                    bottom.getLow(operator, barcodeText, subscriber, spd, house, payment);
+
+                    if (count != subscribers.length) {
+                        doc.addPage();
+                    }
+                }
 
                 const buffer = [];
                 doc.on('data', buffer.push.bind(buffer));

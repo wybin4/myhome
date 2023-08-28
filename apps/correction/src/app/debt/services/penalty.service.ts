@@ -13,8 +13,8 @@ export class PenaltyService {
         private readonly cbrService: CBRService,
     ) { }
 
-    async getCombinedPenaltyData(subscriberSPDs: IGetCorrection[]): Promise<{ subscriberId: number; penalty: number; }[]> {
-        const penaltyDataByDebts = await this.calculatePenalties(subscriberSPDs);
+    async getCombinedPenaltyData(subscriberSPDs: IGetCorrection[], keyRate?: number): Promise<{ subscriberId: number; penalty: number; }[]> {
+        const penaltyDataByDebts = await this.calculatePenalties(subscriberSPDs, keyRate);
         const penaltyDataByPenalty = await this.getFixedPenalties(subscriberSPDs);
 
         const combinedPenaltyData = penaltyDataByDebts.map(debtItem => {
@@ -113,19 +113,19 @@ export class PenaltyService {
         return outputArray;
     }
 
-    public async getPenaltyByHistory(debtHistory: IDebtHistory, endDate: Date) {
+    public async getPenaltyByHistory(debtHistory: IDebtHistory, endDate: Date, keyRate?: number) {
         // Получаем все правила вычисления пени
         const penaltyRules = await this.penaltyRuleService.getAllPenaltyRules();
         // Получаем ключевую ставку
         let keyRateData: [{ period: Date, value: number }];
-        let keyRate: number;
-        try {
-            keyRateData = await this.cbrService.getKeyRates(debtHistory.date, new Date());
-            keyRate = keyRateData[0].value;
-        } catch (e) {
-            throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
+        if (!keyRate) {
+            try {
+                keyRateData = await this.cbrService.getKeyRates(debtHistory.date, new Date());
+                keyRate = keyRateData[0].value;
+            } catch (e) {
+                throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
+            }
         }
-        // keyRate = 12; ЗАГЛУШКА!!!!!!!!!
 
         return this.calculatePenaltyByOneDebt(
             debtHistory.outstandingDebt,
@@ -175,7 +175,7 @@ export class PenaltyService {
         return penalty;
     }
 
-    async calculatePenalties(subscriberSPDs: IGetCorrection[]): Promise<{ subscriberId: number; penalty: number }[]> {
+    async calculatePenalties(subscriberSPDs: IGetCorrection[], keyRate?: number): Promise<{ subscriberId: number; penalty: number }[]> {
         const subscribersPenalty: { subscriberId: number; penalty: number }[] = [];
 
         // Получаем правила расчёта пени
@@ -183,16 +183,16 @@ export class PenaltyService {
 
         // Получаем ключевую ставку
         let keyRateData: [{ period: Date, value: number }];
-        let keyRate: number;
-        const today = new Date();
-        const lastMonth = new Date(today.setMonth(today.getMonth() - 1));
-        try {
-            keyRateData = await this.cbrService.getKeyRates(lastMonth, today);
-            keyRate = keyRateData[0].value;
-        } catch (e) {
-            throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
+        if (!keyRate) {
+            const today = new Date();
+            const lastMonth = new Date(today.setMonth(today.getMonth() - 1));
+            try {
+                keyRateData = await this.cbrService.getKeyRates(lastMonth, today);
+                keyRate = keyRateData[0].value;
+            } catch (e) {
+                throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
+            }
         }
-        // let keyRate = 12;
 
 
         // Для каждого абонента находим его незакрытые долги по SPDIds

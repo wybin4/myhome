@@ -138,6 +138,7 @@ export class SubscriberController {
 			const currentHouse = houses.find(obj => obj.id === currentApart.houseId);
 
 			subscribersInfo.push({
+				id: subscriber.id,
 				name: currentOwner.name,
 				address: currentHouse.street + ', дом № ' + currentHouse.houseNumber + ', кв. ' + currentApart.apartmentNumber,
 				personalAccount: subscriber.personalAccount,

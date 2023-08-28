@@ -1,5 +1,5 @@
 import { IDebt } from "@myhome/interfaces";
-import { IsNumber } from "class-validator";
+import { IsNumber, IsOptional } from "class-validator";
 
 export namespace CorrectionUpdateDebt {
     export const topic = 'correction.update-debt.command';
@@ -13,6 +13,10 @@ export namespace CorrectionUpdateDebt {
 
         @IsNumber()
         amount!: number;
+
+        @IsOptional()
+        @IsNumber()
+        keyRate?: number;
     }
 
     export class Response {

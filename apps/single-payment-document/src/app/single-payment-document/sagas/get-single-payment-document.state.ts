@@ -10,6 +10,6 @@ export abstract class GetSinglePaymentDocumentSagaState {
     }
 
     public abstract calculateDetails(subscriberIds: number[], managementCompanyId?: number, houseId?: number): Promise<{ detailIds: number[], singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
-    public abstract calculateDebtAndPenalty(subscriberSPDs: IGetCorrection[]): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
+    public abstract calculateDebtAndPenalty(subscriberSPDs: IGetCorrection[], keyRate?: number): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
     public abstract cancell(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
 }

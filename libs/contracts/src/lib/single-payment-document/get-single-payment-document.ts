@@ -1,5 +1,5 @@
 import { RequireHomeOrManagementCompany } from "@myhome/interfaces";
-import { IsArray } from "class-validator";
+import { IsArray, IsNumber, IsOptional } from "class-validator";
 
 export namespace GetSinglePaymentDocument {
     export const topic = 'single-payment-document.get-single-payment-document.command';
@@ -13,6 +13,10 @@ export namespace GetSinglePaymentDocument {
 
         @RequireHomeOrManagementCompany()
         houseId?: number;
+
+        @IsOptional()
+        @IsNumber()
+        keyRate?: number;
     }
 
     export class Response {

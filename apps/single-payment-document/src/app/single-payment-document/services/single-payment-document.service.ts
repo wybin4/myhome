@@ -4,7 +4,7 @@ import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentRepository } from "../single-payment-document.repository";
 import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
 import { CalculationState, UserRole } from "@myhome/interfaces";
-import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, CANT_GET_SUBSCRIBERS_BY_HOUSE_ID, HOME_NOT_EXIST, MANAG_COMP_NOT_EXIST, RMQException, SUBSCRIBERS_NOT_EXIST } from "@myhome/constants";
+import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, HOME_NOT_EXIST, MANAG_COMP_NOT_EXIST, RMQException, SUBSCRIBERS_NOT_EXIST } from "@myhome/constants";
 import { GetSinglePaymentDocumentSaga } from "../sagas/get-single-payment-document.saga";
 import { PdfService } from "./pdf.service";
 import { ISpdHouse, ISpdManagementCompany } from "../interfaces/subscriber.interface";
@@ -31,66 +31,66 @@ export class SinglePaymentDocumentService {
         const spdHouse: ISpdHouse = {
             livingArea: house.livingArea, noLivingArea: house.noLivingArea, commonArea: house.commonArea
         }
+
         const { profile: managementC } = await this.getManagementC(dto.managementCompanyId);
         const spdManagementC: ISpdManagementCompany = {
             name: managementC.name, address: 'address', phone: 'phone', email: managementC.email,
         }
 
-        const { subscribers } = (await this.getSubscribers(dto.subscriberIds));
+        let { subscribers } = (await this.getSubscribers(dto.subscriberIds));
         if (!subscribers.length) {
             throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
         }
+        subscribers = subscribers.map(obj => {
+            obj.name = obj.name.toUpperCase();
+            return obj;
+        })
+        const subscriberIds = subscribers.map(obj => obj.id);
 
-        const currentSubscriber = subscribers[0];
-        currentSubscriber.name = currentSubscriber.name.toUpperCase();
-        
-        // const subscriberIds = subscribers.map(obj => obj.id);
-        // const SPDEntities: SinglePaymentDocumentEntity[] = [];
-        // for (const subscriberId of dto.subscriberIds) {
-        //     const SPDEntity =
-        //         new SinglePaymentDocumentEntity({
-        //             managementCompanyId: dto.managementCompanyId,
-        //             subscriberId: subscriberId,
-        //             createdAt: new Date(),
-        //             status: CalculationState.Started
-        //         });
-        //     SPDEntities.push(SPDEntity);
-        // }
+        const SPDEntities: SinglePaymentDocumentEntity[] = [];
+        for (const subscriberId of dto.subscriberIds) {
+            const SPDEntity =
+                new SinglePaymentDocumentEntity({
+                    managementCompanyId: dto.managementCompanyId,
+                    subscriberId: subscriberId,
+                    createdAt: new Date(),
+                    status: CalculationState.Started
+                });
+            SPDEntities.push(SPDEntity);
+        }
 
-        // const savedSPDEntities = await this.singlePaymentDocumentRepository.createMany(SPDEntities);
+        const savedSPDEntities = await this.singlePaymentDocumentRepository.createMany(SPDEntities);
 
-        // const saga = new GetSinglePaymentDocumentSaga(
-        //     savedSPDEntities,
-        //     this.rmqService,
-        //     subscriberIds,
-        //     dto.managementCompanyId,
-        //     dto.houseId
-        // );
+        const saga = new GetSinglePaymentDocumentSaga(
+            savedSPDEntities,
+            this.rmqService,
+            subscriberIds,
+            dto.managementCompanyId,
+            dto.houseId
+        );
 
-        // const { detailIds, singlePaymentDocuments: singlePaymentDocumentsWithAmount } =
-        //     await saga.getState().calculateDetails(
-        //         subscriberIds, dto.managementCompanyId, dto.houseId
-        //     );
-        // await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithAmount);
+        const { detailIds, singlePaymentDocuments: singlePaymentDocumentsWithAmount } =
+            await saga.getState().calculateDetails(
+                subscriberIds, dto.managementCompanyId, dto.houseId
+            );
+        await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithAmount);
 
-        // // По subscriberIds получаем все их spdIds
-        // const subscriberSPDs = await this.singlePaymentDocumentRepository.getSPDIdsBySubscriberIds(subscriberIds);
-        // try {
-        //     const { singlePaymentDocuments: singlePaymentDocumentsWithDebtAndPenalty } =
-        //         await saga.getState().calculateDebtAndPenalty(
-        //             subscriberSPDs
-        //         );
-        //     await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithDebtAndPenalty);
-        //     return { singlePaymentDocuments: singlePaymentDocumentsWithDebtAndPenalty };
-        // }
-        // catch (e) {
-        //     await this.revertCalculateDetails(detailIds);
-        //     throw new RMQException(e.message, e.status);
-        // }
-
-        return (await this.pdfService.generatePdf(
-            spdHouse, spdManagementC, currentSubscriber
-        )).toString('binary');
+        // По subscriberIds получаем все их spdIds
+        const subscriberSPDs = await this.singlePaymentDocumentRepository.getSPDIdsBySubscriberIds(subscriberIds);
+        try {
+            const { singlePaymentDocuments: singlePaymentDocumentsWithDebtAndPenalty } =
+                await saga.getState().calculateDebtAndPenalty(
+                    subscriberSPDs, dto.keyRate
+                );
+            await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithDebtAndPenalty);
+            return (await this.pdfService.generatePdf(
+                spdHouse, spdManagementC, subscribers
+            )).toString('binary');
+        }
+        catch (e) {
+            await this.revertCalculateDetails(detailIds);
+            throw new RMQException(e.message, e.status);
+        }
     }
 
     private async revertCalculateDetails(detailIds: number[]) {

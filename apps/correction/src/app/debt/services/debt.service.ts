@@ -73,7 +73,7 @@ export class DebtService {
             lastDebtInHis.date = new Date(lastDebtInHis.date);
             let penalty: number;
             try {
-                penalty = await this.penaltyService.getPenaltyByHistory(lastDebtInHis, new Date());
+                penalty = await this.penaltyService.getPenaltyByHistory(lastDebtInHis, new Date(), dto.keyRate);
             } catch (e) {
                 throw new RMQException(e.message, e.status);
             }

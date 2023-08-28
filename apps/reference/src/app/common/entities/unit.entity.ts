@@ -20,4 +20,11 @@ export class UnitEntity implements IUnit {
             name: this.name
         }
     }
+
+    public getUnitWithId() {
+        return {
+            id: this.id,
+            name: this.name
+        }
+    }
 }

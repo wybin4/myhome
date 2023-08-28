@@ -18,4 +18,8 @@ export class UnitRepository {
         return this.unitRepository.findOne({ where: { id } });
     }
 
+    async findAll() {
+        return this.unitRepository.find();
+    }
+
 }

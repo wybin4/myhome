@@ -8,14 +8,18 @@ import { DataSource, Repository } from "typeorm";
 import { seedTypeOfService } from "./seeds/type-of-service.seed";
 import { seedUnit } from "./seeds/unit.seed";
 import { TypeOfServiceController } from "./controllers/type-of-service.controller";
+import { CommonController } from "./controllers/common.controller";
+import { CommonService } from "./services/common.service";
+import { UnitService } from "./services/unit.service";
+import { TypeOfServiceService } from "./services/type-of-service.service";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([TypeOfServiceEntity, UnitEntity]),
   ],
-  providers: [TypeOfServiceRepository, UnitRepository],
+  providers: [TypeOfServiceRepository, UnitRepository, CommonService, UnitService, TypeOfServiceService],
   exports: [TypeOfServiceRepository, UnitRepository],
-  controllers: [TypeOfServiceController],
+  controllers: [TypeOfServiceController, CommonController],
 })
 
 export class CommonModule implements OnModuleInit {

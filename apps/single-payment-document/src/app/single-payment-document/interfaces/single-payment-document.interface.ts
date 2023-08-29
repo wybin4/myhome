@@ -1,5 +1,5 @@
 export interface ISpd {
-    month: string; amount: number; penalty: number; deposit: number; debt: number;
+    month: string; amount: number; penalty: number; deposit: number; debt: number; subscriberId: number;
 }
 export interface ISpdPayment {
     amount: number; payedAt: Date;

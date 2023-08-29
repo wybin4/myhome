@@ -8,6 +8,7 @@ import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, HOME_NOT_EXIST, MANAG_COMP_
 import { GetSinglePaymentDocumentSaga } from "../sagas/get-single-payment-document.saga";
 import { PdfService } from "./pdf.service";
 import { ISpdHouse, ISpdManagementCompany } from "../interfaces/subscriber.interface";
+import { ISpd } from "../interfaces/single-payment-document.interface";
 
 @Injectable()
 export class SinglePaymentDocumentService {
@@ -84,9 +85,37 @@ export class SinglePaymentDocumentService {
                 await saga.getState().calculateDebtAndPenalty(
                     subscriberSPDs, dto.keyRate
                 );
-            await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithDebtAndPenalty);
+            await this.singlePaymentDocumentRepository
+                .updateMany(singlePaymentDocumentsWithDebtAndPenalty);
+
+            const monthOptions = {
+                year: 'numeric',
+                month: 'long',
+                timezone: 'UTC'
+            } as const;
+
+            const SPDs: ISpd[] = singlePaymentDocumentsWithDebtAndPenalty.map(obj => {
+                let monthName = obj.createdAt.toLocaleString("ru", monthOptions);
+                const splitted = monthName.split("")
+                const first = splitted[0].toUpperCase();
+                const rest = [...splitted];
+                rest.splice(0, 1);
+                monthName = [first, ...rest].join("");
+
+                return {
+                    month: monthName,
+                    amount: this.pdfService.getFixedNumber(obj.amount),
+                    penalty: this.pdfService.getFixedNumber(obj.penalty),
+                    deposit: 0, // ИСПРАВИТЬ!!!
+                    debt: this.pdfService.getFixedNumber(obj.debt),
+                    subscriberId: obj.subscriberId
+                };
+            });
+
             return (await this.pdfService.generatePdf(
-                spdHouse, spdManagementC, subscribers, detailsInfo
+                spdHouse, spdManagementC, subscribers,
+                detailsInfo,
+                SPDs
             )).toString('binary');
         }
         catch (e) {

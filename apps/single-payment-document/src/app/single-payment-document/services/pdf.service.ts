@@ -17,13 +17,19 @@ export class PdfService {
     private arialBold = join(__dirname, '.', 'assets', 'Arial-Bold.ttf');
     private arial = join(__dirname, '.', 'assets', 'Arial.ttf');
 
-    private getFixed(value: number) {
+    public getFixed(value: number) {
         if (Number(value) && Number(value) !== 0) {
             return Number(value).toFixed(2);
         } else return undefined;
     }
 
-    private getThreeOrMore(value: number) {
+    public getFixedNumber(value: number): number {
+        if (Number(value) && Number(value) !== 0) {
+            return Number(Number(value).toFixed(2));
+        } else return 0;
+    }
+
+    public getThreeOrMore(value: number) {
         if (Number(value) && Number(value) !== 0) {
             const threeAfterDot = value.toString().split('.')[1].slice(0, 3);
             const getZeros = (x: string) => {
@@ -36,7 +42,8 @@ export class PdfService {
 
     async generatePdf(
         house: ISpdHouse, managementC: ISpdManagementCompany, subscribers: ISpdSubscriber[],
-        detailsInfo: ISpdDetailInfo[]
+        detailsInfo: ISpdDetailInfo[],
+        SPDs: ISpd[]
     ): Promise<Buffer> {
         const qrCodeText = "ST00012|Name=ООО 'Служба 100'|PersonalAcc=40703810552090063242|BankName=Юго-Западный Банк ПАО 'Сбербанк России'|BIC=046025302|CorrespAcc=30102110600000000602|Sum=171505|PayeeINN=6368082584|DocDate=2023-07-28|lastName=ИВАНОВ|firstName=ИВАН|middleName=ИВАНОВИЧ|payerAddress=Малюгина, дом № 14, кв. 125|persAcc=97472855|paymPeriod=07.2023|category=0|serviceName=30581|Fine=0";
         // Генерация QR-кода в виде Buffer
@@ -80,9 +87,9 @@ export class PdfService {
         //     email: 'myhouse@mail.ru'
         // }
 
-        const spd: ISpd = {
-            amount: 1582.71, month: 'Август 2023 г.', penalty: 0, deposit: 0, debt: 0,
-        }
+        // const spd: ISpd = {
+        //     amount: 1582.71, month: 'Август 2023 г.', penalty: 0, deposit: 0, debt: 0,
+        // }
 
         const payment: ISpdPayment = {
             amount: 1532.18,
@@ -92,6 +99,7 @@ export class PdfService {
         // Проходимся по каждой детали с своим subscriberId
         const allSpdServices: { services: ISpdService[]; subscriberId: number; }[] = [];
         for (const detail of detailsInfo) {
+            const currentSPD = SPDs.find(obj => obj.subscriberId === detail.subscriberId);
             // Пушим услуги
             const temp: ISpdService[] = detail.details.map(obj => {
                 return {
@@ -103,7 +111,7 @@ export class PdfService {
                         this.getFixed(obj.volume.publicUtility), this.getThreeOrMore(obj.volume.commonHouseNeed),
                         this.getFixed(obj.tariff), this.getFixed(obj.amount.publicUtility),
                         this.getFixed(obj.amount.commonHouseNeed), this.getFixed(obj.totalAmount),
-                        '', '', ''
+                        '', ''
                     ],
                 };
             });
@@ -115,7 +123,7 @@ export class PdfService {
                     titleColSpan: 4,
                     titleAlign: 'right',
                     titleBold: true,
-                    services: ['', '', String(Number(detail.total).toFixed(2)), 'x', '', '', '']
+                    services: ['', '', String(Number(detail.total).toFixed(2)), 'x', '', '']
                 },
                 {
                     title: 'Всего с учетом пени:',
@@ -123,7 +131,7 @@ export class PdfService {
                     titleAlign: 'right',
                     titleBold: true,
                     servicesBold: true,
-                    services: ['', '']
+                    services: [this.getFixed(detail.total + currentSPD.penalty)]
                 }
             );
 
@@ -204,12 +212,14 @@ export class PdfService {
                 for (const subscriber of subscribers) {
                     count++;
 
+                    const currentSPD = SPDs.find(obj => obj.subscriberId === subscriber.id);
+
                     const top = new Top(this.arial, this.arialBold, doc);
-                    top.getTop(qr, barcode, operator, subscriber, managementC, spd);
+                    top.getTop(qr, barcode, operator, subscriber, managementC, currentSPD);
 
                     const currentService = allSpdServices.find(obj => obj.subscriberId === subscriber.id);
                     const bottom = new Bottom(this.arial, this.arialBold, doc, currentService.services, readings);
-                    bottom.getLow(operator, barcodeText, subscriber, spd, house, payment);
+                    bottom.getLow(operator, barcodeText, subscriber, currentSPD, house, payment);
 
                     if (count != subscribers.length) {
                         doc.addPage();
@@ -490,7 +500,7 @@ class Top {
         this.doc
             .font(this.arial)
             .fontSize(14)
-            .text(String(totalAmount), 949, 370, {
+            .text(String(totalAmount + penalty - deposit), 949, 370, {
                 width: 112,
                 align: 'right',
             });
@@ -611,24 +621,8 @@ class Bottom {
             startX: 908,
             width: 156,
             name: 'Итого к оплате за расчетный период, руб.',
-            yOfName: 552,
+            yOfName: 571,
             widthOfName: 156,
-            parts: [
-                {
-                    startX: 908,
-                    width: 78,
-                    name: 'Всего',
-                    widthOfName: 78,
-                    yOfName: 598
-                },
-                {
-                    startX: 986,
-                    width: 78,
-                    name: 'С учетом рассрочки',
-                    widthOfName: 78,
-                    yOfName: 590
-                },
-            ]
         }
     ];
 

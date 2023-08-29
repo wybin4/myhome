@@ -94,7 +94,8 @@ export class PublicUtilityService {
                             :
                             currentTariff.norm,
                     amountConsumed: difference,
-                    typeOfServiceId: meterReading.typeOfServiceId
+                    typeOfServiceId: meterReading.typeOfServiceId,
+                    unitId: currentTariff.unitId
                 });
             } else throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
         }

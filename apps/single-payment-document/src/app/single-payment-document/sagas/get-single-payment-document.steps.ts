@@ -2,8 +2,9 @@ import { GetSinglePaymentDocumentSagaState } from "./get-single-payment-document
 import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
 import { CANT_ADD_DOCUMENT_DETAILS, RMQException } from "@myhome/constants";
 import { HttpStatus } from "@nestjs/common";
-import { CalculationState, IDocumentDetail, IGetCorrection } from "@myhome/interfaces";
+import { CalculationState, IDocumentDetail, IGetCorrection, ITypeOfService, IUnit } from "@myhome/interfaces";
 import { AddDocumentDetails, GetCommonHouseNeeds, GetCorrection, GetPublicUtilities } from "@myhome/contracts";
+import { ISpdDetailInfo, ISpdDocumentDetail } from "../interfaces/single-payment-document.interface";
 
 export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDocumentSagaState {
     private async addDocumentDetails(details: IDocumentDetail[]) {
@@ -41,12 +42,77 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
             });
     }
 
-    public async calculateDetails(subscriberIds: number[], managementCompanyId?: number, houseId?: number): Promise<{ detailIds: number[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+    private merge(
+        pu: {
+            tariff: number,
+            amountConsumed: number,
+            typeOfServiceId: number,
+            unitId: number,
+        }[],
+        chn: {
+            tariff: number,
+            amountConsumed: number,
+            typeOfServiceId: number,
+            unitId: number,
+        }[]
+    ): {
+        tariff: number,
+        publicUtility: number,
+        commonHouseNeed: number,
+        typeOfServiceId: number,
+        unitId: number,
+    }[] {
+        const arr: {
+            tariff: number,
+            publicUtility: number,
+            commonHouseNeed: number,
+            typeOfServiceId: number,
+            unitId: number,
+        }[] = [];
+
+        for (const puItem of pu) {
+            const chnItem = chn.find(obj => obj.typeOfServiceId === puItem.typeOfServiceId);
+            if (!chnItem) {
+                arr.push({
+                    ...puItem,
+                    commonHouseNeed: 0,
+                    publicUtility: puItem.amountConsumed
+                });
+            } else {
+                arr.push({
+                    ...puItem,
+                    commonHouseNeed: chnItem.amountConsumed,
+                    publicUtility: puItem.amountConsumed
+                });
+            }
+        }
+
+        for (const chnItem of chn) {
+            const puItem = pu.find(obj => obj.typeOfServiceId === chnItem.typeOfServiceId);
+            if (!puItem) {
+                arr.push({
+                    ...chnItem,
+                    commonHouseNeed: chnItem.amountConsumed,
+                    publicUtility: 0
+                });
+            }
+        }
+
+        return arr;
+    }
+
+    public async calculateDetails(
+        subscriberIds: number[],
+        typesOfService: ITypeOfService[], units: IUnit[],
+        managementCompanyId?: number, houseId?: number
+    ): Promise<{
+        detailIds: number[]; detailsInfo: ISpdDetailInfo[]; singlePaymentDocuments: SinglePaymentDocumentEntity[];
+    }> {
         const { publicUtilities } = await this.getPublicUtility(subscriberIds, managementCompanyId);
         const { commonHouseNeeds } = await this.getCommonHouseNeed(subscriberIds, houseId);
 
-        const sum: { sum: number, subscriberId: number }[] = [];
         const details: IDocumentDetail[] = [];
+        const detailsInfo: ISpdDetailInfo[] = [];
 
         for (const pu of publicUtilities) {
             const chn = commonHouseNeeds.find(obj => obj.subscriberId === pu.subscriberId);
@@ -67,19 +133,42 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
                 }
             }));
 
-            const chnResult = chn.commonHouseNeeds.map(obj => obj.tariff * obj.amountConsumed);
-            const puResult = pu.publicUtility.map(obj => obj.tariff * obj.amountConsumed);
+            // Мёрджим publicUtility и commonHouseNeeds для одного конкретного абонента по typeOfServiceId
+            const mergedParts = this.merge(pu.publicUtility, chn.commonHouseNeeds);
+            // Для PDF нужно сформировать полную картину
+            let tempSum = 0;
+            const detailInfo: ISpdDocumentDetail[] = [];
+            for (const item of mergedParts) {
+                const currentTypeOfService = typesOfService.find(obj => obj.id === item.typeOfServiceId);
+                const currentUnit = units.find(obj => obj.id === item.unitId);
 
-            const temp = chnResult.reduce((a, b) => a + b, 0) + puResult.reduce((a, b) => a + b, 0);
-            sum.push({
-                sum: temp,
+                const temp = (item.commonHouseNeed + item.publicUtility) * item.tariff
+                tempSum += temp;
+
+                detailInfo.push({
+                    typeOfServiceName: currentTypeOfService.name,
+                    unitName: currentUnit.name,
+                    volume: {
+                        commonHouseNeed: item.commonHouseNeed, publicUtility: item.publicUtility
+                    },
+                    tariff: item.tariff,
+                    amount: {
+                        commonHouseNeed: item.commonHouseNeed * item.tariff,
+                        publicUtility: item.publicUtility * item.tariff
+                    },
+                    totalAmount: temp
+                });
+            }
+            detailsInfo.push({
+                total: tempSum,
+                details: detailInfo,
                 subscriberId: pu.subscriberId
             });
         }
 
         this.saga.singlePaymentDocuments.map(spd => {
-            const currSum = sum.find(s => spd.subscriberId === s.subscriberId);
-            spd.setAmount(currSum.sum);
+            const currSum = detailsInfo.find(s => spd.subscriberId === s.subscriberId);
+            spd.setAmount(currSum.total);
         });
         this.saga.setState(CalculationState.DetailsCalculated);
 
@@ -91,7 +180,7 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
             throw new RMQException(e.message, e.status);
         }
 
-        return { detailIds, singlePaymentDocuments: this.saga.singlePaymentDocuments }
+        return { detailIds, detailsInfo, singlePaymentDocuments: this.saga.singlePaymentDocuments }
     }
 
     public async calculateDebtAndPenalty(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
@@ -117,7 +206,7 @@ export class GetSinglePaymentDocumentSagaStateDetailsCalculated extends GetSingl
             throw new RMQException(e.message, e.status);
         }
     }
-    public calculateDetails(): Promise<{ detailIds: number[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+    public async calculateDetails(): Promise<{ detailIds: number[]; detailsInfo: ISpdDetailInfo[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("ЕПД уже в процессе расчёта", HttpStatus.BAD_REQUEST);
     }
     public async calculateDebtAndPenalty(subscriberSPDs: IGetCorrection[], keyRate?: number): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
@@ -136,7 +225,7 @@ export class GetSinglePaymentDocumentSagaStateDetailsCalculated extends GetSingl
 }
 
 export class GetSinglePaymentDocumentSagaStateCorrectionsCalculated extends GetSinglePaymentDocumentSagaState {
-    public calculateDetails(): Promise<{ detailIds: number[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+    public async calculateDetails(): Promise<{ detailIds: number[]; detailsInfo: ISpdDetailInfo[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("Нельзя сделать перерасчёт уже рассчитанного ЕПД", HttpStatus.BAD_REQUEST);
     }
     public calculateDebtAndPenalty(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
@@ -147,9 +236,9 @@ export class GetSinglePaymentDocumentSagaStateCorrectionsCalculated extends GetS
     }
 }
 export class GetSinglePaymentDocumentSagaStateCancelled extends GetSinglePaymentDocumentSagaState {
-    public async calculateDetails(subscriberIds: number[], managementCompanyId?: number, houseId?: number): Promise<{ detailIds: number[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+    public async calculateDetails(subscriberIds: number[], typesOfService: ITypeOfService[], units: IUnit[], managementCompanyId?: number, houseId?: number,): Promise<{ detailIds: number[]; detailsInfo: ISpdDetailInfo[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         this.saga.setState(CalculationState.Started);
-        return this.saga.getState().calculateDetails(subscriberIds, managementCompanyId, houseId);
+        return this.saga.getState().calculateDetails(subscriberIds, typesOfService, units, managementCompanyId, houseId);
     }
     public calculateDebtAndPenalty(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("Нельзя рассчитать отменённый ЕПД", HttpStatus.BAD_REQUEST);

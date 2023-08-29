@@ -7,7 +7,7 @@ export interface ISubscriber {
 }
 
 export interface ISubscriberAllInfo {
-    id?: number;
+    id: number;
     name: string;
     address: string;
     personalAccount: string;

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ISpdQR, ISpdBarcode } from '../interfaces/code.interface';
 import { ISpdOperator } from '../interfaces/operator.interface';
-import { ISpd, ISpdPayment } from '../interfaces/single-payment-document.interface';
+import { ISpd, ISpdDetailInfo, ISpdPayment } from '../interfaces/single-payment-document.interface';
 import { ISpdSubscriber, ISpdManagementCompany, ISpdHouse } from '../interfaces/subscriber.interface';
 import { RMQException } from '@myhome/constants';
 import qrcode from 'qrcode';
@@ -17,8 +17,26 @@ export class PdfService {
     private arialBold = join(__dirname, '.', 'assets', 'Arial-Bold.ttf');
     private arial = join(__dirname, '.', 'assets', 'Arial.ttf');
 
+    private getFixed(value: number) {
+        if (Number(value) && Number(value) !== 0) {
+            return Number(value).toFixed(2);
+        } else return undefined;
+    }
+
+    private getThreeOrMore(value: number) {
+        if (Number(value) && Number(value) !== 0) {
+            const threeAfterDot = value.toString().split('.')[1].slice(0, 3);
+            const getZeros = (x: string) => {
+                return (x.match(/0/g) || []).length;
+            }
+            const countOfZeros: number = getZeros(threeAfterDot);
+            return value.toFixed(countOfZeros + 3);
+        } else return undefined;
+    }
+
     async generatePdf(
-        house: ISpdHouse, managementC: ISpdManagementCompany, subscribers: ISpdSubscriber[]
+        house: ISpdHouse, managementC: ISpdManagementCompany, subscribers: ISpdSubscriber[],
+        detailsInfo: ISpdDetailInfo[]
     ): Promise<Buffer> {
         const qrCodeText = "ST00012|Name=ООО 'Служба 100'|PersonalAcc=40703810552090063242|BankName=Юго-Западный Банк ПАО 'Сбербанк России'|BIC=046025302|CorrespAcc=30102110600000000602|Sum=171505|PayeeINN=6368082584|DocDate=2023-07-28|lastName=ИВАНОВ|firstName=ИВАН|middleName=ИВАНОВИЧ|payerAddress=Малюгина, дом № 14, кв. 125|persAcc=97472855|paymPeriod=07.2023|category=0|serviceName=30581|Fine=0";
         // Генерация QR-кода в виде Buffer
@@ -71,45 +89,89 @@ export class PdfService {
             payedAt: new Date('03.07.2023')
         }
 
-        const services: ISpdService[] = [
-            {
-                title: 'Жилищные услуги',
-                titleColSpan: 4,
-                titleAlign: 'left',
-                titleBold: true,
-                servicesBold: true,
-                services: ['635.18', '231.41', '866.59', '', '', '866.59', '866.59']
-            },
-            {
-                title: 'СодОбщИмущ',
-                titleColSpan: 1,
-                titleAlign: 'left',
-                services: ['м2', '29.53', '', '7.31', '215.86', '', '215.86', '', '', '215.86', '215.86']
-            },
-            {
-                title: 'Коммунальные услуги',
-                titleColSpan: 4,
-                titleAlign: 'left',
-                titleBold: true,
-                servicesBold: true,
-                services: ['848.46', '', '848.46', '', '', '', '848.46', '848.46']
-            },
-            {
-                title: 'Итого к оплате за расчетный период:',
-                titleColSpan: 4,
-                titleAlign: 'right',
-                titleBold: true,
-                services: ['', '', '1715.05', 'x', '', '1715.05', '1715.05']
-            },
-            {
-                title: 'Всего с учетом пени:',
-                titleColSpan: 8,
-                titleAlign: 'right',
-                titleBold: true,
-                servicesBold: true,
-                services: ['1715.05', '1715.05']
-            },
-        ];
+        // Проходимся по каждой детали с своим subscriberId
+        const allSpdServices: { services: ISpdService[]; subscriberId: number; }[] = [];
+        for (const detail of detailsInfo) {
+            // Пушим услуги
+            const temp: ISpdService[] = detail.details.map(obj => {
+                return {
+                    titleColSpan: 1,
+                    titleAlign: 'left',
+                    title: obj.typeOfServiceName,
+                    services: [
+                        obj.unitName.replace('руб.', '').replace('/', '').replace(/м2/, ''),
+                        this.getFixed(obj.volume.publicUtility), this.getThreeOrMore(obj.volume.commonHouseNeed),
+                        this.getFixed(obj.tariff), this.getFixed(obj.amount.publicUtility),
+                        this.getFixed(obj.amount.commonHouseNeed), this.getFixed(obj.totalAmount),
+                        '', '', ''
+                    ],
+                };
+            });
+
+            // Пушим обязательные строки
+            temp.push(
+                {
+                    title: 'Итого к оплате за расчетный период:',
+                    titleColSpan: 4,
+                    titleAlign: 'right',
+                    titleBold: true,
+                    services: ['', '', String(Number(detail.total).toFixed(2)), 'x', '', '', '']
+                },
+                {
+                    title: 'Всего с учетом пени:',
+                    titleColSpan: 8,
+                    titleAlign: 'right',
+                    titleBold: true,
+                    servicesBold: true,
+                    services: ['', '']
+                }
+            );
+
+            // Пушим всё
+            allSpdServices.push({
+                services: temp,
+                subscriberId: detail.subscriberId,
+            });
+        }
+        // const services: ISpdService[] = [
+        //     {
+        //         title: 'Жилищные услуги',
+        //         titleColSpan: 4,
+        //         titleAlign: 'left',
+        //         titleBold: true,
+        //         servicesBold: true,
+        //         services: ['635.18', '231.41', '866.59', '', '', '866.59', '866.59']
+        //     },
+        //     {
+        //         title: 'СодОбщИмущ',
+        //         titleColSpan: 1,
+        //         titleAlign: 'left',
+        //         services: ['м2', '29.53', '', '7.31', '215.86', '', '215.86', '', '', '215.86', '215.86']
+        //     },
+        //     {
+        //         title: 'Коммунальные услуги',
+        //         titleColSpan: 4,
+        //         titleAlign: 'left',
+        //         titleBold: true,
+        //         servicesBold: true,
+        //         services: ['848.46', '', '848.46', '', '', '', '848.46', '848.46']
+        //     },
+        //     {
+        //         title: 'Итого к оплате за расчетный период:',
+        //         titleColSpan: 4,
+        //         titleAlign: 'right',
+        //         titleBold: true,
+        //         services: ['', '', '1715.05', 'x', '', '1715.05', '1715.05']
+        //     },
+        //     {
+        //         title: 'Всего с учетом пени:',
+        //         titleColSpan: 8,
+        //         titleAlign: 'right',
+        //         titleBold: true,
+        //         servicesBold: true,
+        //         services: ['1715.05', '1715.05']
+        //     },
+        // ];
 
         const readings: ISpdReading[][] = [[
             {
@@ -145,7 +207,8 @@ export class PdfService {
                     const top = new Top(this.arial, this.arialBold, doc);
                     top.getTop(qr, barcode, operator, subscriber, managementC, spd);
 
-                    const bottom = new Bottom(this.arial, this.arialBold, doc, services, readings);
+                    const currentService = allSpdServices.find(obj => obj.subscriberId === subscriber.id);
+                    const bottom = new Bottom(this.arial, this.arialBold, doc, currentService.services, readings);
                     bottom.getLow(operator, barcodeText, subscriber, spd, house, payment);
 
                     if (count != subscribers.length) {

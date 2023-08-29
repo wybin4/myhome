@@ -21,7 +21,8 @@ export interface IGetPublicUtility {
         {
             tariff: number,
             amountConsumed: number,
-            typeOfServiceId: number
+            typeOfServiceId: number,
+            unitId: number
         }
     ]
 }

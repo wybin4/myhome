@@ -19,7 +19,7 @@ export class CommonHouseNeedService {
         const individualAmountConsumed = await this.getPUSum(houseId, managementCompanyId);
         const generalMeterReadings = await this.getMeterReadingsByHID(houseId);
 
-        const difference = [], result = [];
+        const difference: { difference: number; typeOfServiceId: number }[] = [], result = [];
 
         for (const chn of generalMeterReadings.meterReadings) {
             const currentIndividual = individualAmountConsumed.find(obj => obj.typeOfServiceId === chn.typeOfServiceId);
@@ -48,7 +48,8 @@ export class CommonHouseNeedService {
                 temp.push({
                     amountConsumed: diff.difference * apartmentEntity.livingArea / house.house.livingArea,
                     typeOfServiceId: diff.typeOfServiceId,
-                    tariff: currentTariff.multiplier
+                    tariff: currentTariff.multiplier,
+                    unitId: currentTariff.unitId
                 });
             }
             result.push({

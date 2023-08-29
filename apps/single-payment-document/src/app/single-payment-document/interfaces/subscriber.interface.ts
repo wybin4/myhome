@@ -1,5 +1,5 @@
 export interface ISpdSubscriber {
-    name: string; address: string; personalAccount: string; apartmentArea: number; livingArea: number; numberOfRegistered: number;
+    id: number; name: string; address: string; personalAccount: string; apartmentArea: number; livingArea: number; numberOfRegistered: number;
 }
 
 export interface ISpdManagementCompany {

@@ -1,4 +1,4 @@
-import { AccountUserInfo, CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, ReferenceGetHouse, ReferenceGetSubscribers, ReferenceGetSubscribersAllInfo } from "@myhome/contracts";
+import { AccountUserInfo, CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, ReferenceGetCommon, ReferenceGetHouse, ReferenceGetSubscribersAllInfo } from "@myhome/contracts";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentRepository } from "../single-payment-document.repository";
@@ -69,9 +69,11 @@ export class SinglePaymentDocumentService {
             dto.houseId
         );
 
-        const { detailIds, singlePaymentDocuments: singlePaymentDocumentsWithAmount } =
+        const { typesOfService, units } = await this.getCommon();
+
+        const { detailIds, detailsInfo, singlePaymentDocuments: singlePaymentDocumentsWithAmount } =
             await saga.getState().calculateDetails(
-                subscriberIds, dto.managementCompanyId, dto.houseId
+                subscriberIds, typesOfService, units, dto.managementCompanyId, dto.houseId
             );
         await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithAmount);
 
@@ -84,7 +86,7 @@ export class SinglePaymentDocumentService {
                 );
             await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithDebtAndPenalty);
             return (await this.pdfService.generatePdf(
-                spdHouse, spdManagementC, subscribers
+                spdHouse, spdManagementC, subscribers, detailsInfo
             )).toString('binary');
         }
         catch (e) {
@@ -142,6 +144,19 @@ export class SinglePaymentDocumentService {
                 (ReferenceGetSubscribersAllInfo.topic, { ids: subscriberIds });
         } catch (e) {
             throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
+        }
+    }
+
+    private async getCommon(): Promise<ReferenceGetCommon.Response> {
+        try {
+            return await this.rmqService.send
+                <
+                    ReferenceGetCommon.Request,
+                    ReferenceGetCommon.Response
+                >
+                (ReferenceGetCommon.topic, {});
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
         }
     }
 }

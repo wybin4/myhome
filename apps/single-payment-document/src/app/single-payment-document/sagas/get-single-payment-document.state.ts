@@ -1,6 +1,7 @@
 import { GetSinglePaymentDocumentSaga } from "./get-single-payment-document.saga";
 import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
-import { IGetCorrection } from "@myhome/interfaces";
+import { IGetCorrection, ITypeOfService, IUnit } from "@myhome/interfaces";
+import { ISpdDetailInfo } from "../interfaces/single-payment-document.interface";
 
 export abstract class GetSinglePaymentDocumentSagaState {
     public saga: GetSinglePaymentDocumentSaga;
@@ -9,7 +10,16 @@ export abstract class GetSinglePaymentDocumentSagaState {
         this.saga = saga;
     }
 
-    public abstract calculateDetails(subscriberIds: number[], managementCompanyId?: number, houseId?: number): Promise<{ detailIds: number[], singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
-    public abstract calculateDebtAndPenalty(subscriberSPDs: IGetCorrection[], keyRate?: number): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
+    public abstract calculateDetails(
+        subscriberIds: number[],
+        typesOfService: ITypeOfService[], units: IUnit[],
+        managementCompanyId?: number, houseId?: number
+    ): Promise<{
+        detailIds: number[]; detailsInfo: ISpdDetailInfo[];
+        singlePaymentDocuments: SinglePaymentDocumentEntity[];
+    }>;
+    public abstract calculateDebtAndPenalty(
+        subscriberSPDs: IGetCorrection[], keyRate?: number
+    ): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
     public abstract cancell(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
 }

@@ -100,6 +100,8 @@ export class PdfService {
         const allSpdServices: { services: ISpdService[]; subscriberId: number; }[] = [];
         for (const detail of detailsInfo) {
             const currentSPD = SPDs.find(obj => obj.subscriberId === detail.subscriberId);
+            const debtMinusDeposit = currentSPD.debt - currentSPD.deposit;
+
             // Пушим услуги
             const temp: ISpdService[] = detail.details.map(obj => {
                 return {
@@ -111,7 +113,7 @@ export class PdfService {
                         this.getFixed(obj.volume.publicUtility), this.getThreeOrMore(obj.volume.commonHouseNeed),
                         this.getFixed(obj.tariff), this.getFixed(obj.amount.publicUtility),
                         this.getFixed(obj.amount.commonHouseNeed), this.getFixed(obj.totalAmount),
-                        '', ''
+                        '', '', ''
                     ],
                 };
             });
@@ -123,7 +125,12 @@ export class PdfService {
                     titleColSpan: 4,
                     titleAlign: 'right',
                     titleBold: true,
-                    services: ['', '', String(Number(detail.total).toFixed(2)), 'x', '', '']
+                    services: [
+                        '', '',
+                        String(Number(detail.total).toFixed(2)),
+                        'x', (currentSPD.debt - currentSPD.deposit).toFixed(2),
+                        (detail.total + debtMinusDeposit).toFixed(2)
+                    ]
                 },
                 {
                     title: 'Всего с учетом пени:',
@@ -131,7 +138,7 @@ export class PdfService {
                     titleAlign: 'right',
                     titleBold: true,
                     servicesBold: true,
-                    services: [this.getFixed(detail.total + currentSPD.penalty)]
+                    services: [this.getFixed(detail.total + debtMinusDeposit + currentSPD.penalty)]
                 }
             );
 
@@ -304,7 +311,7 @@ class Top {
             managementC.name, managementC.address, managementC.phone, managementC.email,
             spd.amount
         );
-        this.getFifthTopZone(spd.amount, spd.penalty, spd.deposit);
+        this.getFifthTopZone(spd.amount, spd.debt, spd.penalty, spd.deposit);
         this.doc
             .moveTo(this.startX, 432)
             .lineWidth(4)
@@ -415,7 +422,7 @@ class Top {
     }
 
     private getFifthTopZone(
-        totalAmount: number, penalty: number, deposit: number
+        totalAmount: number, debt: number, penalty: number, deposit: number
     ): PDFKit.PDFDocument {
         const xGen = 277;
         const yGen = 219;
@@ -500,7 +507,7 @@ class Top {
         this.doc
             .font(this.arial)
             .fontSize(14)
-            .text(String(totalAmount + penalty - deposit), 949, 370, {
+            .text(String(totalAmount), 949, 370, {
                 width: 112,
                 align: 'right',
             });
@@ -508,6 +515,13 @@ class Top {
             .font(this.arial)
             .fontSize(14)
             .text('ВСЕГО:', 893, 405);
+        this.doc
+            .font(this.arialBold)
+            .fontSize(14)
+            .text(String(totalAmount + debt + penalty - deposit), 949, 405, {
+                width: 112,
+                align: 'right',
+            });
         return this.doc;
     }
 }
@@ -918,17 +932,19 @@ class Bottom {
                 this.doc.font(this.arialBold);
             } else { this.doc.font(this.arial); }
 
+            const align = isNumber(Number(service.services[numberOfInserted]));
+
             if (!arr.parts) {
-                this.doc.text(service.services[numberOfInserted], arr.startX + spanFromEdgeWhenRight, y + textHeight, {
+                this.doc.text(service.services[numberOfInserted], arr.startX + (align ? spanFromEdgeWhenRight : 0), y + textHeight, {
                     width: arr.width,
-                    align: isNumber(Number(service.services[numberOfInserted])) ? 'right' : 'center'
+                    align: align ? 'right' : 'center'
                 });
                 numberOfInserted++;
             } else {
                 for (const part of arr.parts) {
-                    this.doc.text(service.services[numberOfInserted], part.startX + spanFromEdgeWhenRight, y + textHeight, {
+                    this.doc.text(service.services[numberOfInserted], part.startX + (align ? spanFromEdgeWhenRight : 0), y + textHeight, {
                         width: part.width,
-                        align: isNumber(Number(service.services[numberOfInserted])) ? 'right' : 'center'
+                        align: align ? 'right' : 'center'
                     });
                     numberOfInserted++;
                 }

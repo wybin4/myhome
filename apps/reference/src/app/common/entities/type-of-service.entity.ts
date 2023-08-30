@@ -9,6 +9,9 @@ export class TypeOfServiceEntity implements ITypeOfService {
     @Column({ nullable: false })
     name: string;
 
+    @Column({ nullable: false })
+    unitId: number;
+
     constructor(data?: Partial<TypeOfServiceEntity>) {
         if (data) {
             Object.assign(this, data);
@@ -17,13 +20,15 @@ export class TypeOfServiceEntity implements ITypeOfService {
 
     public getTypeOfService() {
         return {
-            name: this.name
+            name: this.name,
+            unitId: this.unitId,
         }
     }
     public getTypeOfServiceWithId() {
         return {
             id: this.id,
-            name: this.name
+            name: this.name,
+            unitId: this.unitId,
         }
     }
 }

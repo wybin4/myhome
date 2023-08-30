@@ -672,16 +672,16 @@ class Bottom {
             ySpanOfName: 26,
         },
         {
-            width: 138,
+            width: 140,
             name: 'Показания ИПУ (тек./пред.)',
             ySpanOfName: 18,
             widthOfName: 95,
             xSpanOfName: 22,
         },
         {
-            width: 60,
-            name: 'Расход',
-            ySpanOfName: 27,
+            width: 58,
+            name: 'Расход по ИПУ',
+            ySpanOfName: 19,
         },
         {
             width: 60,
@@ -713,19 +713,21 @@ class Bottom {
             ]
         },
         {
-            width: 99,
-            name: 'Объем услуг в целях СОИД',
+            width: 140,
+            name: 'Показания ОПУ (тек./пред.)',
             ySpanOfName: 19,
+            widthOfName: 95,
+            xSpanOfName: 22,
         },
         {
-            width: 99,
-            name: 'Расход общедомовых приборов учета',
-            ySpanOfName: 10,
+            width: 58,
+            name: 'Расход по ОПУ',
+            ySpanOfName: 19,
         },
         {
             width: 118,
-            name: 'Объем ком.услуг в помещениях',
-            ySpanOfName: 19,
+            name: 'Объем ком. услуг',
+            ySpanOfName: 26,
         },
     ]
 

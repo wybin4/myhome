@@ -48,27 +48,23 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
             tariff: number,
             amountConsumed: number,
             typeOfServiceId: number,
-            unitId: number,
         }[],
         chn: {
             tariff: number,
             amountConsumed: number,
             typeOfServiceId: number,
-            unitId: number,
         }[]
     ): {
         tariff: number,
         publicUtility: number,
         commonHouseNeed: number,
         typeOfServiceId: number,
-        unitId: number,
     }[] {
         const arr: {
             tariff: number,
             publicUtility: number,
             commonHouseNeed: number,
             typeOfServiceId: number,
-            unitId: number,
         }[] = [];
 
         for (const puItem of pu) {
@@ -144,7 +140,7 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
             const detailInfo: ISpdDocumentDetail[] = [];
             for (const item of mergedParts) {
                 const currentTypeOfService = typesOfService.find(obj => obj.id === item.typeOfServiceId);
-                const currentUnit = units.find(obj => obj.id === item.unitId);
+                const currentUnit = units.find(obj => obj.id === currentTypeOfService.unitId);
 
                 const temp = (item.commonHouseNeed + item.publicUtility) * item.tariff
                 tempSum += temp;
@@ -173,7 +169,7 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
             // Для PDF, но уже с meterData
             for (const meterReading of pu.meterData) {
                 const currentTypeOfService = typesOfService.find(obj => obj.id === meterReading.typeOfServiceId);
-                // const currentUnit = units.find(obj => obj.id === item.unitId);
+                const currentUnit = units.find(obj => obj.id === currentTypeOfService.unitId);
 
                 const fullMeterReadings: Reading = meterReading.fullMeterReadings;
                 const individualReadings = 'difference' in fullMeterReadings ? {
@@ -187,7 +183,7 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
                 meterReadingData.push({
                     individualReadings,
                     typeOfServiceName: currentTypeOfService.name,
-                    unitName: 'ЮНИТ',
+                    unitName: currentUnit.name,
                     norm: norm,
                     commonReadings: 0,
                 });

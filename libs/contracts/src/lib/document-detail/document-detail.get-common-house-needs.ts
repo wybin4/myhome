@@ -22,7 +22,6 @@ export interface IGetCommonHouseNeed {
             tariff: number,
             amountConsumed: number,
             typeOfServiceId: number,
-            unitId: number
         }
     ]
 }

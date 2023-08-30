@@ -49,7 +49,6 @@ export class CommonHouseNeedService {
                     amountConsumed: diff.difference * apartmentEntity.livingArea / house.house.livingArea,
                     typeOfServiceId: diff.typeOfServiceId,
                     tariff: currentTariff.multiplier,
-                    unitId: currentTariff.unitId
                 });
             }
             result.push({

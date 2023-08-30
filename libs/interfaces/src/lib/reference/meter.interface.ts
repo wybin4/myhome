@@ -47,10 +47,15 @@ export enum MeterStatus {
     NotInstall = 'NotInstall',
 }
 
+export type FullReading = { current: number; previous: number; difference: number; };
+export type NormReading = { norm: number; };
+export type AvgReading = { avgVolume: number; };
+export type Reading = FullReading | NormReading | AvgReading;
 
 export interface IGetMeterReading {
     meterReadings: IIndividualMeterReading | IGeneralMeterReading;
     typeOfServiceId: number;
+    fullMeterReadings: Reading;
 }
 
 export function RequireHomeOrApartment(validationOptions?: ValidationOptions) {

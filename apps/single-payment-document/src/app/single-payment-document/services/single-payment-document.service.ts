@@ -72,7 +72,11 @@ export class SinglePaymentDocumentService {
 
         const { typesOfService, units } = await this.getCommon();
 
-        const { detailIds, detailsInfo, singlePaymentDocuments: singlePaymentDocumentsWithAmount } =
+        const {
+            detailIds, detailsInfo,
+            meterReadingsData,
+            singlePaymentDocuments: singlePaymentDocumentsWithAmount
+        } =
             await saga.getState().calculateDetails(
                 subscriberIds, typesOfService, units, dto.managementCompanyId, dto.houseId
             );
@@ -115,7 +119,7 @@ export class SinglePaymentDocumentService {
             return (await this.pdfService.generatePdf(
                 spdHouse, spdManagementC, subscribers,
                 detailsInfo,
-                SPDs
+                SPDs, meterReadingsData,
             )).toString('binary');
         }
         catch (e) {

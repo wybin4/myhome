@@ -2,9 +2,10 @@ import { GetSinglePaymentDocumentSagaState } from "./get-single-payment-document
 import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
 import { CANT_ADD_DOCUMENT_DETAILS, RMQException } from "@myhome/constants";
 import { HttpStatus } from "@nestjs/common";
-import { CalculationState, IDocumentDetail, IGetCorrection, ITypeOfService, IUnit } from "@myhome/interfaces";
+import { CalculationState, IDocumentDetail, IGetCorrection, ITypeOfService, IUnit, Reading } from "@myhome/interfaces";
 import { AddDocumentDetails, GetCommonHouseNeeds, GetCorrection, GetPublicUtilities } from "@myhome/contracts";
 import { ISpdDetailInfo, ISpdDocumentDetail } from "../interfaces/single-payment-document.interface";
+import { ISpdMeterReading, ISpdMeterReadings } from "../interfaces/reading-table.interface";
 
 export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDocumentSagaState {
     private async addDocumentDetails(details: IDocumentDetail[]) {
@@ -106,13 +107,16 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
         typesOfService: ITypeOfService[], units: IUnit[],
         managementCompanyId?: number, houseId?: number
     ): Promise<{
-        detailIds: number[]; detailsInfo: ISpdDetailInfo[]; singlePaymentDocuments: SinglePaymentDocumentEntity[];
+        detailIds: number[], detailsInfo: ISpdDetailInfo[],
+        meterReadingsData: ISpdMeterReadings[],
+        singlePaymentDocuments: SinglePaymentDocumentEntity[],
     }> {
         const { publicUtilities } = await this.getPublicUtility(subscriberIds, managementCompanyId);
         const { commonHouseNeeds } = await this.getCommonHouseNeed(subscriberIds, houseId);
 
         const details: IDocumentDetail[] = [];
         const detailsInfo: ISpdDetailInfo[] = [];
+        const meterReadingsData: ISpdMeterReadings[] = [];
 
         for (const pu of publicUtilities) {
             const chn = commonHouseNeeds.find(obj => obj.subscriberId === pu.subscriberId);
@@ -164,6 +168,34 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
                 details: detailInfo,
                 subscriberId: pu.subscriberId
             });
+
+            const meterReadingData: ISpdMeterReading[] = [];
+            // Для PDF, но уже с meterData
+            for (const meterReading of pu.meterData) {
+                const currentTypeOfService = typesOfService.find(obj => obj.id === meterReading.typeOfServiceId);
+                // const currentUnit = units.find(obj => obj.id === item.unitId);
+
+                const fullMeterReadings: Reading = meterReading.fullMeterReadings;
+                const individualReadings = 'difference' in fullMeterReadings ? {
+                    reading: `${fullMeterReadings.current}/${fullMeterReadings.previous}`,
+                    difference: fullMeterReadings.difference
+                } : { reading: '', difference: 0 };
+                const norm = 'norm' in fullMeterReadings
+                    ? { individual: fullMeterReadings.norm, common: 0 }
+                    : { individual: 0, common: 0 };
+
+                meterReadingData.push({
+                    individualReadings,
+                    typeOfServiceName: currentTypeOfService.name,
+                    unitName: 'ЮНИТ',
+                    norm: norm,
+                    commonReadings: 0,
+                });
+            }
+            meterReadingsData.push({
+                readings: meterReadingData,
+                subscriberId: pu.subscriberId,
+            });
         }
 
         this.saga.singlePaymentDocuments.map(spd => {
@@ -180,7 +212,7 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
             throw new RMQException(e.message, e.status);
         }
 
-        return { detailIds, detailsInfo, singlePaymentDocuments: this.saga.singlePaymentDocuments }
+        return { detailIds, detailsInfo, meterReadingsData, singlePaymentDocuments: this.saga.singlePaymentDocuments }
     }
 
     public async calculateDebtAndPenalty(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
@@ -206,7 +238,7 @@ export class GetSinglePaymentDocumentSagaStateDetailsCalculated extends GetSingl
             throw new RMQException(e.message, e.status);
         }
     }
-    public async calculateDetails(): Promise<{ detailIds: number[]; detailsInfo: ISpdDetailInfo[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+    public async calculateDetails(): Promise<{ detailIds: number[]; detailsInfo: ISpdDetailInfo[]; meterReadingsData: ISpdMeterReadings[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("ЕПД уже в процессе расчёта", HttpStatus.BAD_REQUEST);
     }
     public async calculateDebtAndPenalty(subscriberSPDs: IGetCorrection[], keyRate?: number): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
@@ -225,7 +257,7 @@ export class GetSinglePaymentDocumentSagaStateDetailsCalculated extends GetSingl
 }
 
 export class GetSinglePaymentDocumentSagaStateCorrectionsCalculated extends GetSinglePaymentDocumentSagaState {
-    public async calculateDetails(): Promise<{ detailIds: number[]; detailsInfo: ISpdDetailInfo[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+    public async calculateDetails(): Promise<{ detailIds: number[]; detailsInfo: ISpdDetailInfo[]; meterReadingsData: ISpdMeterReadings[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("Нельзя сделать перерасчёт уже рассчитанного ЕПД", HttpStatus.BAD_REQUEST);
     }
     public calculateDebtAndPenalty(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
@@ -236,7 +268,7 @@ export class GetSinglePaymentDocumentSagaStateCorrectionsCalculated extends GetS
     }
 }
 export class GetSinglePaymentDocumentSagaStateCancelled extends GetSinglePaymentDocumentSagaState {
-    public async calculateDetails(subscriberIds: number[], typesOfService: ITypeOfService[], units: IUnit[], managementCompanyId?: number, houseId?: number,): Promise<{ detailIds: number[]; detailsInfo: ISpdDetailInfo[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+    public async calculateDetails(subscriberIds: number[], typesOfService: ITypeOfService[], units: IUnit[], managementCompanyId?: number, houseId?: number,): Promise<{ detailIds: number[]; detailsInfo: ISpdDetailInfo[]; meterReadingsData: ISpdMeterReadings[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         this.saga.setState(CalculationState.Started);
         return this.saga.getState().calculateDetails(subscriberIds, typesOfService, units, managementCompanyId, houseId);
     }

@@ -10,8 +10,9 @@ export class PublicUtilityService {
         private readonly rmqService: RMQService,
     ) { }
 
-    public async getPublicUtility({ subscriberIds, managementCompanyId }: GetPublicUtilities.Request)
-        : Promise<GetPublicUtilities.Response> {
+    public async getPublicUtility(
+        { subscriberIds, managementCompanyId }: GetPublicUtilities.Request
+    ): Promise<GetPublicUtilities.Response> {
         const result = [];
         let meterReadings: ReferenceGetMeterReadingBySID.Response;
         let tariffs: Array<IMunicipalTariff>;
@@ -33,7 +34,13 @@ export class PublicUtilityService {
             }
             result.push({
                 subscriberId: subscriberId,
-                publicUtility: await this.getPUAmount(meterReadings.meterReadings, tariffs)
+                publicUtility: await this.getPUAmount(meterReadings.meterReadings, tariffs),
+                meterData: meterReadings.meterReadings.map(obj => {
+                    return {
+                        fullMeterReadings: obj.fullMeterReadings,
+                        typeOfServiceId: obj.typeOfServiceId
+                    };
+                })
             })
         }
         return { publicUtilities: result };
@@ -49,7 +56,9 @@ export class PublicUtilityService {
         }
     }
 
-    private async getMeterReadingsBySID(subscriber: ISubscriber, managementCompanyId: number): Promise<ReferenceGetMeterReadingBySID.Response> {
+    private async getMeterReadingsBySID(
+        subscriber: ISubscriber, managementCompanyId: number
+    ): Promise<ReferenceGetMeterReadingBySID.Response> {
         try {
             return await this.rmqService.send
                 <
@@ -57,8 +66,12 @@ export class PublicUtilityService {
                     ReferenceGetMeterReadingBySID.Response
                 >
                 (
-                    ReferenceGetMeterReadingBySID.topic, { subscriber: subscriber, meterType: MeterType.Individual, managementCompanyId }
-                );
+                    ReferenceGetMeterReadingBySID.topic,
+                    {
+                        subscriber: subscriber,
+                        meterType: MeterType.Individual,
+                        managementCompanyId
+                    });
         } catch (e) {
             throw new RMQException(e.message, e.code);
         }

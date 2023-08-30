@@ -2,6 +2,7 @@ import { GetSinglePaymentDocumentSaga } from "./get-single-payment-document.saga
 import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
 import { IGetCorrection, ITypeOfService, IUnit } from "@myhome/interfaces";
 import { ISpdDetailInfo } from "../interfaces/single-payment-document.interface";
+import { ISpdMeterReadings } from "../interfaces/reading-table.interface";
 
 export abstract class GetSinglePaymentDocumentSagaState {
     public saga: GetSinglePaymentDocumentSaga;
@@ -16,6 +17,7 @@ export abstract class GetSinglePaymentDocumentSagaState {
         managementCompanyId?: number, houseId?: number
     ): Promise<{
         detailIds: number[]; detailsInfo: ISpdDetailInfo[];
+        meterReadingsData: ISpdMeterReadings[];
         singlePaymentDocuments: SinglePaymentDocumentEntity[];
     }>;
     public abstract calculateDebtAndPenalty(

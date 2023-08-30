@@ -1,3 +1,4 @@
+import { Reading } from "@myhome/interfaces";
 import { IsNumber } from "class-validator";
 
 export namespace GetPublicUtilities {
@@ -24,5 +25,9 @@ export interface IGetPublicUtility {
             typeOfServiceId: number,
             unitId: number
         }
-    ]
+    ],
+    meterData: {
+        fullMeterReadings: Reading,
+        typeOfServiceId: number
+    }[]
 }

@@ -9,7 +9,7 @@ import { join } from 'path';
 import bwipjs from 'bwip-js';
 import * as PDFDocument from 'pdfkit';
 import { ISpdService, ISpdServiceColumn } from '../interfaces/service-table.interface';
-import { ISpdReading, ISpdReadingColumn } from '../interfaces/reading-table.interface';
+import { ISpdMeterReadings, ISpdReading, ISpdReadingColumn, ISpdReadings } from '../interfaces/reading-table.interface';
 import { isNumber } from 'class-validator';
 
 @Injectable()
@@ -17,9 +17,9 @@ export class PdfService {
     private arialBold = join(__dirname, '.', 'assets', 'Arial-Bold.ttf');
     private arial = join(__dirname, '.', 'assets', 'Arial.ttf');
 
-    public getFixed(value: number) {
+    public getFixed(value: number, fix: number) {
         if (Number(value) && Number(value) !== 0) {
-            return Number(value).toFixed(2);
+            return Number(value).toFixed(fix);
         } else return undefined;
     }
 
@@ -43,7 +43,7 @@ export class PdfService {
     async generatePdf(
         house: ISpdHouse, managementC: ISpdManagementCompany, subscribers: ISpdSubscriber[],
         detailsInfo: ISpdDetailInfo[],
-        SPDs: ISpd[]
+        SPDs: ISpd[], meterReadingsData: ISpdMeterReadings[]
     ): Promise<Buffer> {
         const qrCodeText = "ST00012|Name=ООО 'Служба 100'|PersonalAcc=40703810552090063242|BankName=Юго-Западный Банк ПАО 'Сбербанк России'|BIC=046025302|CorrespAcc=30102110600000000602|Sum=171505|PayeeINN=6368082584|DocDate=2023-07-28|lastName=ИВАНОВ|firstName=ИВАН|middleName=ИВАНОВИЧ|payerAddress=Малюгина, дом № 14, кв. 125|persAcc=97472855|paymPeriod=07.2023|category=0|serviceName=30581|Fine=0";
         // Генерация QR-кода в виде Buffer
@@ -110,9 +110,9 @@ export class PdfService {
                     title: obj.typeOfServiceName,
                     services: [
                         obj.unitName.replace('руб.', '').replace('/', '').replace(/м2/, ''),
-                        this.getFixed(obj.volume.publicUtility), this.getThreeOrMore(obj.volume.commonHouseNeed),
-                        this.getFixed(obj.tariff), this.getFixed(obj.amount.publicUtility),
-                        this.getFixed(obj.amount.commonHouseNeed), this.getFixed(obj.totalAmount),
+                        this.getFixed(obj.volume.publicUtility, 2), this.getThreeOrMore(obj.volume.commonHouseNeed),
+                        this.getFixed(obj.tariff, 2), this.getFixed(obj.amount.publicUtility, 2),
+                        this.getFixed(obj.amount.commonHouseNeed, 2), this.getFixed(obj.totalAmount, 2),
                         '', '', ''
                     ],
                 };
@@ -138,7 +138,7 @@ export class PdfService {
                     titleAlign: 'right',
                     titleBold: true,
                     servicesBold: true,
-                    services: [this.getFixed(detail.total + debtMinusDeposit + currentSPD.penalty)]
+                    services: [this.getFixed(detail.total + debtMinusDeposit + currentSPD.penalty, 2)]
                 }
             );
 
@@ -187,29 +187,53 @@ export class PdfService {
         //         services: ['1715.05', '1715.05']
         //     },
         // ];
+        const allReadings: ISpdReadings[] = [];
+        // Для каждого subscriberId
+        for (const meterReadings of meterReadingsData) {
+            const currentSubscriber = subscribers.find(obj => obj.id === meterReadings.subscriberId);
 
-        const readings: ISpdReading[][] = [[
-            {
-                reading: 'Теп.эн.СОИД',
-                readingAlign: 'left',
-            }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
-            {
-                reading: 'Гкал',
-                readingAlign: 'center',
-            },
-            {
-                reading: '29.53/2299.2',
-                readingAlign: 'right',
-            }, { reading: '', readingAlign: 'left' },
-            {
-                reading: '0.001',
-                readingAlign: 'right',
-            },
-            {
-                reading: '0.594',
-                readingAlign: 'right',
-            }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
-        ]];
+            const reading: ISpdReading[] = [];
+            for (const meterReading of meterReadings.readings) {
+                const individualReadingString = meterReading.individualReadings.reading;
+                reading.push(
+                    { reading: meterReading.typeOfServiceName, readingAlign: 'left' },
+                    { reading: individualReadingString, readingAlign: 'left' },
+                    { reading: this.getFixed(meterReading.individualReadings.difference, 3), readingAlign: 'right' },
+                    { reading: meterReading.unitName, readingAlign: 'center' },
+                    { reading: `${currentSubscriber.livingArea}/${house.livingArea}`, readingAlign: 'right' },
+                    { reading: this.getFixed(meterReading.norm.individual, 3), readingAlign: 'right' },
+                    { reading: this.getFixed(meterReading.norm.common, 3), readingAlign: 'right' },
+                    { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
+                )
+            }
+            allReadings.push({
+                readings: reading,
+                subscriberId: currentSubscriber.id
+            });
+        };
+
+        // const readings: ISpdReading[][] = [[
+        //     {
+        //         reading: 'Теп.эн.СОИД',
+        //         readingAlign: 'left',
+        //     }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
+        //     {
+        //         reading: 'Гкал',
+        //         readingAlign: 'center',
+        //     },
+        //     {
+        //         reading: '29.53/2299.2',
+        //         readingAlign: 'right',
+        //     }, { reading: '', readingAlign: 'left' },
+        //     {
+        //         reading: '0.001',
+        //         readingAlign: 'right',
+        //     },
+        //     {
+        //         reading: '0.594',
+        //         readingAlign: 'right',
+        //     }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
+        // ]];
 
         try {
             const pdfBuffer: Buffer = await new Promise(resolve => {
@@ -225,7 +249,8 @@ export class PdfService {
                     top.getTop(qr, barcode, operator, subscriber, managementC, currentSPD);
 
                     const currentService = allSpdServices.find(obj => obj.subscriberId === subscriber.id);
-                    const bottom = new Bottom(this.arial, this.arialBold, doc, currentService.services, readings);
+                    const currentReadings = allReadings.find(obj => obj.subscriberId === subscriber.id);
+                    const bottom = new Bottom(this.arial, this.arialBold, doc, currentService.services, currentReadings.readings);
                     bottom.getLow(operator, barcodeText, subscriber, currentSPD, house, payment);
 
                     if (count != subscribers.length) {
@@ -531,7 +556,7 @@ class Bottom {
         private readonly arial: string, private readonly arialBold: string,
         private doc: PDFKit.PDFDocument,
         private readonly services: ISpdService[],
-        private readonly readings: ISpdReading[][]
+        private readonly readings: ISpdReading[]
     ) {
         this.arial = arial;
         this.arialBold = arialBold;
@@ -727,7 +752,7 @@ class Bottom {
             .fontSize(16)
             .font(this.arialBold)
             .text(
-                `Задолженность на дату печати: ${spd.debt} руб.`,
+                `Задолженность на дату печати: ${spd.debt.toFixed(2)} руб.`,
                 this.startX,
                 currentY + 7,
                 {
@@ -739,8 +764,8 @@ class Bottom {
 
         this.getReadingTableCap(currentY); // 6 сегмент
         currentY += 64;
-        for (const reading of this.readings) {
-            this.getReadingRows(currentY, reading);
+        if (this.readings.length) {
+            this.getReadingRows(currentY, this.readings);
             currentY += this.heightOfReadingCol; // 7 сегмент
         }
 

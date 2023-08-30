@@ -1,5 +1,5 @@
 import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, APART_NOT_EXIST, RMQException, MISSING_PREVIOUS_READING, FAILED_TO_GET_METER_READINGS, FAILED_TO_GET_READINGS_WITHOUT_NORMS, NORMS_NOT_EXIST, HOME_NOT_EXIST, FAILED_TO_GET_PREVIOUS_READINGS, FAILED_TO_GET_CURRENT_READINGS } from "@myhome/constants";
-import { IGeneralMeterReading, IGetMeterReading, IIndividualMeterReading, INorm, MeterStatus, MeterType } from "@myhome/interfaces";
+import { IGeneralMeterReading, IGetMeterReading, IIndividualMeterReading, INorm, MeterStatus, MeterType, Reading } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
@@ -126,7 +126,9 @@ export class MeterReadingService {
         return { meterReadings: temp };
     }
 
-    public async getMeterReadingBySID(dto: ReferenceGetMeterReadingBySID.Request) {
+    public async getMeterReadingBySID(
+        dto: ReferenceGetMeterReadingBySID.Request
+    ): Promise<ReferenceGetMeterReadingBySID.Response> {
         const apartment = await this.apartmentRepository.findApartmentById(dto.subscriber.apartmentId);
         if (!apartment) {
             throw new RMQError(APART_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
@@ -139,12 +141,15 @@ export class MeterReadingService {
         } catch (e) {
             throw new RMQError(NORMS_NOT_EXIST.message, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
         }
+
         switch (dto.meterType) {
             case (MeterType.General):
                 break;
             case (MeterType.Individual):
                 try {
-                    newMeterReading.push(...await this.getActiveMeterReadings(apartment.id, norms, apartment.numberOfRegistered));
+                    newMeterReading.push(
+                        ...await this.getActiveMeterReadings(apartment.id, norms, apartment.numberOfRegistered)
+                    );
                     newMeterReading.push(
                         ...await this.getNPAndNIMeterReadings
                             (
@@ -164,20 +169,39 @@ export class MeterReadingService {
         }
     }
 
-    private async getActiveMeterReadings(apartmentId: number, norms: INorm[], numberOfRegistered: number) {
+
+    private async getActiveMeterReadings(
+        apartmentId: number, norms: INorm[], numberOfRegistered: number
+    ): Promise<IGetMeterReading[]> {
         const temp = [];
-        let reading: number;
+        let reading: Reading;
         const activeMeters = await this.individualMeterRepository.findByApartmentAndStatus(apartmentId, [MeterStatus.Active]);
         for (const meter of activeMeters) {
             reading = await this.calculateActiveMeterReadings(meter.id, 15, 25, norms, numberOfRegistered, meter.typeOfServiceId);
+            const tempReading =
+                'difference' in reading ? reading.difference :
+                    'norm' in reading ? reading.norm :
+                        'avgVolume' in reading ? reading.avgVolume : 0;
             temp.push({
-                meterReadings: { reading }, typeOfServiceId: meter.typeOfServiceId
+                meterReadings: {
+                    individualMeterId: meter.id,
+                    reading: tempReading,
+                    readAt: new Date()
+                },
+                typeOfServiceId: meter.typeOfServiceId,
+                fullMeterReadings: reading
             });
         }
         return temp;
     }
 
-    private async calculateActiveMeterReadings(meterId: number, start: number, end: number, norms: INorm[], numberOfRegistered: number, typeOfServiceId: number) {
+    private async calculateActiveMeterReadings(
+        meterId: number,
+        start: number, end: number,
+        norms: INorm[],
+        numberOfRegistered: number,
+        typeOfServiceId: number
+    ): Promise<Reading> {
         const currentDate = new Date();
         const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), start);
         const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), end);
@@ -187,7 +211,10 @@ export class MeterReadingService {
             // Если нет предыдущих показаний
             if (currentMonthReadings.length > 0) {
                 // Если есть текущие, т.е. счётчик новый
-                return currentMonthReadings[0].reading;
+                return {
+                    current: currentMonthReadings[0].reading, previous: 0,
+                    difference: currentMonthReadings[0].reading
+                };
                 // Если ничего нет
             } else throw new RMQException(FAILED_TO_GET_METER_READINGS.message(meterId), FAILED_TO_GET_METER_READINGS.status);
         }
@@ -198,21 +225,24 @@ export class MeterReadingService {
             // Если есть показания за текущий месяц
             if (differenceInMonths === 1) {
                 // Если есть показания за предыдущий месяц
-                return currentMonthReadings[0].reading - previousReadings[0].reading;
+                return {
+                    current: currentMonthReadings[0].reading, previous: previousReadings[0].reading,
+                    difference: currentMonthReadings[0].reading - previousReadings[0].reading
+                };
                 // Есть показания за текущий, но нет за предыдущий
             } else throw new RMQException(MISSING_PREVIOUS_READING.message(meterId), MISSING_PREVIOUS_READING.status);
         } else {
             if (differenceInMonths < 3) {
                 // Если прошло меньше трех месяцев с момента отправки показаний
                 const averageConsumption = this.calculateAverageConsumption(previousReadings);
-                return averageConsumption;
+                return { avgVolume: averageConsumption };
             } else {
                 const tempNorm = norms.filter(norm => norm.typeOfServiceId === typeOfServiceId);
                 let norm: number;
                 if (tempNorm.length > 0) {
                     norm = tempNorm[0].norm;
                 } else throw new RMQException(NORM_NOT_EXIST.message, NORM_NOT_EXIST.status);
-                return norm * numberOfRegistered;
+                return { norm: norm * numberOfRegistered };
                 // Расчёт по нормативу
             }
         }
@@ -228,9 +258,14 @@ export class MeterReadingService {
         return averageConsumption;
     }
 
-    private async getNPAndNIMeterReadings(apartmentId: number, numberOfRegistered: number, norms: INorm[], meterStatus: MeterStatus[]) {
+    private async getNPAndNIMeterReadings(
+        apartmentId: number,
+        numberOfRegistered: number,
+        norms: INorm[],
+        meterStatus: MeterStatus[]
+    ): Promise<IGetMeterReading[]> {
         try {
-            const temp = [];
+            const temp: IGetMeterReading[] = [];
             let norm: number, tempNorm: INorm[];
             const meters = await this.individualMeterRepository.findByApartmentAndStatus(apartmentId, meterStatus);
             for (const meter of meters) {
@@ -242,7 +277,11 @@ export class MeterReadingService {
                     meterReadings: {
                         individualMeterId: meter.id,
                         reading: norm * numberOfRegistered,
-                    }, typeOfServiceId: meter.typeOfServiceId
+                        readAt: new Date()
+                    }, typeOfServiceId: meter.typeOfServiceId,
+                    fullMeterReadings: {
+                        norm: norm * numberOfRegistered
+                    }
                 });
             }
             return temp;

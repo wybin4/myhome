@@ -6,9 +6,13 @@ export interface IBaseTariffAndNorm {
   managementCompanyId: number;
   typeOfServiceId: number;
 }
+
+export enum TypeOfNorm { Individual = 'Individual', General = 'General' };
+
 export interface INorm extends IBaseTariffAndNorm {
   unitId: number;
   norm: number;
+  typeOfNorm: TypeOfNorm;
 }
 
 export interface IMunicipalTariff extends IBaseTariffAndNorm {

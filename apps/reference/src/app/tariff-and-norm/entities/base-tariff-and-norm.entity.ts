@@ -1,5 +1,6 @@
+import { GenericEnumTransformer } from '@myhome/constants';
 import { ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
-import { IBaseTariffAndNorm, IMunicipalTariff, INorm, ISeasonalityFactor, ISocialNorm } from '@myhome/interfaces';
+import { IBaseTariffAndNorm, IMunicipalTariff, INorm, ISeasonalityFactor, ISocialNorm, TypeOfNorm } from '@myhome/interfaces';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export class BaseTariffAndNormEntity implements IBaseTariffAndNorm {
@@ -39,12 +40,21 @@ export class NormEntity extends BaseTariffAndNormEntity implements INorm {
   @Column('double', { nullable: false })
   norm: number;
 
+  @Column({
+    nullable: false,
+    type: 'varchar',
+    transformer: GenericEnumTransformer(TypeOfNorm),
+    default: TypeOfNorm.Individual,
+  })
+  typeOfNorm: TypeOfNorm;
+
   public get() {
     return {
       managementCompanyId: this.managementCompanyId,
       typeOfServiceId: this.typeOfServiceId,
       unitId: this.unitId,
       norm: this.norm,
+      typeOfNorm: this.typeOfNorm
     }
   }
 

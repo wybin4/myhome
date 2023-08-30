@@ -101,6 +101,9 @@ export class TariffAndNormService {
                 if (!dto.norm) {
                     throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
                 }
+                if (!dto.typeOfNorm) {
+                    throw new RMQError(INCORRECT_PARAM + 'typeOfNorm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                }
                 return this.genericAddTariffAndNorm<NormEntity>(
                     this.normRepository,
                     dto, NormEntity

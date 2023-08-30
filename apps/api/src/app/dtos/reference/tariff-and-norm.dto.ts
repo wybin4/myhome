@@ -1,4 +1,4 @@
-import { TariffAndNormType } from "@myhome/interfaces";
+import { TariffAndNormType, TypeOfNorm } from "@myhome/interfaces";
 import { IsNumber, IsOptional, IsString } from "class-validator";
 
 export class AddTariffAndNormDto {
@@ -38,6 +38,9 @@ export class AddTariffAndNormDto {
 
     @IsString()
     type: TariffAndNormType;
+
+    @IsString()
+    typeOfNorm: TypeOfNorm;
 }
 
 export class GetTariffAndNormDto {

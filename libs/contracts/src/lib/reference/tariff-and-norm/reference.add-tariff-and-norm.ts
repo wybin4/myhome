@@ -1,4 +1,4 @@
-import { RequireHomeOrManagementCompany, TariffAndNormType, TariffOrNormType } from '@myhome/interfaces';
+import { RequireHomeOrManagementCompany, TariffAndNormType, TariffOrNormType, TypeOfNorm } from '@myhome/interfaces';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export namespace ReferenceAddTariffOrNorm {
@@ -48,6 +48,9 @@ export namespace ReferenceAddTariffOrNorm {
 
         @IsString()
         type!: TariffAndNormType;
+
+        @IsString()
+        typeOfNorm!: TypeOfNorm;
     }
 
     export class Response {

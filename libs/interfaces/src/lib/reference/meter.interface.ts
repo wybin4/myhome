@@ -52,6 +52,11 @@ export type NormReading = { norm: number; };
 export type AvgReading = { avgVolume: number; };
 export type Reading = FullReading | NormReading | AvgReading;
 
+export interface IGetMeterReadings {
+    data: IGetMeterReading[];
+    subscriberId: number;
+}
+
 export interface IGetMeterReading {
     meterReadings: IIndividualMeterReading | IGeneralMeterReading;
     typeOfServiceId: number;

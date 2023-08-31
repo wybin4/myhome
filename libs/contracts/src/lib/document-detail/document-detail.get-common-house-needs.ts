@@ -1,3 +1,4 @@
+import { IGetCommonHouseNeed } from "@myhome/interfaces";
 import { IsNumber } from "class-validator";
 
 export namespace GetCommonHouseNeeds {
@@ -13,15 +14,4 @@ export namespace GetCommonHouseNeeds {
     export class Response {
         commonHouseNeeds!: IGetCommonHouseNeed[];
     }
-}
-
-export interface IGetCommonHouseNeed {
-    subscriberId: number;
-    commonHouseNeeds: [
-        {
-            tariff: number,
-            amountConsumed: number,
-            typeOfServiceId: number,
-        }
-    ]
 }

@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { FindOneOptions, FindOptionsWhere, ObjectLiteral, Repository } from "typeorm";
 import { MunicipalTariffEntity, NormEntity, SeasonalityFactorEntity, SocialNormEntity } from "./entities/base-tariff-and-norm.entity";
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
+import { TypeOfNorm } from "@myhome/interfaces";
 
 interface BaseTariffAndNorm extends ObjectLiteral {
     id: number;
@@ -54,6 +55,15 @@ export class NormRepository extends GenericTariffAndNormRepository<NormEntity> {
         return await this.normRepository.find({
             where: {
                 managementCompanyId,
+            },
+        });
+    }
+
+    async findByMCIDAndType(managementCompanyId: number, typeOfNorm: TypeOfNorm): Promise<NormEntity[] | undefined> {
+        return await this.normRepository.find({
+            where: {
+                managementCompanyId,
+                typeOfNorm
             },
         });
     }

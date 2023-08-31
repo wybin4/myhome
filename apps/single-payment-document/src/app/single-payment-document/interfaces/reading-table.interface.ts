@@ -19,9 +19,11 @@ export interface ISpdMeterReadings {
 }
 
 export interface ISpdMeterReading {
-    individualReadings: ISpdIndividualReadings, typeOfServiceName: string, unitName: string,
+    individualReadings: ISpdGenericReadings,
+    typeOfServiceName: string, unitName: string,
     norm: { individual: number; common: number; },
-    commonReadings: number,
+    commonReadings: ISpdGenericReadings,
+    totalVolume: number,
 };
 
-interface ISpdIndividualReadings { reading: string, difference: number }
+interface ISpdGenericReadings { reading: string, difference: number }

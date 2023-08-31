@@ -1,4 +1,4 @@
-import { Reading } from "@myhome/interfaces";
+import { IGetPublicUtility } from "@myhome/interfaces";
 import { IsNumber } from "class-validator";
 
 export namespace GetPublicUtilities {
@@ -14,20 +14,4 @@ export namespace GetPublicUtilities {
     export class Response {
         publicUtilities!: IGetPublicUtility[];
     }
-}
-
-export interface IGetPublicUtility {
-    subscriberId: number,
-    publicUtility: [
-        {
-            tariff: number,
-            amountConsumed: number,
-            typeOfServiceId: number,
-            unitId: number
-        }
-    ],
-    meterData: {
-        fullMeterReadings: Reading,
-        typeOfServiceId: number
-    }[]
 }

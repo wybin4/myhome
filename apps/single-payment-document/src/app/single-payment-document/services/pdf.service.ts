@@ -195,6 +195,7 @@ export class PdfService {
             const reading: ISpdReading[] = [];
             for (const meterReading of meterReadings.readings) {
                 const individualReadingString = meterReading.individualReadings.reading;
+                const commonReadingString = meterReading.commonReadings.reading;
                 reading.push(
                     { reading: meterReading.typeOfServiceName, readingAlign: 'left' },
                     { reading: individualReadingString, readingAlign: 'left' },
@@ -203,7 +204,9 @@ export class PdfService {
                     { reading: `${currentSubscriber.livingArea}/${house.livingArea}`, readingAlign: 'right' },
                     { reading: this.getFixed(meterReading.norm.individual, 3), readingAlign: 'right' },
                     { reading: this.getFixed(meterReading.norm.common, 3), readingAlign: 'right' },
-                    { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
+                    { reading: commonReadingString, readingAlign: 'left' },
+                    { reading: this.getFixed(meterReading.commonReadings.difference, 3), readingAlign: 'right' },
+                    { reading: this.getFixed(meterReading.totalVolume, 3), readingAlign: 'right' },
                 )
             }
             allReadings.push({

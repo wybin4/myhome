@@ -1,8 +1,8 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { IGetMeterReading, IMunicipalTariff, ISubscriber, MeterType, TariffAndNormType } from "@myhome/interfaces";
-import { GetPublicUtilities, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscriber } from "@myhome/contracts";
-import { RMQException, SUBSCRIBER_WITH_ID_NOT_EXIST, TARIFFS_NOT_EXIST } from "@myhome/constants";
+import { IGetMeterReading, IGetPublicUtility, IMunicipalTariff, ISubscriber, TariffAndNormType } from "@myhome/interfaces";
+import { GetPublicUtilities, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscribers } from "@myhome/contracts";
+import { RMQException, SUBSCRIBERS_NOT_EXIST, TARIFFS_NOT_EXIST } from "@myhome/constants";
 
 @Injectable()
 export class PublicUtilityService {
@@ -13,51 +13,38 @@ export class PublicUtilityService {
     public async getPublicUtility(
         { subscriberIds, managementCompanyId }: GetPublicUtilities.Request
     ): Promise<GetPublicUtilities.Response> {
-        const result = [];
-        let meterReadings: ReferenceGetMeterReadingBySID.Response;
-        let tariffs: Array<IMunicipalTariff>;
-        try {
-            tariffs = await this.getPublicUtilityTariffs(managementCompanyId) as unknown as Array<IMunicipalTariff>;
-        }
-        catch (e) {
-            throw new RMQException(e.message, e.code);
-        }
-        for (const subscriberId of subscriberIds) {
-            const subscriber = await this.getSubscriber(subscriberId);
-            if (!subscriber) {
-                throw new RMQException(SUBSCRIBER_WITH_ID_NOT_EXIST.message(subscriberId), SUBSCRIBER_WITH_ID_NOT_EXIST.status);
-            }
-            try {
-                meterReadings = await this.getMeterReadingsBySID(subscriber.subscriber, managementCompanyId);
-            } catch (e) {
-                throw new RMQException(e.message, e.status);
-            }
+        const result: IGetPublicUtility[] = [];
+        const { subscribers } = await this.getSubscribers(subscriberIds);
+        const { meterReadings } = await this.getMeterReadingsBySID(subscribers, managementCompanyId);
+        const tariffs = await this.getPublicUtilityTariffs(managementCompanyId) as unknown as Array<IMunicipalTariff>;
+
+        for (const meterReading of meterReadings) {
             result.push({
-                subscriberId: subscriberId,
-                publicUtility: await this.getPUAmount(meterReadings.meterReadings, tariffs),
-                meterData: meterReadings.meterReadings.map(obj => {
+                subscriberId: meterReading.subscriberId,
+                publicUtility: await this.getPUAmount(meterReading.data, tariffs),
+                meterData: meterReading.data.map(obj => {
                     return {
                         fullMeterReadings: obj.fullMeterReadings,
                         typeOfServiceId: obj.typeOfServiceId
                     };
                 })
-            })
+            });
         }
         return { publicUtilities: result };
     }
 
-    private async getSubscriber(subscriberId: number) {
+    private async getSubscribers(subscriberIds: number[]) {
         try {
-            return await this.rmqService.send<ReferenceGetSubscriber.Request, ReferenceGetSubscriber.Response>(
-                ReferenceGetSubscriber.topic, { id: subscriberId }
+            return await this.rmqService.send<ReferenceGetSubscribers.Request, ReferenceGetSubscribers.Response>(
+                ReferenceGetSubscribers.topic, { ids: subscriberIds }
             );
         } catch (e) {
-            throw new RMQException(SUBSCRIBER_WITH_ID_NOT_EXIST.message(subscriberId), SUBSCRIBER_WITH_ID_NOT_EXIST.status);
+            throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
         }
     }
 
     private async getMeterReadingsBySID(
-        subscriber: ISubscriber, managementCompanyId: number
+        subscribers: ISubscriber[], managementCompanyId: number
     ): Promise<ReferenceGetMeterReadingBySID.Response> {
         try {
             return await this.rmqService.send
@@ -68,8 +55,7 @@ export class PublicUtilityService {
                 (
                     ReferenceGetMeterReadingBySID.topic,
                     {
-                        subscriber: subscriber,
-                        meterType: MeterType.Individual,
+                        subscribers: subscribers,
                         managementCompanyId
                     });
         } catch (e) {

@@ -1,8 +1,9 @@
 import { Body, Controller } from '@nestjs/common';
-import { RMQRoute, RMQValidate } from 'nestjs-rmq';
+import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ReferenceAddMeterReading, ReferenceGetMeterReading } from '@myhome/contracts';
 import { MeterReadingService } from '../services/meter-reading.service';
 import { ReferenceGetMeterReadingByHID, ReferenceGetMeterReadingBySID } from '@myhome/contracts';
+import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
 @Controller('meter-reading')
 export class MeterReadingController {
@@ -13,24 +14,40 @@ export class MeterReadingController {
     @RMQValidate()
     @RMQRoute(ReferenceGetMeterReading.topic)
     async getMeterReading(@Body() { id, meterType }: ReferenceGetMeterReading.Request) {
-        return this.meterReadingService.getMeterReading(id, meterType);
+        try {
+            return await this.meterReadingService.getMeterReading(id, meterType);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 
     @RMQValidate()
     @RMQRoute(ReferenceAddMeterReading.topic)
     async addMeterReading(@Body() dto: ReferenceAddMeterReading.Request) {
-        return this.meterReadingService.addMeterReading(dto);
+        try {
+            return await this.meterReadingService.addMeterReading(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 
     @RMQValidate()
     @RMQRoute(ReferenceGetMeterReadingBySID.topic)
     async getMeterReadingBySID(@Body() dto: ReferenceGetMeterReadingBySID.Request) {
-        return this.meterReadingService.getMeterReadingBySID(dto);
+        try {
+            return await this.meterReadingService.getMeterReadingBySID(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 
     @RMQValidate()
     @RMQRoute(ReferenceGetMeterReadingByHID.topic)
     async getMeterReadingByHID(@Body() dto: ReferenceGetMeterReadingByHID.Request) {
-        return this.meterReadingService.getMeterReadingByHID(dto);
+        try {
+            return await this.meterReadingService.getMeterReadingByHID(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 }

@@ -2,7 +2,7 @@ import { GetSinglePaymentDocumentSagaState } from "./get-single-payment-document
 import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
 import { CANT_ADD_DOCUMENT_DETAILS, RMQException } from "@myhome/constants";
 import { HttpStatus } from "@nestjs/common";
-import { CalculationState, IDocumentDetail, IGetCorrection, ITypeOfService, IUnit, Reading } from "@myhome/interfaces";
+import { CalculationState, IDocumentDetail, IFullDocumentDetail, IFullMeterData, IGetCorrection, IGetDocumentDetail, IGetMeterData, ITypeOfService, IUnit, Reading } from "@myhome/interfaces";
 import { AddDocumentDetails, GetCommonHouseNeeds, GetCorrection, GetPublicUtilities } from "@myhome/contracts";
 import { ISpdDetailInfo, ISpdDocumentDetail } from "../interfaces/single-payment-document.interface";
 import { ISpdMeterReading, ISpdMeterReadings } from "../interfaces/reading-table.interface";
@@ -43,29 +43,11 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
             });
     }
 
-    private merge(
-        pu: {
-            tariff: number,
-            amountConsumed: number,
-            typeOfServiceId: number,
-        }[],
-        chn: {
-            tariff: number,
-            amountConsumed: number,
-            typeOfServiceId: number,
-        }[]
-    ): {
-        tariff: number,
-        publicUtility: number,
-        commonHouseNeed: number,
-        typeOfServiceId: number,
-    }[] {
-        const arr: {
-            tariff: number,
-            publicUtility: number,
-            commonHouseNeed: number,
-            typeOfServiceId: number,
-        }[] = [];
+    private mergeDocumentDetail(
+        pu: IGetDocumentDetail[],
+        chn: IGetDocumentDetail[]
+    ): IFullDocumentDetail[] {
+        const arr: IFullDocumentDetail[] = [];
 
         for (const puItem of pu) {
             const chnItem = chn.find(obj => obj.typeOfServiceId === puItem.typeOfServiceId);
@@ -91,6 +73,43 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
                     ...chnItem,
                     commonHouseNeed: chnItem.amountConsumed,
                     publicUtility: 0
+                });
+            }
+        }
+
+        return arr;
+    }
+
+    private mergeMeterReading(
+        pu: IGetMeterData[],
+        chn: IGetMeterData[]
+    ): IFullMeterData[] {
+        const arr: IFullMeterData[] = [];
+
+        for (const puItem of pu) {
+            const chnItem = chn.find(obj => obj.typeOfServiceId === puItem.typeOfServiceId);
+            if (!chnItem) {
+                arr.push({
+                    ...puItem,
+                    commonHouseNeed: { current: 0, previous: 0, difference: 0 },
+                    publicUtility: puItem.fullMeterReadings
+                });
+            } else {
+                arr.push({
+                    ...puItem,
+                    commonHouseNeed: chnItem.fullMeterReadings,
+                    publicUtility: puItem.fullMeterReadings
+                });
+            }
+        }
+
+        for (const chnItem of chn) {
+            const puItem = pu.find(obj => obj.typeOfServiceId === chnItem.typeOfServiceId);
+            if (!puItem) {
+                arr.push({
+                    ...chnItem,
+                    commonHouseNeed: chnItem.fullMeterReadings,
+                    publicUtility: { current: 0, previous: 0, difference: 0 }
                 });
             }
         }
@@ -134,11 +153,11 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
             }));
 
             // Мёрджим publicUtility и commonHouseNeeds для одного конкретного абонента по typeOfServiceId
-            const mergedParts = this.merge(pu.publicUtility, chn.commonHouseNeeds);
+            const mergedDDParts = this.mergeDocumentDetail(pu.publicUtility, chn.commonHouseNeeds);
             // Для PDF нужно сформировать полную картину
             let tempSum = 0;
             const detailInfo: ISpdDocumentDetail[] = [];
-            for (const item of mergedParts) {
+            for (const item of mergedDDParts) {
                 const currentTypeOfService = typesOfService.find(obj => obj.id === item.typeOfServiceId);
                 const currentUnit = units.find(obj => obj.id === currentTypeOfService.unitId);
 
@@ -165,27 +184,52 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
                 subscriberId: pu.subscriberId
             });
 
+            // Мёрджим publicUtility и commonHouseNeeds для одного конкретного абонента по typeOfServiceId
+            const mergedMDParts = this.mergeMeterReading(pu.meterData, chn.meterData);
             const meterReadingData: ISpdMeterReading[] = [];
             // Для PDF, но уже с meterData
-            for (const meterReading of pu.meterData) {
+            for (const meterReading of mergedMDParts) {
                 const currentTypeOfService = typesOfService.find(obj => obj.id === meterReading.typeOfServiceId);
                 const currentUnit = units.find(obj => obj.id === currentTypeOfService.unitId);
 
-                const fullMeterReadings: Reading = meterReading.fullMeterReadings;
-                const individualReadings = 'difference' in fullMeterReadings ? {
-                    reading: `${fullMeterReadings.current}/${fullMeterReadings.previous}`,
-                    difference: fullMeterReadings.difference
-                } : { reading: '', difference: 0 };
-                const norm = 'norm' in fullMeterReadings
-                    ? { individual: fullMeterReadings.norm, common: 0 }
-                    : { individual: 0, common: 0 };
+                const getDiff = (fullMeterReadings: Reading) => {
+                    return 'difference' in fullMeterReadings ? {
+                        reading: `${fullMeterReadings.current}/${fullMeterReadings.previous}`,
+                        difference: fullMeterReadings.difference
+                    } : { reading: '', difference: 0 }
+                };
+                const getNorm = (publicUt: Reading, common: Reading) => {
+                    const norm = { individual: 0, common: 0 };
+                    if ('norm' in publicUt) {
+                        norm.individual = publicUt.norm;
+                    }
+                    if ('norm' in common) {
+                        norm.common = common.norm;
+                    }
+                    return norm;
+                };
+                const getTotalVolume = (publicUt: Reading, common: Reading) => {
+                    let volume = 0;
+                    if ('difference' in publicUt) {
+                        volume += publicUt.difference;
+                    }
+                    if ('difference' in common) {
+                        volume += common.difference;
+                    }
+                    return volume;
+                };
+
+                const individualReadings = getDiff(meterReading.publicUtility);
+                const commonReadings = getDiff(meterReading.commonHouseNeed);
+                const norm = getNorm(meterReading.publicUtility, meterReading.commonHouseNeed);
+                const volume = getTotalVolume(meterReading.publicUtility, meterReading.commonHouseNeed);
 
                 meterReadingData.push({
-                    individualReadings,
-                    typeOfServiceName: currentTypeOfService.name,
-                    unitName: currentUnit.name,
+                    individualReadings: individualReadings,
+                    typeOfServiceName: currentTypeOfService.name, unitName: currentUnit.name,
                     norm: norm,
-                    commonReadings: 0,
+                    commonReadings: commonReadings,
+                    totalVolume: volume,
                 });
             }
             meterReadingsData.push({

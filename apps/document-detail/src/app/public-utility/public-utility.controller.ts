@@ -1,4 +1,4 @@
-import { Body, Controller } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { PublicUtilityService } from './public-utility.service';
 import { GetPublicUtilities } from '@myhome/contracts';
 import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
@@ -10,6 +10,7 @@ export class PublicUtilityController {
         private readonly publicUtilityService: PublicUtilityService,
     ) { }
 
+    @Post('get-public-utility')
     @RMQValidate()
     @RMQRoute(GetPublicUtilities.topic)
     async getPublicUtility(@Body() dto: GetPublicUtilities.Request) {

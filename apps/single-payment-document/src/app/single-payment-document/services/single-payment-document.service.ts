@@ -85,12 +85,12 @@ export class SinglePaymentDocumentService {
         // По subscriberIds получаем все их spdIds
         const subscriberSPDs = await this.singlePaymentDocumentRepository.getSPDIdsBySubscriberIds(subscriberIds);
         try {
-            const { singlePaymentDocuments: singlePaymentDocumentsWithDebtAndPenalty } =
-                await saga.getState().calculateDebtAndPenalty(
+            const { singlePaymentDocuments: singlePaymentDocumentsWithCorrection } =
+                await saga.getState().calculateCorrection(
                     subscriberSPDs, dto.keyRate
                 );
             await this.singlePaymentDocumentRepository
-                .updateMany(singlePaymentDocumentsWithDebtAndPenalty);
+                .updateMany(singlePaymentDocumentsWithCorrection);
 
             const monthOptions = {
                 year: 'numeric',
@@ -98,7 +98,7 @@ export class SinglePaymentDocumentService {
                 timezone: 'UTC'
             } as const;
 
-            const SPDs: ISpd[] = singlePaymentDocumentsWithDebtAndPenalty.map(obj => {
+            const SPDs: ISpd[] = singlePaymentDocumentsWithCorrection.map(obj => {
                 let monthName = obj.createdAt.toLocaleString("ru", monthOptions);
                 const splitted = monthName.split("")
                 const first = splitted[0].toUpperCase();
@@ -110,7 +110,7 @@ export class SinglePaymentDocumentService {
                     month: monthName,
                     amount: this.pdfService.getFixedNumber(obj.amount),
                     penalty: this.pdfService.getFixedNumber(obj.penalty),
-                    deposit: 0, // ИСПРАВИТЬ!!!
+                    deposit: this.pdfService.getFixedNumber(obj.deposit),
                     debt: this.pdfService.getFixedNumber(obj.debt),
                     subscriberId: obj.subscriberId
                 };

@@ -22,6 +22,9 @@ export class SinglePaymentDocumentEntity implements ISinglePaymentDocument {
     @Column('double', { nullable: true })
     penalty?: number;
 
+    @Column('double', { nullable: true })
+    deposit?: number;
+
     @Column({ nullable: false })
     createdAt: Date;
 
@@ -46,6 +49,7 @@ export class SinglePaymentDocumentEntity implements ISinglePaymentDocument {
             amount: this.amount,
             debt: this.debt,
             penalty: this.penalty,
+            deposit: this.deposit,
             createdAt: this.createdAt
         }
     }
@@ -60,9 +64,10 @@ export class SinglePaymentDocumentEntity implements ISinglePaymentDocument {
         return this;
     }
 
-    public setCorrection(debt: number, penalty: number) {
+    public setCorrection(debt: number, penalty: number, deposit: number) {
         this.debt = debt;
         this.penalty = penalty;
+        this.deposit = deposit;
         return this;
     }
 }

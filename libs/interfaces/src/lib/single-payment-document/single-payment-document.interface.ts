@@ -5,6 +5,7 @@ export interface ISinglePaymentDocument {
     amount?: number;
     debt?: number;
     penalty?: number;
+    deposit?: number;
     createdAt: Date;
 }
 

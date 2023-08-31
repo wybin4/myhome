@@ -255,7 +255,7 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
         return { detailIds, detailsInfo, meterReadingsData, singlePaymentDocuments: this.saga.singlePaymentDocuments }
     }
 
-    public async calculateDebtAndPenalty(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+    public async calculateCorrection(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("Невозможно рассчитать задолженность и пени без деталей ЕПД", HttpStatus.BAD_REQUEST);
     }
 
@@ -281,12 +281,13 @@ export class GetSinglePaymentDocumentSagaStateDetailsCalculated extends GetSingl
     public async calculateDetails(): Promise<{ detailIds: number[]; detailsInfo: ISpdDetailInfo[]; meterReadingsData: ISpdMeterReadings[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("ЕПД уже в процессе расчёта", HttpStatus.BAD_REQUEST);
     }
-    public async calculateDebtAndPenalty(subscriberSPDs: IGetCorrection[], keyRate?: number): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
-        const { debts, penalties } = await this.getCorrection(subscriberSPDs, keyRate);
+    public async calculateCorrection(subscriberSPDs: IGetCorrection[], keyRate?: number): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+        const { debts, penalties, deposits } = await this.getCorrection(subscriberSPDs, keyRate);
         this.saga.singlePaymentDocuments.map(spd => {
             const currDebt = debts.find(d => spd.subscriberId === d.subscriberId);
             const currPenalty = penalties.find(p => spd.subscriberId === p.subscriberId);
-            spd.setCorrection(currDebt.debt, currPenalty.penalty);
+            const currDeposit = deposits.find(d => spd.subscriberId === d.subscriberId);
+            spd.setCorrection(currDebt.debt, currPenalty.penalty, currDeposit.deposit);
         });
         this.saga.setState(CalculationState.CorrectionsCalculated);
         return { singlePaymentDocuments: this.saga.singlePaymentDocuments };
@@ -300,7 +301,7 @@ export class GetSinglePaymentDocumentSagaStateCorrectionsCalculated extends GetS
     public async calculateDetails(): Promise<{ detailIds: number[]; detailsInfo: ISpdDetailInfo[]; meterReadingsData: ISpdMeterReadings[]; singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("Нельзя сделать перерасчёт уже рассчитанного ЕПД", HttpStatus.BAD_REQUEST);
     }
-    public calculateDebtAndPenalty(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+    public calculateCorrection(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("Нельзя сделать перерасчёт уже рассчитанного ЕПД", HttpStatus.BAD_REQUEST);
     }
     public cancell(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
@@ -312,7 +313,7 @@ export class GetSinglePaymentDocumentSagaStateCancelled extends GetSinglePayment
         this.saga.setState(CalculationState.Started);
         return this.saga.getState().calculateDetails(subscriberIds, typesOfService, units, managementCompanyId, houseId);
     }
-    public calculateDebtAndPenalty(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
+    public calculateCorrection(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {
         throw new RMQException("Нельзя рассчитать отменённый ЕПД", HttpStatus.BAD_REQUEST);
     }
     public cancell(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[]; }> {

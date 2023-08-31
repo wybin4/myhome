@@ -543,6 +543,7 @@ class Top {
             .font(this.arial)
             .fontSize(14)
             .text('ВСЕГО:', 893, 405);
+        console.log(totalAmount, debt, penalty, deposit)
         this.doc
             .font(this.arialBold)
             .fontSize(14)

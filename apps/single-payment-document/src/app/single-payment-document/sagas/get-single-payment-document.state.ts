@@ -20,7 +20,7 @@ export abstract class GetSinglePaymentDocumentSagaState {
         meterReadingsData: ISpdMeterReadings[];
         singlePaymentDocuments: SinglePaymentDocumentEntity[];
     }>;
-    public abstract calculateDebtAndPenalty(
+    public abstract calculateCorrection(
         subscriberSPDs: IGetCorrection[], keyRate?: number
     ): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;
     public abstract cancell(): Promise<{ singlePaymentDocuments: SinglePaymentDocumentEntity[] }>;

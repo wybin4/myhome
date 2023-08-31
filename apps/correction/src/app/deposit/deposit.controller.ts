@@ -12,9 +12,9 @@ export class DepositController {
 
     @RMQValidate()
     @RMQRoute(CorrectionGetDeposit.topic)
-    async getDeposit(@Body() dto: CorrectionGetDeposit.Request) {
+    async getDeposit(@Body() { subscriberSPDs }: CorrectionGetDeposit.Request) {
         try {
-            return await this.depositService.getDeposit(dto);
+            return await this.depositService.getDeposit(subscriberSPDs);
         }
         catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);

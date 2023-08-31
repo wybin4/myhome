@@ -1,15 +1,15 @@
-import { IDeposit } from "@myhome/interfaces";
-import { IsNumber } from "class-validator";
+import { ICalculatedDeposit, IGetCorrection } from "@myhome/interfaces";
+import { IsArray } from "class-validator";
 
 export namespace CorrectionGetDeposit {
     export const topic = 'correction.get-deposit.query';
 
     export class Request {
-        @IsNumber()
-        id!: number;
+        @IsArray()
+        subscriberSPDs!: IGetCorrection[];
     }
 
     export class Response {
-        deposit!: IDeposit;
+        deposits!: ICalculatedDeposit[];
     }
 }

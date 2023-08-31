@@ -1,4 +1,4 @@
-import { ICalculatedDebt, ICalculatedPenalty, IGetCorrection } from "@myhome/interfaces";
+import { ICalculatedDebt, ICalculatedDeposit, ICalculatedPenalty, IGetCorrection } from "@myhome/interfaces";
 import { IsArray, IsNumber, IsOptional } from "class-validator";
 
 export namespace GetCorrection {
@@ -16,5 +16,6 @@ export namespace GetCorrection {
     export class Response {
         debts!: ICalculatedDebt[];
         penalties!: ICalculatedPenalty[];
+        deposits!: ICalculatedDeposit[];
     }
 }

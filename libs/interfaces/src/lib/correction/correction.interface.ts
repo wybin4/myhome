@@ -12,3 +12,8 @@ export interface ICalculatedPenalty {
     subscriberId: number;
     penalty: number
 }
+
+export interface ICalculatedDeposit {
+    subscriberId: number;
+    deposit: number
+}

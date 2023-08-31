@@ -1,9 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DepositRepository } from "./deposit.repository";
-import { CorrectionGetDeposit, CorrectionAddDeposit, CheckSinglePaymentDocument } from "@myhome/contracts";
+import { CorrectionAddDeposit, CheckSinglePaymentDocument } from "@myhome/contracts";
 import { DepositEntity } from "./deposit.entity";
-import { RMQException, CANT_GET_SPD, DEPOSIT_NOT_EXIST } from "@myhome/constants";
+import { RMQException, CANT_GET_SPD } from "@myhome/constants";
+import { IGetCorrection } from "@myhome/interfaces";
 
 @Injectable()
 export class DepositService {
@@ -12,13 +13,22 @@ export class DepositService {
         private readonly depositRepository: DepositRepository
     ) { }
 
-    public async getDeposit({ id }: CorrectionGetDeposit.Request) {
-        const deposit = await this.depositRepository.findDepositById(id);
-        if (!deposit) {
-            throw new RMQException(DEPOSIT_NOT_EXIST.message, DEPOSIT_NOT_EXIST.status);
+    public async getDeposit(subscriberSPDs: IGetCorrection[]) {
+        const subscribersDeposit = [];
+        // Для каждого абонента находим его неучтенные авансы по SPDIds
+        for (const subscriber of subscriberSPDs) {
+            // Т.е. те, где в outstandingDeposit
+            const depositWithNonZeroOD =
+                await this.depositRepository.findWithSpdIdsAndOutstandingDeposit(subscriber.spdIds);
+            // Авансы абонента по всем ЕПД
+            const deposits = depositWithNonZeroOD.map(obj => obj.outstandingDeposit);
+            subscribersDeposit.push({
+                subscriberId: subscriber.subscriberId,
+                deposit: deposits.reduce((a, b) => a + b, 0)
+            });
         }
-        const gettedDeposit = new DepositEntity(deposit).get();
-        return { deposit: gettedDeposit };
+
+        return { deposits: subscribersDeposit };
     }
 
     public async addDeposit(dto: CorrectionAddDeposit.Request) {

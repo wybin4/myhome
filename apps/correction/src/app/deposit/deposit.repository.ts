@@ -18,4 +18,11 @@ export class DepositRepository {
         return this.depositRepository.findOne({ where: { id } });
     }
 
+    async findWithSpdIdsAndOutstandingDeposit(spdIds: number[]): Promise<DepositEntity[]> {
+        return this.depositRepository.createQueryBuilder('entity')
+            .where('entity.singlePaymentDocumentId IN (:...spdIds)', { spdIds })
+            .andWhere('entity.outstandingDeposit != 0')
+            .getMany();
+    }
+
 }

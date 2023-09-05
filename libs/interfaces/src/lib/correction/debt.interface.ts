@@ -1,5 +1,7 @@
+import { Types } from 'mongoose';
+
 export interface IDebt {
-    _id?: string;
+    _id?: Types.ObjectId;
     singlePaymentDocumentId: number;
     debtHistory: IDebtHistory[];
     originalDebt: IDebtDetail[];

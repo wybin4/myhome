@@ -101,7 +101,6 @@ export class PdfService {
         for (const detail of detailsInfo) {
             const currentSPD = SPDs.find(obj => obj.subscriberId === detail.subscriberId);
             const debtMinusDeposit = currentSPD.debt - currentSPD.deposit;
-
             // Пушим услуги
             const temp: ISpdService[] = detail.details.map(obj => {
                 return {
@@ -128,7 +127,8 @@ export class PdfService {
                     services: [
                         '', '',
                         String(Number(detail.total).toFixed(2)),
-                        'x', (currentSPD.debt - currentSPD.deposit).toFixed(2),
+                        'x',
+                        (debtMinusDeposit).toFixed(2),
                         (detail.total + debtMinusDeposit).toFixed(2)
                     ]
                 },
@@ -543,7 +543,6 @@ class Top {
             .font(this.arial)
             .fontSize(14)
             .text('ВСЕГО:', 893, 405);
-        console.log(totalAmount, debt, penalty, deposit)
         this.doc
             .font(this.arialBold)
             .fontSize(14)
@@ -993,8 +992,8 @@ class Bottom {
         for (const arr of this.readingCols) {
             if (!arr.parts) {
                 const spanFromEdge =
-                    readings[numberOfInserted].readingAlign === 'right' ? -3 :
-                        readings[numberOfInserted].readingAlign === 'left' ? 2 : 0;
+                    readings[numberOfInserted].readingAlign === 'right' ? -4 :
+                        readings[numberOfInserted].readingAlign === 'left' ? 4 : 0;
 
                 this.doc.rect(currentX, y, arr.width, this.heightOfReadingCol).stroke();
                 this.doc.text(readings[numberOfInserted].reading, currentX + spanFromEdge, y + ySpan, {
@@ -1007,8 +1006,8 @@ class Bottom {
                 let partX = currentX;
                 for (const part of arr.parts) {
                     const spanFromEdge =
-                        readings[numberOfInserted].readingAlign === 'right' ? -3 :
-                            readings[numberOfInserted].readingAlign === 'left' ? 2 : 0;
+                        readings[numberOfInserted].readingAlign === 'right' ? -4 :
+                            readings[numberOfInserted].readingAlign === 'left' ? 4 : 0;
 
                     this.doc.rect(partX, y, part.width, this.heightOfReadingCol).stroke();
                     this.doc.text(readings[numberOfInserted].reading, partX + spanFromEdge, y + ySpan, {

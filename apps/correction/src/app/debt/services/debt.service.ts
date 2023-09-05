@@ -4,9 +4,10 @@ import { DebtRepository } from "../repositories/debt.repository";
 import { AccountUserInfo, CheckSinglePaymentDocument, CorrectionAddDebt, CorrectionGetDebt, CorrectionCalculateDebts, CorrectionUpdateDebt } from "@myhome/contracts";
 import { PenaltyRuleRepository } from "../repositories/penalty-rule.repository";
 import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_SPD, DEBT_NOT_EXIST, MANAG_COMP_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
-import { IDebtDetail, IDebtHistory, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
+import { IDebt, IDebtDetail, IDebtHistory, IGetCorrection, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
 import { DebtEntity } from "../entities/debt.entity";
 import { PenaltyService } from "./penalty.service";
+import { Debt } from "../models/debt.model";
 
 @Injectable()
 export class DebtService {
@@ -16,6 +17,10 @@ export class DebtService {
         private readonly penaltyRuleRepository: PenaltyRuleRepository,
         private readonly penaltyService: PenaltyService,
     ) { }
+
+    public async checkSubscriberDebts(subscriberSPDs: IGetCorrection) {
+        return await this.debtRepository.findSPDsWithOutstandingDebt(subscriberSPDs.spdIds);
+    }
 
     public async calculateDebts({ subscriberSPDs }: CorrectionCalculateDebts.Request): Promise<CorrectionCalculateDebts.Response> {
         const subscribersDebt = [];
@@ -51,9 +56,29 @@ export class DebtService {
         return { debt: gettedDebt };
     }
 
+    public async updateDebts(
+        debtIds: string[],
+        amount: number,
+        managementCompanyId: number,
+        keyRate: number
+    ) {
+        await this.checkManagementCompany(managementCompanyId);
+        const priorities = await this.getPriorityWithId(managementCompanyId);
+        const debts = await this.debtRepository.findMany(debtIds);
+
+        for (const debt of debts) {
+            // надо находить остаток после погашения и приступать к дальнейшим долгам
+            // если не осталось amount, то break
+            // отсортировать debts по дате
+            let { amount: remaining } = await this.updateDebtHistory(debt, amount, keyRate, priorities);
+        }
+    }
+
     // Функция уплаты долга или его части
     public async updateDebt(dto: CorrectionUpdateDebt.Request) {
         await this.checkSPD(dto.singlePaymentDocumentId);
+        await this.checkManagementCompany(dto.managementCompanyId);
+        const priorities = await this.getPriorityWithId(dto.managementCompanyId);
         // Ищем соответствующий долг по SPDId
         const debt = await this.debtRepository.findBySPDId(dto.singlePaymentDocumentId);
         if (!debt) {
@@ -65,51 +90,58 @@ export class DebtService {
 
         // Если есть что-то в массиве debt.debtHistory
         if (debt.debtHistory.length) {
-            let paymentAmount = dto.amount;
-            const newDebt: IDebtDetail[] = [];
-
-            // Для предыдущей суммы долга вычисляем и фиксируем пени
-            const lastDebtInHis: IDebtHistory = JSON.parse(JSON.stringify(debt.debtHistory[0]));
-            lastDebtInHis.date = new Date(lastDebtInHis.date);
-            let penalty: number;
-            try {
-                penalty = await this.penaltyService.getPenaltyByHistory(lastDebtInHis, new Date(), dto.keyRate);
-            } catch (e) {
-                throw new RMQException(e.message, e.status);
-            }
-            debt.debtHistory[0].originalPenalty = penalty;
-            debt.debtHistory[0].outstandingPenalty = penalty;
-
-            // Получить новую сумму долга вычитанием из предыдущей debtHistory пришедшей суммы по приоритету
-            await this.checkManagementCompany(dto.managementCompanyId);
-            const priorities = await this.getPriorityWithId(dto.managementCompanyId);
-            const lastDebtState: IDebtDetail[] = JSON.parse(JSON.stringify(debt.debtHistory[0].outstandingDebt));
-            for (const priority of priorities) {
-                const oldDebt = lastDebtState.find(obj => String(obj.penaltyRuleId) === String(priority._id));
-                if (oldDebt && paymentAmount > 0) {
-                    let currAmount = oldDebt.amount; const prevAmount = oldDebt.amount;
-                    currAmount -= paymentAmount;
-                    if (currAmount < 0) {
-                        currAmount = 0;
-                    }
-                    paymentAmount -= prevAmount;
-                    newDebt.push({
-                        amount: currAmount,
-                        penaltyRuleId: priority._id
-                    });
-                } else if (paymentAmount <= 0 && oldDebt) newDebt.push({ ...oldDebt });
-            }
-
-            // Затем в его debtHistory запушить получившуюся сумму с new Date()
-            debt.debtHistory.unshift({
-                outstandingDebt: newDebt,
-                date: new Date(),
-            });
-            // Сохраняем модель
-            await debt.save();
-
-            return { debt: debt };
+            return { debt: (await this.updateDebtHistory(debt, dto.amount, dto.keyRate, priorities)).debt };
         } else return { debt: [] };
+    }
+
+    private async updateDebtHistory(
+        debt: Debt,
+        amount: number, keyRate: number,
+        priorities: {
+            _id: string;
+            penaltyCalculationRules: IPenaltyCalculationRule;
+        }[]) {
+        const newDebt: IDebtDetail[] = [];
+
+        // Для предыдущей суммы долга вычисляем и фиксируем пени
+        const lastDebtInHis: IDebtHistory = JSON.parse(JSON.stringify(debt.debtHistory[0]));
+        lastDebtInHis.date = new Date(lastDebtInHis.date);
+        let penalty: number;
+        try {
+            penalty = await this.penaltyService.getPenaltyByHistory(lastDebtInHis, new Date(), keyRate);
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
+        debt.debtHistory[0].originalPenalty = penalty;
+        debt.debtHistory[0].outstandingPenalty = penalty;
+
+        // Получить новую сумму долга вычитанием из предыдущей debtHistory пришедшей суммы по приоритету
+        const lastDebtState: IDebtDetail[] = JSON.parse(JSON.stringify(debt.debtHistory[0].outstandingDebt));
+        let paymentAmount = amount;
+        for (const priority of priorities) {
+            const oldDebt = lastDebtState.find(obj => String(obj.penaltyRuleId) === String(priority._id));
+            if (oldDebt && paymentAmount > 0) {
+                let currAmount = oldDebt.amount; const prevAmount = oldDebt.amount;
+                currAmount -= paymentAmount;
+                if (currAmount < 0) {
+                    currAmount = 0;
+                }
+                paymentAmount -= prevAmount;
+                newDebt.push({
+                    amount: currAmount,
+                    penaltyRuleId: priority._id
+                });
+            } else if (paymentAmount <= 0 && oldDebt) newDebt.push({ ...oldDebt });
+        }
+
+        // Затем в его debtHistory запушить получившуюся сумму с new Date()
+        debt.debtHistory.unshift({
+            outstandingDebt: newDebt,
+            date: new Date(),
+        });
+        // Сохраняем модель
+        await debt.save();
+        return { debt: debt, amount: paymentAmount };
     }
 
     private async getPriority(managementCompanyId: number) {

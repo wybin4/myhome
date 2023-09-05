@@ -1,7 +1,8 @@
 import { IDebt, IDebtDetail, IDebtHistory } from '@myhome/interfaces';
+import { Types } from 'mongoose';
 
 export class DebtEntity implements IDebt {
-    _id?: string;
+    _id?: Types.ObjectId;
     singlePaymentDocumentId: number;
     debtHistory: IDebtHistory[];
     originalDebt: IDebtDetail[];

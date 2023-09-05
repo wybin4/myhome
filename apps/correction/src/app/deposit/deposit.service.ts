@@ -1,16 +1,18 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DepositRepository } from "./deposit.repository";
-import { CorrectionAddDeposit, CheckSinglePaymentDocument } from "@myhome/contracts";
+import { CorrectionAddDeposit, CheckSinglePaymentDocument, CorrectionUpdateDeposit } from "@myhome/contracts";
 import { DepositEntity } from "./deposit.entity";
 import { RMQException, CANT_GET_SPD } from "@myhome/constants";
 import { IGetCorrection } from "@myhome/interfaces";
+import { DebtService } from "../debt/services/debt.service";
 
 @Injectable()
 export class DepositService {
     constructor(
         private readonly rmqService: RMQService,
-        private readonly depositRepository: DepositRepository
+        private readonly depositRepository: DepositRepository,
+        private readonly debtService: DebtService,
     ) { }
 
     public async getDeposit(subscriberSPDs: IGetCorrection[]) {
@@ -44,6 +46,14 @@ export class DepositService {
         );
         const newDeposit = await this.depositRepository.createDeposit(newDepositEntity);
         return { deposit: newDeposit };
+    }
+
+    public async updateDeposit({ subscriberSPDs }: CorrectionUpdateDeposit.Request) {
+        // Проверяем, есть ли у subscriber долги
+        const debts = await this.debtService.checkSubscriberDebts(subscriberSPDs);
+        if (debts && debts.length) { // Если есть
+            
+        } else return; // Если нет, то оставляем всё как есть, т.к. это идёт в счёт будущих ЕПД
     }
 
     private async checkSPD(spdId: number) {

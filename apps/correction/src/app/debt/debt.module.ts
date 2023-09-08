@@ -36,7 +36,7 @@ export class DebtModule implements OnModuleInit {
 
             if (!dataExists) {
                 await this.penaltyRuleSeeder.seed();
-                Logger.log('Seed data inserted successfully');
+                Logger.log('Penalty rules inserted successfully');
             } else {
                 Logger.log('Penalty rules already exist. Skipping seeding');
             }

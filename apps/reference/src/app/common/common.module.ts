@@ -38,12 +38,12 @@ export class CommonModule implements OnModuleInit {
       if (!tablesExist) {
         await seedTypeOfService(this.typeOfServiceRepository);
         await seedUnit(this.unitRepository);
-        Logger.log('Seed data inserted successfully');
+        Logger.log('TypesOfService and units inserted successfully');
       } else {
-        Logger.log('Tables already exist. Skipping seeding');
+        Logger.log('TypesOfService and units already exist. Skipping seeding');
       }
     } catch (error) {
-      Logger.error('Error seeding data:', error);
+      Logger.error('Error seeding typesOfService and units:', error);
     }
   }
 

@@ -33,12 +33,12 @@ export class AppealModule implements OnModuleInit {
             const tablesExist = await this.checkTablesExistence();
             if (!tablesExist) {
                 await seedTypeOfAppeal(this.typeOfAppealRepository);
-                Logger.log('Seed data inserted successfully');
+                Logger.log('TypesOfAppeal inserted successfully');
             } else {
-                Logger.log('Tables already exist. Skipping seeding');
+                Logger.log('TypesOfAppeal already exist. Skipping seeding');
             }
         } catch (error) {
-            Logger.error('Error seeding data:', error);
+            Logger.error('Error seeding typesOfAppeal:', error);
         }
     }
 

@@ -14,3 +14,6 @@ export * from './lib/enum.transformer';
 export * from './lib/json.transformer';
 
 export * from './lib/exception';
+
+export * from './lib/rmq-requests/account/check-user.request';
+export * from './lib/rmq-requests/single-payment-document/check-single-payment-document.request';

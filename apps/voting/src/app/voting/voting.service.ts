@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { VotingRepository } from "./repositories/voting.repository";
-import { AccountUserInfo, AddVoting, GetVoting, GetVotings, ReferenceGetManagementCompany } from "@myhome/contracts";
-import { MANAG_COMP_NOT_EXIST, OPTIONS_NOT_EXIST, OPTION_NOT_EXIST, RMQException, SUBSCRIBER_NOT_EXIST, VOTINGS_FOR_MC_NOT_EXIST, VOTING_NOT_EXIST } from '@myhome/constants';
+import { AddVoting, GetVoting, GetVotings, ReferenceGetManagementCompany } from "@myhome/contracts";
+import { OPTIONS_NOT_EXIST, OPTION_NOT_EXIST, RMQException, SUBSCRIBER_NOT_EXIST, VOTINGS_FOR_MC_NOT_EXIST, VOTING_NOT_EXIST, checkUser } from '@myhome/constants';
 import { VotingEntity } from "./entities/voting.entity";
 import { RMQService } from "nestjs-rmq";
 import { IVotingWithOptions, UserRole } from "@myhome/interfaces";
@@ -17,10 +17,8 @@ export class VotingService {
     ) { }
 
     public async createVoting(dto: AddVoting.Request): Promise<AddVoting.Response> {
-        await this.checkManagementCompany(dto.managementCompanyId);
-
         const newVotingEntity = new VotingEntity(dto);
-        await this.checkManagementCompany(dto.managementCompanyId);
+        await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
         const newVoting = await this.votingRepository.create(newVotingEntity);
 
         const options: OptionEntity[] = dto.options.map(option => {
@@ -67,7 +65,7 @@ export class VotingService {
             const { managementCompanyId } = await this.getMCIdBySubscriber(dto.subscriberId);
             return { votings: await this.getVotingsByMCId(managementCompanyId) };
         } else if (dto.managementCompanyId) {
-            await this.checkManagementCompany(dto.managementCompanyId);
+            await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
             return { votings: await this.getVotingsByMCId(dto.managementCompanyId) };
         }
     }
@@ -96,18 +94,6 @@ export class VotingService {
             });
         }
         return gettedVotings;
-    }
-    private async checkManagementCompany(managementCompanyId: number) {
-        try {
-            await this.rmqService.send
-                <
-                    AccountUserInfo.Request,
-                    AccountUserInfo.Response
-                >
-                (AccountUserInfo.topic, { id: managementCompanyId, role: UserRole.ManagementCompany });
-        } catch (e) {
-            throw new RMQException(MANAG_COMP_NOT_EXIST, HttpStatus.NOT_FOUND);
-        }
     }
 
     private async getMCIdBySubscriber(subscriberId: number) {

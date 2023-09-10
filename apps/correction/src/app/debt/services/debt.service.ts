@@ -1,9 +1,9 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DebtRepository } from "../repositories/debt.repository";
-import { AccountUserInfo, CheckSinglePaymentDocument, CorrectionAddDebt, CorrectionGetDebt, CorrectionCalculateDebts, CorrectionUpdateDebt } from "@myhome/contracts";
+import { CorrectionAddDebt, CorrectionGetDebt, CorrectionCalculateDebts, CorrectionUpdateDebt } from "@myhome/contracts";
 import { PenaltyRuleRepository } from "../repositories/penalty-rule.repository";
-import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_SPD, DEBT_NOT_EXIST, MANAG_COMP_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
+import { CANT_GET_DEBT_BY_THIS_SPD_ID, DEBT_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException, checkSPD, checkUser } from "@myhome/constants";
 import { IDebtDetail, IDebtHistory, IGetCorrection, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
 import { DebtEntity } from "../entities/debt.entity";
 import { PenaltyService } from "./penalty.service";
@@ -62,7 +62,7 @@ export class DebtService {
         managementCompanyId: number,
         keyRate: number
     ) {
-        await this.checkManagementCompany(managementCompanyId);
+        await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
         const priorities = await this.getPriorityWithId(managementCompanyId);
         const debts = await this.debtRepository.findMany(debtIds);
         let paymentAmount = amount;
@@ -81,8 +81,8 @@ export class DebtService {
 
     // Функция уплаты долга или его части
     public async updateDebt(dto: CorrectionUpdateDebt.Request) {
-        await this.checkSPD(dto.singlePaymentDocumentId);
-        await this.checkManagementCompany(dto.managementCompanyId);
+        await checkSPD(this.rmqService, dto.singlePaymentDocumentId);
+        await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
         const priorities = await this.getPriorityWithId(dto.managementCompanyId);
         // Ищем соответствующий долг по SPDId
         const debt = await this.debtRepository.findBySPDId(dto.singlePaymentDocumentId);
@@ -199,7 +199,7 @@ export class DebtService {
 
 
     public async addDebt(dto: CorrectionAddDebt.Request) {
-        await this.checkManagementCompany(dto.managementCompanyId);
+        await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
         let filteredObjects = await this.getPriority(dto.managementCompanyId);
         if (!filteredObjects.length) {
             throw new RMQException(PRIORITY_NOT_EXIST.message, PRIORITY_NOT_EXIST.status);
@@ -250,29 +250,4 @@ export class DebtService {
         return { debt: newDebt }
     }
 
-    private async checkManagementCompany(managementCompanyId: number) {
-        try {
-            await this.rmqService.send
-                <
-                    AccountUserInfo.Request,
-                    AccountUserInfo.Response
-                >
-                (AccountUserInfo.topic, { id: managementCompanyId, role: UserRole.ManagementCompany });
-        } catch (e) {
-            throw new RMQException(MANAG_COMP_NOT_EXIST, HttpStatus.NOT_FOUND);
-        }
-    }
-
-    private async checkSPD(spdId: number) {
-        try {
-            await this.rmqService.send
-                <
-                    CheckSinglePaymentDocument.Request,
-                    CheckSinglePaymentDocument.Response
-                >
-                (CheckSinglePaymentDocument.topic, { id: spdId });
-        } catch (e) {
-            throw new RMQException(CANT_GET_SPD.message(spdId), CANT_GET_SPD.status);
-        }
-    }
 }

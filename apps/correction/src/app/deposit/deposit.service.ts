@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DepositRepository } from "./deposit.repository";
-import { CorrectionAddDeposit, CheckSinglePaymentDocument, CorrectionUpdateDeposit } from "@myhome/contracts";
+import { CorrectionAddDeposit, CorrectionUpdateDeposit } from "@myhome/contracts";
 import { DepositEntity } from "./deposit.entity";
-import { RMQException, CANT_GET_SPD } from "@myhome/constants";
+import { checkSPD } from "@myhome/constants";
 import { IGetCorrection } from "@myhome/interfaces";
 import { DebtService } from "../debt/services/debt.service";
 
@@ -34,7 +34,7 @@ export class DepositService {
     }
 
     public async addDeposit(dto: CorrectionAddDeposit.Request) {
-        await this.checkSPD(dto.singlePaymentDocumentId);
+        await checkSPD(this.rmqService, dto.singlePaymentDocumentId);
 
         const newDepositEntity = new DepositEntity(
             {
@@ -52,20 +52,7 @@ export class DepositService {
         // Проверяем, есть ли у subscriber долги
         const debts = await this.debtService.checkSubscriberDebts(subscriberSPDs);
         if (debts && debts.length) { // Если есть
-            
-        } else return; // Если нет, то оставляем всё как есть, т.к. это идёт в счёт будущих ЕПД
-    }
 
-    private async checkSPD(spdId: number) {
-        try {
-            await this.rmqService.send
-                <
-                    CheckSinglePaymentDocument.Request,
-                    CheckSinglePaymentDocument.Response
-                >
-                (CheckSinglePaymentDocument.topic, { id: spdId });
-        } catch (e) {
-            throw new RMQException(CANT_GET_SPD.message(spdId), CANT_GET_SPD.status);
-        }
+        } else return; // Если нет, то оставляем всё как есть, т.к. это идёт в счёт будущих ЕПД
     }
 }

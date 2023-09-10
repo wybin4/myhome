@@ -5,8 +5,8 @@ import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { NormEntity, SeasonalityFactorEntity, MunicipalTariffEntity, SocialNormEntity, BaseTariffAndNormEntity } from "./entities/base-tariff-and-norm.entity";
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
 import { ICommonHouseNeedTariff, IHouse, TariffAndNormType, UserRole } from "@myhome/interfaces";
-import { AccountUserInfo, ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceUpdateTariffOrNorm } from "@myhome/contracts";
-import { HOME_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, MANAG_COMP_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST } from "@myhome/constants";
+import { ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceUpdateTariffOrNorm } from "@myhome/contracts";
+import { HOME_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, checkUser } from "@myhome/constants";
 import { TypeOfServiceRepository } from "../common/repositories/type-of-service.repository";
 import { UnitRepository } from "../common/repositories/unit.repository";
 import { HouseRepository } from "../subscriber/repositories/house.repository";
@@ -96,7 +96,7 @@ export class TariffAndNormService {
         let newTEntity: CommonHouseNeedTariffEntity, newT: ICommonHouseNeedTariff;
         switch (dto.type) {
             case TariffAndNormType.Norm:
-                await this.checkManagementCompany(dto.managementCompanyId);
+                await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 await this.checkUnit(dto.unitId);
                 if (!dto.norm) {
                     throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
@@ -109,7 +109,7 @@ export class TariffAndNormService {
                     dto, NormEntity
                 )
             case TariffAndNormType.SeasonalityFactor:
-                await this.checkManagementCompany(dto.managementCompanyId);
+                await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 if (!dto.monthName) {
                     throw new RMQError(INCORRECT_PARAM + 'monthName', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
                 }
@@ -121,7 +121,7 @@ export class TariffAndNormService {
                     dto, SeasonalityFactorEntity
                 )
             case TariffAndNormType.MunicipalTariff:
-                await this.checkManagementCompany(dto.managementCompanyId);
+                await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 await this.checkUnit(dto.unitId);
                 if (!dto.norm) {
                     throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
@@ -134,7 +134,7 @@ export class TariffAndNormService {
                     dto, MunicipalTariffEntity
                 )
             case TariffAndNormType.SocialNorm:
-                await this.checkManagementCompany(dto.managementCompanyId);
+                await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 await this.checkUnit(dto.unitId);
                 if (!dto.norm) {
                     throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
@@ -164,18 +164,6 @@ export class TariffAndNormService {
 
     }
 
-    private async checkManagementCompany(managementCompanyId: number) {
-        try {
-            await this.rmqService.send
-                <
-                    AccountUserInfo.Request,
-                    AccountUserInfo.Response
-                >
-                (AccountUserInfo.topic, { id: managementCompanyId, role: UserRole.ManagementCompany });
-        } catch (e) {
-            throw new RMQError(MANAG_COMP_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
-        }
-    }
     private async checkUnit(unitId: number) {
         const unit = await this.unitRepository.findUnitById(unitId);
         if (!unit) {
@@ -275,7 +263,7 @@ export class TariffAndNormService {
         let house: IHouse;
         switch (dto.type) {
             case TariffAndNormType.MunicipalTariff:
-                this.checkManagementCompany(dto.managementCompanyId);
+                await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 try {
                     return await this.municipalTariffRepository.findAllByManagementCID(dto.managementCompanyId);
                 } catch (e) {

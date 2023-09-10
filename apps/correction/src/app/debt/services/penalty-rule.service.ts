@@ -1,7 +1,7 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PenaltyRuleRepository } from "../repositories/penalty-rule.repository";
-import { RMQException, PENALTY_RULE_NOT_EXIST, PENALTY_CALCULATION_WITH_PRIORITY_ALREADY_EXIST, MANAG_COMP_NOT_EXIST } from "@myhome/constants";
-import { CorrectionAddPenaltyCalculationRule, AccountUserInfo, ReferenceGetTypesOfService } from "@myhome/contracts";
+import { RMQException, PENALTY_RULE_NOT_EXIST, PENALTY_CALCULATION_WITH_PRIORITY_ALREADY_EXIST, checkUser } from "@myhome/constants";
+import { CorrectionAddPenaltyCalculationRule, ReferenceGetTypesOfService } from "@myhome/contracts";
 import { UserRole } from "@myhome/interfaces";
 import { RMQError, RMQService } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
@@ -23,7 +23,7 @@ export class PenaltyRuleService {
         if (!penaltyRule) {
             throw new RMQException(PENALTY_RULE_NOT_EXIST.message, PENALTY_RULE_NOT_EXIST.status);
         }
-        await this.checkManagementCompany(dto.managementCompanyId);
+        await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
         const { typesOfService } = await this.checkTypesOfService(dto.typeOfServiceIds);
         const typeOfServiceIds = typesOfService.map(obj => obj.id);
 
@@ -44,19 +44,6 @@ export class PenaltyRuleService {
 
         await this.penaltyRuleRepository.update(await penaltyRuleEntity);
         return { penaltyCalculationRule: penaltyCalculationRule }
-    }
-
-    private async checkManagementCompany(managementCompanyId: number) {
-        try {
-            await this.rmqService.send
-                <
-                    AccountUserInfo.Request,
-                    AccountUserInfo.Response
-                >
-                (AccountUserInfo.topic, { id: managementCompanyId, role: UserRole.ManagementCompany });
-        } catch (e) {
-            throw new RMQError(MANAG_COMP_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
-        }
     }
 
     private async checkTypesOfService(typeOfServiceIds: number[]) {

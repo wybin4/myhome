@@ -1,17 +1,19 @@
-import { Controller, Body } from "@nestjs/common";
+import { Controller, Body, Post } from "@nestjs/common";
 import { RMQValidate, RMQRoute } from "nestjs-rmq";
 import { PaymentService } from "./payment.service";
-import { GetPayment } from '@myhome/contracts';
+import { GetPaymentLink } from '@myhome/contracts';
 
-@Controller()
+@Controller('payment')
 export class PaymentController {
     constructor(
         private readonly paymentService: PaymentService,
     ) { }
 
+    @Post('get-payment-link')
     @RMQValidate()
-    @RMQRoute(GetPayment.topic)
-    async getPayment(@Body() { id }: GetPayment.Request) {
-        return this.paymentService.getPayment(id);
+    @RMQRoute(GetPaymentLink.topic)
+    // eslint-disable-next-line no-empty-pattern
+    async getPayment(@Body() {  }: GetPaymentLink.Request) {
+        return this.paymentService.getPaymentLink();
     }
 }

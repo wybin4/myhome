@@ -15,6 +15,7 @@
     "@nestjs/platform-express": "^10.0.2",
     "@nestjs/schedule": "^3.0.1",
     "@nestjs/typeorm": "^10.0.0",
+    "@qiwi/bill-payments-node-js-sdk": "^3.2.1",
     "axios": "^1.0.0",
     "bcryptjs": "^2.4.3",
     "bwip-js": "^4.0.1",

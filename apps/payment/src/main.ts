@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const globalPrefix = 'api';
+  const globalPrefix = 'payment';
   app.setGlobalPrefix(globalPrefix);
   const port = new ConfigService().get('SERVICE_PORT');
   await app.listen(port);

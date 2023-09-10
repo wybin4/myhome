@@ -23,3 +23,5 @@ export * from './lib/correction/debt.interface';
 export * from './lib/correction/deposit.interface';
 export * from './lib/correction/penalty.interface';
 export * from './lib/correction/correction.interface';
+
+export * from './lib/payment/payment.interface';

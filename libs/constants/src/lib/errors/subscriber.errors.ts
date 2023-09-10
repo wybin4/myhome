@@ -1,8 +1,17 @@
 import { HttpStatus } from "@nestjs/common";
 
-export const HOME_NOT_EXIST = 'Такой дом не существует';
-export const APART_NOT_EXIST = 'Такая квартира не существует';
-export const SUBSCRIBER_NOT_EXIST = 'Такой абонент не существует';
+export const HOUSE_NOT_EXIST = {
+    message: (id: number) => `Дом с id=${id} не существует`,
+    status: HttpStatus.NOT_FOUND
+};
+export const APART_NOT_EXIST = {
+    message: (id: number) => `Квартира с id=${id} не существует`,
+    status: HttpStatus.NOT_FOUND
+};
+export const SUBSCRIBER_NOT_EXIST = {
+    message: (id: number) => `Абонент с id=${id} не существует`,
+    status: HttpStatus.NOT_FOUND
+};
 export const SUBSCRIBERS_NOT_EXIST = {
     message: 'Такие абоненты не существуют',
     status: HttpStatus.NOT_FOUND

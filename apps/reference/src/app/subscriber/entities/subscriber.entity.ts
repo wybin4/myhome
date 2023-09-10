@@ -35,7 +35,7 @@ export class SubscriberEntity implements ISubscriber {
         }
     }
 
-    public getSubscriber() {
+    public get(): ISubscriber {
         return {
             ownerId: this.ownerId,
             apartmentId: this.apartmentId,
@@ -44,7 +44,7 @@ export class SubscriberEntity implements ISubscriber {
         }
     }
 
-    public archieveSubscriber() {
+    public archieve() {
         this.status = SubscriberStatus.Archieved;
         return this;
     }

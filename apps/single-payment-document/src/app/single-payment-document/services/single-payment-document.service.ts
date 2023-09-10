@@ -4,7 +4,7 @@ import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentRepository } from "../single-payment-document.repository";
 import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
 import { CalculationState, UserRole } from "@myhome/interfaces";
-import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, HOME_NOT_EXIST, MANAG_COMP_NOT_EXIST, RMQException, SUBSCRIBERS_NOT_EXIST } from "@myhome/constants";
+import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, HOUSE_NOT_EXIST, MANAG_COMP_NOT_EXIST, RMQException, SUBSCRIBERS_NOT_EXIST } from "@myhome/constants";
 import { GetSinglePaymentDocumentSaga } from "../sagas/get-single-payment-document.saga";
 import { PdfService } from "./pdf.service";
 import { ISpdHouse, ISpdManagementCompany } from "../interfaces/subscriber.interface";
@@ -150,7 +150,7 @@ export class SinglePaymentDocumentService {
                 >
                 (ReferenceGetHouse.topic, { id: houseId });
         } catch (e) {
-            throw new RMQException(HOME_NOT_EXIST, HttpStatus.NOT_FOUND);
+            throw new RMQException(HOUSE_NOT_EXIST.message(houseId), HOUSE_NOT_EXIST.status);
         }
     }
 

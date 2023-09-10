@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { GetCommonHouseNeeds, ReferenceGetAllTariffs, ReferenceGetAllTypesOfService, ReferenceGetApartmentsBySubscribers, ReferenceGetHouse, ReferenceGetMeterReadingByHID, ReferenceGetSubscribersByHouse } from "@myhome/contracts";
-import { CANT_GET_SUBSCRIBERS_BY_HOUSE_ID, FAILED_TO_GET_INDIVIDUAL_READINGS, HOME_NOT_EXIST, RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
+import { CANT_GET_SUBSCRIBERS_BY_HOUSE_ID, FAILED_TO_GET_INDIVIDUAL_READINGS, HOUSE_NOT_EXIST, RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { PublicUtilityService } from "../public-utility/public-utility.service";
 import { ICommonHouseNeedTariff, IGetCommonHouseNeed, IGetDocumentDetail, IGetMeterData, Reading, TariffAndNormType } from "@myhome/interfaces";
 
@@ -124,7 +124,7 @@ export class CommonHouseNeedService {
                 ReferenceGetHouse.topic, { id: houseId }
             );
         } catch (e) {
-            throw new RMQException(HOME_NOT_EXIST, HttpStatus.NOT_FOUND);
+            throw new RMQException(HOUSE_NOT_EXIST.message(houseId), HOUSE_NOT_EXIST.status);
         }
     }
 
@@ -134,7 +134,7 @@ export class CommonHouseNeedService {
                 ReferenceGetSubscribersByHouse.topic, { houseId }
             );
         } catch (e) {
-            throw new RMQException(HOME_NOT_EXIST, HttpStatus.NOT_FOUND);
+            throw new RMQException(HOUSE_NOT_EXIST.message(houseId), HOUSE_NOT_EXIST.status);
         }
     }
 

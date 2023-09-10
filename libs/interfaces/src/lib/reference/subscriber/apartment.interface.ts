@@ -1,5 +1,5 @@
 export interface IApartment {
-    id: number;
+    id?: number;
     houseId: number;
     apartmentNumber: number;
     totalArea: number;

@@ -37,7 +37,7 @@ export class ApartmentEntity implements IApartment {
         }
     }
 
-    public getApartment() {
+    public get(): IApartment {
         return {
             houseId: this.houseId,
             apartmentNumber: this.apartmentNumber,

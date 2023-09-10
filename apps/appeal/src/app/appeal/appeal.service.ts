@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError, RMQService } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { AppealRepository, TypeOfAppealRepository } from "./repositories/appeal.repository";
-import { APPEAL_NOT_EXIST, MANAG_COMP_NOT_EXIST, SUBSCRIBER_NOT_EXIST, TYPE_OF_APPEAL_NOT_EXIST } from "@myhome/constants";
+import { APPEAL_NOT_EXIST, MANAG_COMP_NOT_EXIST, RMQException, SUBSCRIBER_NOT_EXIST, TYPE_OF_APPEAL_NOT_EXIST } from "@myhome/constants";
 import { AccountUserInfo, AddNotification, AppealAddAppeal, ReferenceGetManagementCompany, ReferenceGetSubscriber } from "@myhome/contracts";
 import { AppealEntity } from "./entities/appeal.entity";
 import { AppealType, NotificationType, UserRole } from "@myhome/interfaces";
@@ -42,7 +42,7 @@ export class AppealService {
                 <ReferenceGetSubscriber.Request, ReferenceGetSubscriber.Response>
                 (ReferenceGetSubscriber.topic, { id: dto.subscriberId });
         } catch (e) {
-            throw new RMQError(SUBSCRIBER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+            throw new RMQException(SUBSCRIBER_NOT_EXIST.message(dto.subscriberId), SUBSCRIBER_NOT_EXIST.status);
         }
         const newAppealEntity = new AppealEntity({
             managementCompanyId: dto.managementCompanyId,

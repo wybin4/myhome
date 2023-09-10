@@ -6,7 +6,7 @@ import { NormEntity, SeasonalityFactorEntity, MunicipalTariffEntity, SocialNormE
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
 import { ICommonHouseNeedTariff, IHouse, TariffAndNormType, UserRole } from "@myhome/interfaces";
 import { ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceUpdateTariffOrNorm } from "@myhome/contracts";
-import { HOME_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, checkUser } from "@myhome/constants";
+import { HOUSE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, checkUser, RMQException } from "@myhome/constants";
 import { TypeOfServiceRepository } from "../common/repositories/type-of-service.repository";
 import { UnitRepository } from "../common/repositories/unit.repository";
 import { HouseRepository } from "../subscriber/repositories/house.repository";
@@ -147,9 +147,9 @@ export class TariffAndNormService {
                     dto, SocialNormEntity
                 )
             case TariffAndNormType.CommonHouseNeedTariff:
-                house = await this.houseRepository.findHouseById(dto.houseId);
+                house = await this.houseRepository.findById(dto.houseId);
                 if (!house) {
-                    throw new RMQError(HOME_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQException(HOUSE_NOT_EXIST.message(dto.houseId), HOUSE_NOT_EXIST.status);
                 }
                 await this.checkUnit(dto.unitId);
                 if (!dto.multiplier) {
@@ -270,9 +270,9 @@ export class TariffAndNormService {
                     throw new RMQError(TARIFFS_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
                 }
             case TariffAndNormType.CommonHouseNeedTariff:
-                house = await this.houseRepository.findHouseById(dto.houseId);
+                house = await this.houseRepository.findById(dto.houseId);
                 if (!house) {
-                    throw new RMQError(HOME_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQException(HOUSE_NOT_EXIST.message(dto.houseId), HOUSE_NOT_EXIST.status);
                 }
                 try {
                     return await this.commonHouseNeedTariffRepository.findAllByHouseID(dto.houseId);

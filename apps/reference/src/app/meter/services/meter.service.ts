@@ -1,4 +1,4 @@
-import { METER_NOT_EXIST, INCORRECT_METER_TYPE, APART_NOT_EXIST, METER_ALREADY_EXIST, HOME_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST } from "@myhome/constants";
+import { METER_NOT_EXIST, INCORRECT_METER_TYPE, APART_NOT_EXIST, METER_ALREADY_EXIST, HOUSE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, RMQException } from "@myhome/constants";
 import { IGeneralMeter, IIndividualMeter, MeterType } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError } from "nestjs-rmq";
@@ -88,9 +88,9 @@ export class MeterService {
             newMeterEntity: Meters;
         switch (dto.meterType) {
             case (MeterType.General):
-                house = await this.houseRepository.findHouseById(dto.houseId);
+                house = await this.houseRepository.findById(dto.houseId);
                 if (!house) {
-                    throw new RMQError(HOME_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQException(HOUSE_NOT_EXIST.message(dto.houseId), HOUSE_NOT_EXIST.status);
                 }
                 typeOfService = await this.typeOfServicesRepository.findTypeOfServiceById(dto.typeOfServiceId);
                 if (!typeOfService) {
@@ -110,9 +110,9 @@ export class MeterService {
                 newMeter = await this.generalMeterRepository.createGeneralMeter(newMeterEntity);
                 return { newMeter };
             case (MeterType.Individual):
-                apartment = await this.apartmentRepository.findApartmentById(dto.apartmentId);
+                apartment = await this.apartmentRepository.findById(dto.apartmentId);
                 if (!apartment) {
-                    throw new RMQError(APART_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQException(APART_NOT_EXIST.message(dto.apartmentId), APART_NOT_EXIST.status);
                 }
                 typeOfService = await this.typeOfServicesRepository.findTypeOfServiceById(dto.typeOfServiceId);
                 if (!typeOfService) {

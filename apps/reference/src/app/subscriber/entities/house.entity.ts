@@ -37,12 +37,12 @@ export class HouseEntity implements IHouse {
         }
     }
 
-    public async updateHouse(managementCompanyId: number) {
+    public async update(managementCompanyId: number) {
         this.managementCompanyId = managementCompanyId;
         return this;
     }
 
-    public getHouse() {
+    public get(): IHouse {
         return {
             managementCompanyId: this.managementCompanyId,
             city: this.city,

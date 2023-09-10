@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { VotingRepository } from "./repositories/voting.repository";
 import { AddVoting, GetVoting, GetVotings, ReferenceGetManagementCompany } from "@myhome/contracts";
 import { OPTIONS_NOT_EXIST, OPTION_NOT_EXIST, RMQException, SUBSCRIBER_NOT_EXIST, VOTINGS_FOR_MC_NOT_EXIST, VOTING_NOT_EXIST, checkUser } from '@myhome/constants';
@@ -105,7 +105,7 @@ export class VotingService {
                 >
                 (ReferenceGetManagementCompany.topic, { subscriberId: subscriberId });
         } catch (e) {
-            throw new RMQException(SUBSCRIBER_NOT_EXIST, HttpStatus.NOT_FOUND);
+            throw new RMQException(SUBSCRIBER_NOT_EXIST.message(subscriberId), SUBSCRIBER_NOT_EXIST.status);
         }
     }
 }

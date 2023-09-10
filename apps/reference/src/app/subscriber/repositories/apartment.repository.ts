@@ -10,15 +10,15 @@ export class ApartmentRepository {
         private readonly apartmentRepository: Repository<ApartmentEntity>,
     ) { }
 
-    async createApartment(apartment: ApartmentEntity) {
+    async create(apartment: ApartmentEntity) {
         return this.apartmentRepository.save(apartment);
     }
 
-    async findApartmentById(id: number) {
+    async findById(id: number) {
         return this.apartmentRepository.findOne({ where: { id } });
     }
 
-    async findApartmentByNumber(apatNumber: number, houseId: number) {
+    async findByNumber(apatNumber: number, houseId: number) {
         return this.apartmentRepository
             .createQueryBuilder('apartment')
             .where('apartment.apartmentNumber = :apatNumber', { apatNumber })
@@ -26,15 +26,11 @@ export class ApartmentRepository {
             .getOne();
     }
 
-    async deleteApartment(id: number): Promise<void> {
-        await this.apartmentRepository.delete({ id });
-    }
-
     async findAllByHouse(houseId: number) {
         return this.apartmentRepository.find({ where: { houseId } });
     }
 
-    async findApartments(apartmentIds: number[]) {
+    async findMany(apartmentIds: number[]) {
         return this.apartmentRepository.find({
             where: {
                 id: In(apartmentIds),
@@ -42,7 +38,7 @@ export class ApartmentRepository {
         });
     }
 
-    async findApartmentsWithSubscribers(apartmentIds: number[]) {
+    async findWithSubscribers(apartmentIds: number[]) {
         return this.apartmentRepository.createQueryBuilder('apartment')
             .innerJoinAndSelect('apartment.subscriber', 'subscriber')
             .where('apartment.id IN (:...apartmentIds)', { apartmentIds })

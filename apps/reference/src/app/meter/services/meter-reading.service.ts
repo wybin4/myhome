@@ -1,4 +1,4 @@
-import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, RMQException, MISSING_PREVIOUS_READING, FAILED_TO_GET_METER_READINGS, FAILED_TO_GET_READINGS_WITHOUT_NORMS, NORMS_NOT_EXIST, HOME_NOT_EXIST, FAILED_TO_GET_CURRENT_READINGS, APARTS_NOT_EXIST } from "@myhome/constants";
+import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, RMQException, MISSING_PREVIOUS_READING, FAILED_TO_GET_METER_READINGS, FAILED_TO_GET_READINGS_WITHOUT_NORMS, NORMS_NOT_EXIST, HOUSE_NOT_EXIST, FAILED_TO_GET_CURRENT_READINGS, APARTS_NOT_EXIST } from "@myhome/constants";
 import { IGeneralMeterReading, IGetMeterReading, IGetMeterReadings, IIndividualMeterReading, INorm, MeterStatus, MeterType, Reading, TypeOfNorm } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { ReferenceAddMeterReading, ReferenceGetMeterReadingBySID, ReferenceGetMeterReadingByHID } from "@myhome/contracts";
@@ -86,9 +86,9 @@ export class MeterReadingService {
     }
 
     public async getMeterReadingByHID({ houseId, managementCompanyId }: ReferenceGetMeterReadingByHID.Request) {
-        const house = await this.houseRepository.findHouseById(houseId);
+        const house = await this.houseRepository.findById(houseId);
         if (!house) {
-            throw new RMQException(HOME_NOT_EXIST, HttpStatus.NOT_FOUND);
+            throw new RMQException(HOUSE_NOT_EXIST.message(houseId), HOUSE_NOT_EXIST.status);
         }
         let norms: INorm[] = [];
         try {
@@ -108,7 +108,7 @@ export class MeterReadingService {
         dto: ReferenceGetMeterReadingBySID.Request
     ): Promise<ReferenceGetMeterReadingBySID.Response> {
         const apartmentIds = dto.subscribers.map(obj => obj.apartmentId);
-        const apartments = await this.apartmentRepository.findApartments(apartmentIds);
+        const apartments = await this.apartmentRepository.findMany(apartmentIds);
         if (!apartments.length) {
             throw new RMQException(APARTS_NOT_EXIST.message, APARTS_NOT_EXIST.status);
         }

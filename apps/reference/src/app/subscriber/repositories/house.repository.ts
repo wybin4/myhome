@@ -10,24 +10,24 @@ export class HouseRepository {
         private readonly houseRepository: Repository<HouseEntity>,
     ) { }
 
-    async createHouse(house: HouseEntity) {
+    async create(house: HouseEntity) {
         return this.houseRepository.save(house);
     }
 
-    async findHouseById(id: number) {
+    async findById(id: number) {
         return this.houseRepository.findOne({ where: { id } });
     }
 
-    async deleteHouse(id: number): Promise<void> {
+    async delete(id: number): Promise<void> {
         await this.houseRepository.delete({ id });
     }
 
-    async updateHouse(house: HouseEntity) {
+    async update(house: HouseEntity) {
         await this.houseRepository.update(house.id, house);
-        return this.findHouseById(house.id);
+        return this.findById(house.id);
     }
 
-    async findHouses(ids: number[]) {
+    async findMany(ids: number[]) {
         return this.houseRepository.find({
             where: {
                 id: In(ids),

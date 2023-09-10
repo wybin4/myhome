@@ -10,28 +10,24 @@ export class SubscriberRepository {
         private readonly subscriberRepository: Repository<SubscriberEntity>,
     ) { }
 
-    async createSubscriber(subscriber: SubscriberEntity) {
+    async create(subscriber: SubscriberEntity) {
         return this.subscriberRepository.save(subscriber);
     }
 
-    async findSubscriberById(id: number) {
+    async findById(id: number) {
         return this.subscriberRepository.findOne({ where: { id } });
     }
 
-    async findSubscriberByPersonalAccount(personalAccount: string) {
+    async findByPersonalAccount(personalAccount: string) {
         return this.subscriberRepository.findOne({ where: { personalAccount } });
     }
 
-    async deleteSubscriber(id: number): Promise<void> {
-        await this.subscriberRepository.delete({ id });
-    }
-
-    async updateSubscriber(subscriber: SubscriberEntity) {
+    async update(subscriber: SubscriberEntity) {
         await this.subscriberRepository.update(subscriber.id, subscriber);
-        return this.findSubscriberById(subscriber.id);
+        return this.findById(subscriber.id);
     }
 
-    async findSubscriberIdsByApartmentIds(apartmentIds: number[]): Promise<number[]> {
+    async findIdsByApartmentIds(apartmentIds: number[]): Promise<number[]> {
         const subscribers = await this.subscriberRepository.find({
             where: {
                 apartmentId: In(apartmentIds),
@@ -42,7 +38,7 @@ export class SubscriberRepository {
         return subscribers.map(subscriber => subscriber.id);
     }
 
-    async findSubscribers(subscriberIds: number[]) {
+    async findMany(subscriberIds: number[]) {
         return this.subscriberRepository.find({
             where: {
                 id: In(subscriberIds),

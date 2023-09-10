@@ -4,7 +4,7 @@ import { DebtRepository } from "../repositories/debt.repository";
 import { AccountUserInfo, CheckSinglePaymentDocument, CorrectionAddDebt, CorrectionGetDebt, CorrectionCalculateDebts, CorrectionUpdateDebt } from "@myhome/contracts";
 import { PenaltyRuleRepository } from "../repositories/penalty-rule.repository";
 import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_SPD, DEBT_NOT_EXIST, MANAG_COMP_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
-import { IDebt, IDebtDetail, IDebtHistory, IGetCorrection, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
+import { IDebtDetail, IDebtHistory, IGetCorrection, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
 import { DebtEntity } from "../entities/debt.entity";
 import { PenaltyService } from "./penalty.service";
 import { Debt } from "../models/debt.model";
@@ -65,13 +65,18 @@ export class DebtService {
         await this.checkManagementCompany(managementCompanyId);
         const priorities = await this.getPriorityWithId(managementCompanyId);
         const debts = await this.debtRepository.findMany(debtIds);
+        let paymentAmount = amount;
 
         for (const debt of debts) {
             // надо находить остаток после погашения и приступать к дальнейшим долгам
             // если не осталось amount, то break
             // отсортировать debts по дате
-            let { amount: remaining } = await this.updateDebtHistory(debt, amount, keyRate, priorities);
+            const { amount: remaining } = await this.updateDebtHistory(debt, paymentAmount, keyRate, priorities);
+            if (remaining <= 0) {
+                break;
+            } else paymentAmount = remaining;
         }
+        return { debts: debts };
     }
 
     // Функция уплаты долга или его части

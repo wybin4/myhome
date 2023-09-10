@@ -25,3 +25,5 @@ export * from './lib/correction/penalty.interface';
 export * from './lib/correction/correction.interface';
 
 export * from './lib/payment/payment.interface';
+
+export * from './lib/voting/voting.interface';

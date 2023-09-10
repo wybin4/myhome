@@ -66,4 +66,9 @@ export * from './lib/correction/penalty/correction.add-penalty-calculation-rule'
 export * from './lib/correction/penalty/correction.add-penalty';
 export * from './lib/correction/correction.get-correction';
 
-export * from './lib/payment/payment.get-payment';
+export * from './lib/payment/payment.get-payment-link';
+
+export * from './lib/voting/voting.get-voting';
+export * from './lib/voting/voting.get-votings';
+export * from './lib/voting/voting.add-voting';
+export * from './lib/voting/voting.update-voting';

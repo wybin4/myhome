@@ -1,8 +1,6 @@
-import { METER_NOT_EXIST, INCORRECT_METER_TYPE, APART_NOT_EXIST, METER_ALREADY_EXIST, HOUSE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, RMQException } from "@myhome/constants";
+import { METER_NOT_EXIST, INCORRECT_METER_TYPE, APART_NOT_EXIST, METER_ALREADY_EXIST, HOUSE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, RMQException, getGenericObject, addGenericObject } from "@myhome/constants";
 import { IGeneralMeter, IIndividualMeter, MeterType } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { RMQError } from "nestjs-rmq";
-import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { GeneralMeterEntity } from "../entities/general-meter.entity";
 import { IndividualMeterEntity } from "../entities/individual-meter.entity";
 import { GeneralMeterRepository } from "../repositories/general-meter.repository";
@@ -15,7 +13,6 @@ import { HouseEntity } from "../../subscriber/entities/house.entity";
 import { MeterEventEmitter } from "../meter.event-emitter";
 import { Cron } from "@nestjs/schedule";
 import { TypeOfServiceRepository } from "../../common/repositories/type-of-service.repository";
-import { TypeOfServiceEntity } from "../../common/entities/type-of-service.entity";
 
 export type Meters = IndividualMeterEntity | GeneralMeterEntity;
 
@@ -38,8 +35,8 @@ export class MeterService {
         this.changeMeterStatus(generalMeters);
         this.changeMeterStatus(individualMeters);
 
-        await this.generalMeterRepository.saveGeneralMeters(generalMeters);
-        await this.individualMeterRepository.saveIndividualMeters(individualMeters);
+        await this.generalMeterRepository.saveMany(generalMeters);
+        await this.individualMeterRepository.save(individualMeters);
 
         await this.meterEventEmitter.handle(
             {
@@ -56,83 +53,88 @@ export class MeterService {
     }
 
     public async getMeter(id: number, meterType: MeterType) {
-        let meter: GeneralMeterEntity | IndividualMeterEntity;
-        let gettedMeter: Omit<IGeneralMeter | IIndividualMeter, 'id'>;
         switch (meterType) {
             case (MeterType.General):
-                meter = await this.generalMeterRepository.findGeneralMeterById(id);
-                if (!meter) {
-                    throw new RMQError(METER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
-                }
-                gettedMeter = new GeneralMeterEntity(meter).getGeneralMeter();
-                return { gettedMeter };
+                return {
+                    meter: await getGenericObject<GeneralMeterEntity>
+                        (
+                            this.generalMeterRepository,
+                            (item) => new GeneralMeterEntity(item),
+                            id,
+                            METER_NOT_EXIST
+                        )
+                };
             case (MeterType.Individual):
-                meter = await this.individualMeterRepository.findIndividualMeterById(id);
-                if (!meter) {
-                    throw new RMQError(METER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
-                }
-                gettedMeter = new IndividualMeterEntity(meter).getIndividualMeter();
-                return { gettedMeter };
+                return {
+                    meter: await getGenericObject<IndividualMeterEntity>
+                        (
+                            this.individualMeterRepository,
+                            (item) => new IndividualMeterEntity(item),
+                            id,
+                            METER_NOT_EXIST
+                        )
+                };
             default:
-                throw new RMQError(INCORRECT_METER_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+                throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);
         }
-
     }
 
     public async addMeter(dto: ReferenceAddMeter.Request) {
         let apartment: ApartmentEntity;
         let house: HouseEntity;
-        let typeOfService: TypeOfServiceEntity;
-        let existedMeter: Meters,
-            newMeter: Meters,
-            newMeterEntity: Meters;
+        let existedMeter: Meters;
+
+        const typeOfService = await this.typeOfServicesRepository.findById(dto.typeOfServiceId);
+        if (!typeOfService) {
+            throw new RMQException(TYPE_OF_SERVICE_NOT_EXIST.message(dto.typeOfServiceId), TYPE_OF_SERVICE_NOT_EXIST.status);
+        }
         switch (dto.meterType) {
             case (MeterType.General):
                 house = await this.houseRepository.findById(dto.houseId);
                 if (!house) {
                     throw new RMQException(HOUSE_NOT_EXIST.message(dto.houseId), HOUSE_NOT_EXIST.status);
                 }
-                typeOfService = await this.typeOfServicesRepository.findTypeOfServiceById(dto.typeOfServiceId);
-                if (!typeOfService) {
-                    throw new RMQError(TYPE_OF_SERVICE_NOT_EXIST.message, ERROR_TYPE.RMQ, TYPE_OF_SERVICE_NOT_EXIST.status);
-                }
-                existedMeter = await this.generalMeterRepository.findIndividualMeterByFNumber(dto.factoryNumber);
+                existedMeter = await this.generalMeterRepository.findByFNumber(dto.factoryNumber);
                 if (existedMeter) {
-                    throw new RMQError(METER_ALREADY_EXIST, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+                    throw new RMQException(METER_ALREADY_EXIST, HttpStatus.CONFLICT);
                 }
-                newMeterEntity = new GeneralMeterEntity({
-                    typeOfServiceId: dto.typeOfServiceId,
-                    houseId: dto.houseId,
-                    factoryNumber: dto.factoryNumber,
-                    verifiedAt: new Date(dto.verifiedAt),
-                    issuedAt: new Date(dto.issuedAt),
-                });
-                newMeter = await this.generalMeterRepository.createGeneralMeter(newMeterEntity);
-                return { newMeter };
+                return {
+                    meter: await addGenericObject<GeneralMeterEntity>(
+                        this.generalMeterRepository,
+                        (item) => new GeneralMeterEntity(item),
+                        {
+                            typeOfServiceId: dto.typeOfServiceId,
+                            houseId: dto.houseId,
+                            factoryNumber: dto.factoryNumber,
+                            verifiedAt: new Date(dto.verifiedAt),
+                            issuedAt: new Date(dto.issuedAt),
+                        } as IGeneralMeter
+                    )
+                };
             case (MeterType.Individual):
                 apartment = await this.apartmentRepository.findById(dto.apartmentId);
                 if (!apartment) {
                     throw new RMQException(APART_NOT_EXIST.message(dto.apartmentId), APART_NOT_EXIST.status);
                 }
-                typeOfService = await this.typeOfServicesRepository.findTypeOfServiceById(dto.typeOfServiceId);
-                if (!typeOfService) {
-                    throw new RMQError(TYPE_OF_SERVICE_NOT_EXIST.message, ERROR_TYPE.RMQ, TYPE_OF_SERVICE_NOT_EXIST.status);
-                }
-                existedMeter = await this.individualMeterRepository.findIndividualMeterByFNumber(dto.factoryNumber);
+                existedMeter = await this.individualMeterRepository.findByFNumber(dto.factoryNumber);
                 if (existedMeter) {
-                    throw new RMQError(METER_ALREADY_EXIST, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+                    throw new RMQException(METER_ALREADY_EXIST, HttpStatus.CONFLICT);
                 }
-                newMeterEntity = new IndividualMeterEntity({
-                    typeOfServiceId: dto.typeOfServiceId,
-                    apartmentId: dto.apartmentId,
-                    factoryNumber: dto.factoryNumber,
-                    verifiedAt: new Date(dto.verifiedAt),
-                    issuedAt: new Date(dto.issuedAt),
-                });
-                newMeter = await this.individualMeterRepository.createIndividualMeter(newMeterEntity);
-                return { newMeter };
+                return {
+                    meter: await addGenericObject<IndividualMeterEntity>(
+                        this.individualMeterRepository,
+                        (item) => new IndividualMeterEntity(item),
+                        {
+                            typeOfServiceId: dto.typeOfServiceId,
+                            apartmentId: dto.apartmentId,
+                            factoryNumber: dto.factoryNumber,
+                            verifiedAt: new Date(dto.verifiedAt),
+                            issuedAt: new Date(dto.issuedAt)
+                        } as IIndividualMeter
+                    )
+                };
             default:
-                throw new RMQError(INCORRECT_METER_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+                throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);
         }
     }
 
@@ -141,25 +143,25 @@ export class MeterService {
 
         switch (meterType) {
             case (MeterType.General):
-                existedMeter = await this.generalMeterRepository.findGeneralMeterById(id);
+                existedMeter = await this.generalMeterRepository.findById(id);
                 if (!existedMeter) {
-                    throw new RMQError(METER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQException(METER_NOT_EXIST.message(id), METER_NOT_EXIST.status);
                 }
-                meterEntity = new GeneralMeterEntity(existedMeter).updateGeneralMeter(verifiedAt);
+                meterEntity = new GeneralMeterEntity(existedMeter).update(verifiedAt);
                 return Promise.all([
-                    this.generalMeterRepository.updateGeneralMeter(await meterEntity),
+                    this.generalMeterRepository.update(await meterEntity),
                 ]);
             case (MeterType.Individual):
-                existedMeter = await this.individualMeterRepository.findIndividualMeterById(id);
+                existedMeter = await this.individualMeterRepository.findById(id);
                 if (!existedMeter) {
-                    throw new RMQError(METER_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQException(METER_NOT_EXIST.message(id), METER_NOT_EXIST.status);
                 }
-                meterEntity = new IndividualMeterEntity(existedMeter).updateIndividualMeter(verifiedAt);
+                meterEntity = new IndividualMeterEntity(existedMeter).update(verifiedAt);
                 return Promise.all([
-                    this.individualMeterRepository.updateIndividualMeter(await meterEntity),
+                    this.individualMeterRepository.update(await meterEntity),
                 ]);
             default:
-                throw new RMQError(INCORRECT_METER_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+                throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);
         }
     }
 }

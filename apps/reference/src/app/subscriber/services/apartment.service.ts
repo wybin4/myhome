@@ -1,12 +1,11 @@
-import { getGenericObject, APART_NOT_EXIST, RMQException, HOUSE_NOT_EXIST, APART_ALREADY_EXIST } from "@myhome/constants";
+import { getGenericObject, APART_NOT_EXIST, RMQException, HOUSE_NOT_EXIST, APART_ALREADY_EXIST, addGenericObject } from "@myhome/constants";
 import { ReferenceAddApartment } from "@myhome/contracts";
 import { Injectable, HttpStatus } from "@nestjs/common";
-import { RMQError } from "nestjs-rmq";
-import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { ApartmentEntity } from "../entities/apartment.entity";
 import { ApartmentRepository } from "../repositories/apartment.repository";
 import { HouseRepository } from "../repositories/house.repository";
 import { SubscriberRepository } from "../repositories/subscriber.repository";
+import { IApartment } from "@myhome/interfaces";
 
 @Injectable()
 export class ApartmentService {
@@ -29,17 +28,22 @@ export class ApartmentService {
 	}
 
 	async addApartment(dto: ReferenceAddApartment.Request) {
-		const newApartmentEntity = new ApartmentEntity(dto);
 		const house = await this.houseRepository.findById(dto.houseId);
 		if (!house) {
 			throw new RMQException(HOUSE_NOT_EXIST.message(dto.houseId), HOUSE_NOT_EXIST.status);
 		}
 		const existedApartment = await this.apartmentRepository.findByNumber(dto.apartmentNumber, dto.houseId);
 		if (existedApartment) {
-			throw new RMQError(APART_ALREADY_EXIST, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+			throw new RMQException(APART_ALREADY_EXIST, HttpStatus.CONFLICT);
 		}
-		const newApartment = await this.apartmentRepository.create(newApartmentEntity);
-		return { apartment: newApartment };
+		return {
+			apartment: await addGenericObject<ApartmentEntity>
+				(
+					this.apartmentRepository,
+					(item) => new ApartmentEntity(item),
+					dto as IApartment
+				)
+		};
 	}
 
 

@@ -73,7 +73,7 @@ export class TypeOfAppealEntity implements ITypeOfAppeal {
         }
     }
 
-    public getIndividualMeter() {
+    public get() {
         return {
             name: this.name
         }

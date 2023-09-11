@@ -21,7 +21,7 @@ export class IndividualMeterReadingEntity implements IIndividualMeterReading {
         }
     }
 
-    public getIndividualMeterReading() {
+    public get(): IIndividualMeterReading {
         return {
             individualMeterId: this.individualMeterId,
             reading: this.reading,

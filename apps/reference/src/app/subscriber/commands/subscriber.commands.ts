@@ -4,7 +4,7 @@ import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 import { SubscriberService } from '../services/subscriber.service';
 
-@Controller()
+@Controller('subscriber')
 export class SubscriberCommands {
     constructor(
         private readonly subscriberService: SubscriberService

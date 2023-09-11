@@ -10,11 +10,11 @@ export class IndividualMeterReadingRepository {
         private readonly individualMeterReadingRepository: Repository<IndividualMeterReadingEntity>,
     ) { }
 
-    async createIndividualMeterReading(individualMeterReading: IndividualMeterReadingEntity) {
+    async create(individualMeterReading: IndividualMeterReadingEntity) {
         return this.individualMeterReadingRepository.save(individualMeterReading);
     }
 
-    async findIndividualMeterReadingById(id: number) {
+    async findById(id: number) {
         return this.individualMeterReadingRepository.findOne({ where: { id } });
     }
     async findReadingsByMeterIDAndPeriod(individualMeterId: number, startOfMonth: Date, endOfMonth: Date) {

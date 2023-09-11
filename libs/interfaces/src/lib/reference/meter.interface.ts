@@ -2,7 +2,7 @@
 import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
 
 export interface IIndividualMeter {
-    id: number;
+    id?: number;
     typeOfServiceId: number;
     apartmentId: number;
     factoryNumber: string;
@@ -12,7 +12,7 @@ export interface IIndividualMeter {
 }
 
 export interface IGeneralMeter {
-    id: number;
+    id?: number;
     typeOfServiceId: number;
     houseId: number;
     factoryNumber: string;
@@ -29,7 +29,7 @@ export interface IIndividualMeterReading {
 }
 
 export interface IGeneralMeterReading {
-    id: number;
+    id?: number;
     generalMeterId: number;
     reading: number;
     readAt: Date;

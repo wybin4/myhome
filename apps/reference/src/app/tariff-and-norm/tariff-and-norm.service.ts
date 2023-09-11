@@ -1,7 +1,6 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { CommonHouseNeedTariffRepository, IGenericTariffAndNormRepository, MunicipalTariffRepository, NormRepository, SeasonalityFactorRepository, SocialNormRepository } from "./base-tariff-and-norm.repository";
-import { RMQError, RMQService } from "nestjs-rmq";
-import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
+import { RMQService } from "nestjs-rmq";
 import { NormEntity, SeasonalityFactorEntity, MunicipalTariffEntity, SocialNormEntity, BaseTariffAndNormEntity } from "./entities/base-tariff-and-norm.entity";
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
 import { ICommonHouseNeedTariff, IHouse, TariffAndNormType, UserRole } from "@myhome/interfaces";
@@ -64,12 +63,12 @@ export class TariffAndNormService {
             case TariffAndNormType.CommonHouseNeedTariff:
                 tItem = await this.commonHouseNeedTariffRepository.findById(id);
                 if (!tItem) {
-                    throw new RMQError('Такой тариф на общедомовые нужды не существует', ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQException('Такой тариф на общедомовые нужды не существует', HttpStatus.NOT_FOUND);
                 }
                 gettedTN = new CommonHouseNeedTariffEntity(tItem).get();
                 return { gettedTN };
             default:
-                throw new RMQError('Такая сущность не существует', ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+                throw new RMQException('Такая сущность не существует', HttpStatus.CONFLICT);
         }
     }
 
@@ -81,16 +80,16 @@ export class TariffAndNormService {
     ): Promise<{ gettedTN: T }> {
         const tItem = await repository.findById(id);
         if (!tItem) {
-            throw new RMQError(errorText + ' не существует', ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+            throw new RMQException(errorText + ' не существует', HttpStatus.NOT_FOUND);
         }
         const gettedTN = createInstance(tItem);
         return { gettedTN };
     }
 
     public async addTariffAndNorm(dto: ReferenceAddTariffOrNorm.Request) {
-        const typeOfService = await this.typeOfServiceRepository.findTypeOfServiceById(dto.typeOfServiceId);
+        const typeOfService = await this.typeOfServiceRepository.findById(dto.typeOfServiceId);
         if (!typeOfService) {
-            throw new RMQError(TYPE_OF_SERVICE_NOT_EXIST.message, ERROR_TYPE.RMQ, TYPE_OF_SERVICE_NOT_EXIST.status);
+            throw new RMQException(TYPE_OF_SERVICE_NOT_EXIST.message(dto.typeOfServiceId), TYPE_OF_SERVICE_NOT_EXIST.status);
         }
         let house: HouseEntity;
         let newTEntity: CommonHouseNeedTariffEntity, newT: ICommonHouseNeedTariff;
@@ -99,10 +98,10 @@ export class TariffAndNormService {
                 await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 await this.checkUnit(dto.unitId);
                 if (!dto.norm) {
-                    throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
                 }
                 if (!dto.typeOfNorm) {
-                    throw new RMQError(INCORRECT_PARAM + 'typeOfNorm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'typeOfNorm', HttpStatus.BAD_REQUEST);
                 }
                 return this.genericAddTariffAndNorm<NormEntity>(
                     this.normRepository,
@@ -111,10 +110,10 @@ export class TariffAndNormService {
             case TariffAndNormType.SeasonalityFactor:
                 await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 if (!dto.monthName) {
-                    throw new RMQError(INCORRECT_PARAM + 'monthName', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'monthName', HttpStatus.BAD_REQUEST);
                 }
                 if (!dto.coefficient) {
-                    throw new RMQError(INCORRECT_PARAM + 'coefficient', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'coefficient', HttpStatus.BAD_REQUEST);
                 }
                 return this.genericAddTariffAndNorm<SeasonalityFactorEntity>(
                     this.seasonalityFactorRepository,
@@ -124,10 +123,10 @@ export class TariffAndNormService {
                 await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 await this.checkUnit(dto.unitId);
                 if (!dto.norm) {
-                    throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
                 }
                 if (!dto.supernorm) {
-                    throw new RMQError(INCORRECT_PARAM + 'supernorm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'supernorm', HttpStatus.BAD_REQUEST);
                 }
                 return this.genericAddTariffAndNorm<MunicipalTariffEntity>(
                     this.municipalTariffRepository,
@@ -137,10 +136,10 @@ export class TariffAndNormService {
                 await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 await this.checkUnit(dto.unitId);
                 if (!dto.norm) {
-                    throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
                 }
                 if (!dto.amount) {
-                    throw new RMQError(INCORRECT_PARAM + 'amount', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'amount', HttpStatus.BAD_REQUEST);
                 }
                 return this.genericAddTariffAndNorm<SocialNormEntity>(
                     this.socialNormRepository,
@@ -153,13 +152,13 @@ export class TariffAndNormService {
                 }
                 await this.checkUnit(dto.unitId);
                 if (!dto.multiplier) {
-                    throw new RMQError(INCORRECT_PARAM + 'multiplier', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'multiplier', HttpStatus.BAD_REQUEST);
                 }
                 newTEntity = new CommonHouseNeedTariffEntity(dto);
                 newT = await this.commonHouseNeedTariffRepository.create(newTEntity);
                 return { newT };
             default:
-                throw new RMQError(INCORRECT_TARIFF_AND_NORM_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+                throw new RMQException(INCORRECT_TARIFF_AND_NORM_TYPE, HttpStatus.CONFLICT);
         }
 
     }
@@ -167,7 +166,7 @@ export class TariffAndNormService {
     private async checkUnit(unitId: number) {
         const unit = await this.unitRepository.findUnitById(unitId);
         if (!unit) {
-            throw new RMQError(UNIT_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+            throw new RMQException(UNIT_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
         return;
     }
@@ -188,7 +187,7 @@ export class TariffAndNormService {
         switch (dto.type) {
             case TariffAndNormType.Norm:
                 if (!dto.norm) {
-                    throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
                 }
                 return this.genericUpdateTariffAndNorm<NormEntity>(
                     this.normRepository,
@@ -196,10 +195,10 @@ export class TariffAndNormService {
                 )
             case TariffAndNormType.SeasonalityFactor:
                 if (!dto.monthName) {
-                    throw new RMQError(INCORRECT_PARAM + 'monthName', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'monthName', HttpStatus.BAD_REQUEST);
                 }
                 if (!dto.coefficient) {
-                    throw new RMQError(INCORRECT_PARAM + 'coefficient', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'coefficient', HttpStatus.BAD_REQUEST);
                 }
                 return this.genericUpdateTariffAndNorm<SeasonalityFactorEntity>(
                     this.seasonalityFactorRepository,
@@ -207,10 +206,10 @@ export class TariffAndNormService {
                 )
             case TariffAndNormType.MunicipalTariff:
                 if (!dto.norm) {
-                    throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
                 }
                 if (!dto.supernorm) {
-                    throw new RMQError(INCORRECT_PARAM + 'supernorm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'supernorm', HttpStatus.BAD_REQUEST);
                 }
                 return this.genericUpdateTariffAndNorm<MunicipalTariffEntity>(
                     this.municipalTariffRepository,
@@ -218,10 +217,10 @@ export class TariffAndNormService {
                 )
             case TariffAndNormType.SocialNorm:
                 if (!dto.norm) {
-                    throw new RMQError(INCORRECT_PARAM + 'norm', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
                 }
                 if (!dto.amount) {
-                    throw new RMQError(INCORRECT_PARAM + 'amount', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'amount', HttpStatus.BAD_REQUEST);
                 }
                 return this.genericUpdateTariffAndNorm<SocialNormEntity>(
                     this.socialNormRepository,
@@ -229,18 +228,18 @@ export class TariffAndNormService {
                 )
             case TariffAndNormType.CommonHouseNeedTariff:
                 if (!dto.multiplier) {
-                    throw new RMQError(INCORRECT_PARAM + 'multiplier', ERROR_TYPE.RMQ, HttpStatus.BAD_REQUEST);
+                    throw new RMQException(INCORRECT_PARAM + 'multiplier', HttpStatus.BAD_REQUEST);
                 }
                 existedT = await this.commonHouseNeedTariffRepository.findById(dto.id);
                 if (!existedT) {
-                    throw new RMQError(TARIFF_AND_NORM_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQException(TARIFF_AND_NORM_NOT_EXIST, HttpStatus.NOT_FOUND);
                 }
                 tEntity = new CommonHouseNeedTariffEntity(existedT).update(dto.multiplier);
                 return Promise.all([
                     this.commonHouseNeedTariffRepository.update(await tEntity),
                 ]);
             default:
-                throw new RMQError(INCORRECT_TARIFF_AND_NORM_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+                throw new RMQException(INCORRECT_TARIFF_AND_NORM_TYPE, HttpStatus.CONFLICT);
         }
     }
 
@@ -251,7 +250,7 @@ export class TariffAndNormService {
     ) {
         const existedT = await repository.findById(dto.id);
         if (!existedT) {
-            throw new RMQError(TARIFF_AND_NORM_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+            throw new RMQException(TARIFF_AND_NORM_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
         const tEntity = createInstance(existedT).update(dto);
         return Promise.all([
@@ -267,7 +266,7 @@ export class TariffAndNormService {
                 try {
                     return await this.municipalTariffRepository.findAllByManagementCID(dto.managementCompanyId);
                 } catch (e) {
-                    throw new RMQError(TARIFFS_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
                 }
             case TariffAndNormType.CommonHouseNeedTariff:
                 house = await this.houseRepository.findById(dto.houseId);
@@ -277,10 +276,10 @@ export class TariffAndNormService {
                 try {
                     return await this.commonHouseNeedTariffRepository.findAllByHouseID(dto.houseId);
                 } catch (e) {
-                    throw new RMQError(TARIFFS_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
+                    throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
                 }
             default:
-                throw new RMQError(INCORRECT_TARIFF_AND_NORM_TYPE, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+                throw new RMQException(INCORRECT_TARIFF_AND_NORM_TYPE, HttpStatus.CONFLICT);
         }
     }
 }

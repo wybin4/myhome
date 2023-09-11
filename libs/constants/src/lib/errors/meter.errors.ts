@@ -1,7 +1,13 @@
 import { HttpStatus } from "@nestjs/common";
 
-export const METER_NOT_EXIST = 'Такой счётчик не существует';
-export const METER_READING_NOT_EXIST = 'Такое показание не существует';
+export const METER_NOT_EXIST = {
+    message: (id: number) => `Счётчик с id=${id} не существует`,
+    status: HttpStatus.NOT_FOUND
+};
+export const METER_READING_NOT_EXIST = {
+    message: (id: number) => `Показание с id=${id} не существует`,
+    status: HttpStatus.NOT_FOUND
+};
 export const METER_ALREADY_EXIST = 'Такой счётчик уже существует';
 export const INCORRECT_METER_TYPE = 'Некорректный тип счётчика';
 export const MISSING_PREVIOUS_READING = {

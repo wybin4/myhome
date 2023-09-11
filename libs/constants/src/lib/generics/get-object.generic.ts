@@ -19,6 +19,7 @@ export abstract class GenericRepository<T extends GenericEntity> {
     abstract create(item: T): Promise<T>;
     abstract delete?(id: number): Promise<void>;
     abstract update?(item: T): Promise<T>;
+    abstract findMany?(ids: number[]): Promise<T[]>
 }
 
 export async function getGenericObject<T extends GenericEntity>(
@@ -33,4 +34,33 @@ export async function getGenericObject<T extends GenericEntity>(
     }
     const gettedTN = createInstance(tItem).get();
     return gettedTN;
+}
+
+export async function getGenericObjects<T extends GenericEntity>(
+    repository: GenericRepository<T>,
+    createInstance: (item: T) => T,
+    ids: number[],
+    error: { message: string; status: HttpStatus },
+): Promise<IEntity[] | undefined> {
+    if (repository.findMany) {
+        const tItems = await repository?.findMany(ids);
+        if (!tItems.length) {
+            throw new RMQException(error.message, error.status);
+        }
+        const gettedTNs = [];
+        for (const tItem of tItems) {
+            gettedTNs.push(createInstance(tItem).get());
+        }
+        return gettedTNs;
+    } else return undefined;
+}
+
+export async function addGenericObject<T extends GenericEntity>(
+    repository: GenericRepository<T>,
+    createInstance: (item: IEntity) => T,
+    dto: IEntity
+): Promise<T> {
+    const newTEntity = createInstance(dto);
+    const newTItem = await repository.create(newTEntity);
+    return newTItem;
 }

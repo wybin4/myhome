@@ -11,21 +11,21 @@ export class GeneralMeterRepository {
         private readonly generalMeterRepository: Repository<GeneralMeterEntity>,
     ) { }
 
-    async createGeneralMeter(generalMeter: GeneralMeterEntity) {
+    async create(generalMeter: GeneralMeterEntity) {
         return this.generalMeterRepository.save(generalMeter);
     }
 
-    async findGeneralMeterById(id: number) {
+    async findById(id: number) {
         return this.generalMeterRepository.findOne({ where: { id } });
     }
 
-    async findIndividualMeterByFNumber(factoryNumber: string) {
+    async findByFNumber(factoryNumber: string) {
         return this.generalMeterRepository.findOne({ where: { factoryNumber } });
     }
 
-    async updateGeneralMeter(meter: GeneralMeterEntity) {
+    async update(meter: GeneralMeterEntity) {
         await this.generalMeterRepository.update(meter.id, meter);
-        return this.findGeneralMeterById(meter.id);
+        return this.findById(meter.id);
     }
 
     async findExpiredGeneralMeters(): Promise<GeneralMeterEntity[]> {
@@ -47,7 +47,7 @@ export class GeneralMeterRepository {
         });
     }
 
-    async saveGeneralMeters(meters: GeneralMeterEntity[]): Promise<GeneralMeterEntity[]> {
+    async saveMany(meters: GeneralMeterEntity[]): Promise<GeneralMeterEntity[]> {
         return this.generalMeterRepository.save(meters);
     }
 

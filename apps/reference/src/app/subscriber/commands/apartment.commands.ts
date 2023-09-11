@@ -4,7 +4,7 @@ import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 import { ApartmentService } from '../services/apartment.service';
 
-@Controller()
+@Controller('apartment')
 export class ApartmentCommands {
     constructor(
         private readonly apartmentService: ApartmentService

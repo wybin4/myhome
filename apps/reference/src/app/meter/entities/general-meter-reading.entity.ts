@@ -21,7 +21,7 @@ export class GeneralMeterReadingEntity implements IGeneralMeterReading {
         }
     }
 
-    public getGeneralMeterReading() {
+    public get(): IGeneralMeterReading {
         return {
             generalMeterId: this.generalMeterId,
             reading: this.reading,

@@ -1,13 +1,12 @@
-import { getGenericObject, SUBSCRIBER_NOT_EXIST, RMQException, APART_NOT_EXIST, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, APARTS_NOT_EXIST, HOUSES_NOT_EXIST } from "@myhome/constants";
-import { ReferenceAddSubscriber, AccountUsersInfo } from "@myhome/contracts";
-import { SubscriberStatus, ISubscriberAllInfo, UserRole } from "@myhome/interfaces";
+import { getGenericObject, SUBSCRIBER_NOT_EXIST, RMQException, APART_NOT_EXIST, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, APARTS_NOT_EXIST, HOUSES_NOT_EXIST, addGenericObject, getGenericObjects } from "@myhome/constants";
+import { ReferenceAddSubscriber, AccountUsersInfo, AccountUserInfo } from "@myhome/contracts";
+import { SubscriberStatus, ISubscriberAllInfo, UserRole, ISubscriber } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
-import { RMQService, RMQError } from "nestjs-rmq";
-import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { SubscriberEntity } from "../entities/subscriber.entity";
 import { ApartmentRepository } from "../repositories/apartment.repository";
 import { HouseRepository } from "../repositories/house.repository";
 import { SubscriberRepository } from "../repositories/subscriber.repository";
+import { RMQService } from "nestjs-rmq";
 
 @Injectable()
 export class SubscriberService {
@@ -31,17 +30,23 @@ export class SubscriberService {
 	}
 
 	async addSubscriber(dto: ReferenceAddSubscriber.Request) {
-		const newSubscriberEntity = new SubscriberEntity(dto);
 		const apartment = await this.apartmentRepository.findById(dto.apartmentId);
 		if (!apartment) {
 			throw new RMQException(APART_NOT_EXIST.message(dto.apartmentId), APART_NOT_EXIST.status);
 		}
+		await this.checkOwner(dto.ownerId);
 		const existedSubscriber = await this.subscriberRepository.findByPersonalAccount(dto.personalAccount);
 		if (existedSubscriber) {
-			throw new RMQError(SUBSCRIBER_ALREADY_EXIST, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+			throw new RMQException(SUBSCRIBER_ALREADY_EXIST, HttpStatus.CONFLICT);
 		}
-		const newSubscriber = await this.subscriberRepository.create(newSubscriberEntity);
-		return { subscriber: newSubscriber };
+		return {
+			subscriber: await addGenericObject<SubscriberEntity>
+				(
+					this.subscriberRepository,
+					(item) => new SubscriberEntity(item),
+					dto as ISubscriber
+				)
+		};
 	}
 
 	async archieveSubscriber(id: number) {
@@ -50,7 +55,7 @@ export class SubscriberService {
 			throw new RMQException(SUBSCRIBER_NOT_EXIST.message(id), SUBSCRIBER_NOT_EXIST.status);
 		}
 		if (existedSubscriber.status === SubscriberStatus.Archieved) {
-			throw new RMQError(SUBSCRIBER_ALREADY_ARCHIEVED, ERROR_TYPE.RMQ, HttpStatus.CONFLICT);
+			throw new RMQException(SUBSCRIBER_ALREADY_ARCHIEVED, HttpStatus.CONFLICT);
 		}
 		const subscriberEntity = new SubscriberEntity(existedSubscriber).archieve();
 		return Promise.all([
@@ -85,33 +90,33 @@ export class SubscriberService {
 	}
 
 	async getSubscribers(ids: number[]) {
-		const subscribers = await this.subscriberRepository.findMany(ids);
-		if (!subscribers.length) {
-			throw new RMQError(SUBSCRIBERS_NOT_EXIST.message, ERROR_TYPE.RMQ, SUBSCRIBERS_NOT_EXIST.status);
-		}
-		const gettedSubscribers = [];
-		for (const subscriber of subscribers) {
-			gettedSubscribers.push(new SubscriberEntity(subscriber));
-		}
-		return { subscribers: gettedSubscribers };
+		return {
+			subscribers: await getGenericObjects<SubscriberEntity>
+				(
+					this.subscriberRepository,
+					(item) => new SubscriberEntity(item),
+					ids,
+					SUBSCRIBERS_NOT_EXIST
+				)
+		};
 	}
 
 	async getSubscribersAllInfo(ids: number[]) {
 		const subscribers = await this.subscriberRepository.findMany(ids);
 		if (!subscribers.length) {
-			throw new RMQError(SUBSCRIBERS_NOT_EXIST.message, ERROR_TYPE.RMQ, SUBSCRIBERS_NOT_EXIST.status);
+			throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
 		}
 
 		const apartmentIds = subscribers.map(obj => obj.apartmentId);
 		const apartments = await this.apartmentRepository.findWithSubscribers(apartmentIds);
 		if (!apartments.length) {
-			throw new RMQError(APARTS_NOT_EXIST.message, ERROR_TYPE.RMQ, APARTS_NOT_EXIST.status);
+			throw new RMQException(APARTS_NOT_EXIST.message, APARTS_NOT_EXIST.status);
 		}
 
 		const houseIds = apartments.map(obj => obj.houseId);
 		const houses = await this.houseRepository.findMany(houseIds);
 		if (!houses.length) {
-			throw new RMQError(HOUSES_NOT_EXIST.message, ERROR_TYPE.RMQ, HOUSES_NOT_EXIST.status);
+			throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
 		}
 
 		const ownerIds = subscribers.map(obj => obj.ownerId);
@@ -138,7 +143,7 @@ export class SubscriberService {
 		return { subscribers: subscribersInfo };
 	}
 
-	async getOwners(ownerIds: number[]) {
+	private async getOwners(ownerIds: number[]) {
 		try {
 			return await this.rmqService.send
 				<
@@ -146,6 +151,19 @@ export class SubscriberService {
 					AccountUsersInfo.Response
 				>
 				(AccountUsersInfo.topic, { ids: ownerIds, role: UserRole.Owner });
+		} catch (e) {
+			throw new RMQException(e.message, e.status);
+		}
+	}
+
+	private async checkOwner(id: number) {
+		try {
+			await this.rmqService.send
+				<
+					AccountUserInfo.Request,
+					AccountUserInfo.Response
+				>
+				(AccountUserInfo.topic, { id: id, role: UserRole.Owner });
 		} catch (e) {
 			throw new RMQException(e.message, e.status);
 		}

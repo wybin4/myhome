@@ -15,13 +15,13 @@ export class UnitEntity implements IUnit {
         }
     }
 
-    public getUnit() {
+    public get(): IUnit {
         return {
             name: this.name
         }
     }
 
-    public getUnitWithId() {
+    public getWithId() {
         return {
             id: this.id,
             name: this.name

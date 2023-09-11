@@ -1,7 +1,7 @@
 import { HouseRepository } from '../repositories/house.repository';
 import { HouseEntity } from '../entities/house.entity';
-import { UserRole } from '@myhome/interfaces';
-import { HOUSE_NOT_EXIST, RMQException, checkUser, getGenericObject } from '@myhome/constants';
+import { IHouse, UserRole } from '@myhome/interfaces';
+import { HOUSE_NOT_EXIST, RMQException, addGenericObject, checkUser, getGenericObject } from '@myhome/constants';
 import { ReferenceAddHouse } from '@myhome/contracts';
 import { Injectable } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
@@ -26,10 +26,15 @@ export class HouseService {
 	}
 
 	async addHouse(dto: ReferenceAddHouse.Request) {
-		const newHouseEntity = new HouseEntity(dto);
 		await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
-		const newHouse = await this.houseRepository.create(newHouseEntity);
-		return { house: newHouse };
+		return {
+			house: await addGenericObject<HouseEntity>
+				(
+					this.houseRepository,
+					(item) => new HouseEntity(item),
+					dto as IHouse
+				)
+		};
 	}
 
 	async updateHouse(id: number, managementCompanyId: number) {

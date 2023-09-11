@@ -1,5 +1,5 @@
-import { RMQException, TYPES_OF_SERVICE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST } from "@myhome/constants";
-import { ReferenceGetAllTypesOfService, ReferenceGetTypeOfService, ReferenceGetTypesOfService } from '@myhome/contracts';
+import { RMQException, TYPES_OF_SERVICE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, getGenericObject, getGenericObjects } from "@myhome/constants";
+import { ReferenceGetAllTypesOfService } from '@myhome/contracts';
 import { Injectable } from "@nestjs/common";
 import { TypeOfServiceRepository } from "../repositories/type-of-service.repository";
 import { TypeOfServiceEntity } from "../entities/type-of-service.entity";
@@ -11,34 +11,35 @@ export class TypeOfServiceService {
     ) { }
 
     async getAll(): Promise<ReferenceGetAllTypesOfService.Response> {
-        const typesOfService = await this.typeOfServiceRepository.findAllTypesOfService();
+        const typesOfService = await this.typeOfServiceRepository.findAll();
 
         if (!typesOfService || typesOfService.length === 0) {
             throw new RMQException(TYPES_OF_SERVICE_NOT_EXIST.message, TYPES_OF_SERVICE_NOT_EXIST.status);
         }
-        const gettedTypesOfService = typesOfService.map(type => type.getTypeOfServiceWithId());
+        const gettedTypesOfService = typesOfService.map(type => type.getWithId());
 
         return { typesOfService: gettedTypesOfService };
     }
 
-    async getTypeOfService(id: number): Promise<ReferenceGetTypeOfService.Response> {
-        const typeOfService = await this.typeOfServiceRepository.findTypeOfServiceById(id);
-        if (!typeOfService) {
-            throw new RMQException(TYPE_OF_SERVICE_NOT_EXIST.message, TYPES_OF_SERVICE_NOT_EXIST.status);
-        }
-        const gettedTypeOfService = new TypeOfServiceEntity(typeOfService).getTypeOfService();
-        return { typeOfService: gettedTypeOfService };
+    async getTypeOfService(id: number) {
+        return {
+            typeOfService: await getGenericObject<TypeOfServiceEntity>(
+                this.typeOfServiceRepository,
+                (item) => new TypeOfServiceEntity(item),
+                id,
+                TYPE_OF_SERVICE_NOT_EXIST
+            )
+        };
     }
 
-    async getTypesOfService(typeOfServiceIds: number[]): Promise<ReferenceGetTypesOfService.Response> {
-        const typesOfService = await this.typeOfServiceRepository.findTypesOfServiceById(typeOfServiceIds);
-        if (!typesOfService) {
-            throw new RMQException(TYPES_OF_SERVICE_NOT_EXIST.message, TYPES_OF_SERVICE_NOT_EXIST.status);
-        }
-        const gettedTypesOfService = [];
-        for (const typeOfService of typesOfService) {
-            gettedTypesOfService.push(new TypeOfServiceEntity(typeOfService));
-        }
-        return { typesOfService: gettedTypesOfService };
+    async getTypesOfService(typeOfServiceIds: number[]) {
+        return {
+            typesOfService: await getGenericObjects<TypeOfServiceEntity>(
+                this.typeOfServiceRepository,
+                (item) => new TypeOfServiceEntity(item),
+                typeOfServiceIds,
+                TYPES_OF_SERVICE_NOT_EXIST
+            )
+        };
     }
 }

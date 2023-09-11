@@ -14,7 +14,7 @@ export class UnitService {
         if (!units || units.length === 0) {
             throw new RMQException(UNITS_NOT_EXIST.message, UNITS_NOT_EXIST.status);
         }
-        const gettedUnits = units.map(unit => unit.getUnitWithId());
+        const gettedUnits = units.map(unit => unit.getWithId());
 
         return { units: gettedUnits };
     }

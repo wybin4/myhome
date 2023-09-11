@@ -13,7 +13,7 @@ export class TypeOfServiceController {
     @RMQValidate()
     @RMQRoute(ReferenceGetAllTypesOfService.topic)
     // eslint-disable-next-line no-empty-pattern
-    async getAll(@Body() { }: ReferenceGetAllTypesOfService.Request): Promise<ReferenceGetAllTypesOfService.Response> {
+    async getAll(@Body() { }: ReferenceGetAllTypesOfService.Request) {
         try {
             return await this.typeOfServiceService.getAll();
         }
@@ -24,7 +24,7 @@ export class TypeOfServiceController {
 
     @RMQValidate()
     @RMQRoute(ReferenceGetTypeOfService.topic)
-    async getTypeOfService(@Body() { id }: ReferenceGetTypeOfService.Request): Promise<ReferenceGetTypeOfService.Response> {
+    async getTypeOfService(@Body() { id }: ReferenceGetTypeOfService.Request) {
         try {
             return await this.typeOfServiceService.getTypeOfService(id);
         }
@@ -35,7 +35,7 @@ export class TypeOfServiceController {
 
     @RMQValidate()
     @RMQRoute(ReferenceGetTypesOfService.topic)
-    async getTypesOfService(@Body() { typeOfServiceIds }: ReferenceGetTypesOfService.Request): Promise<ReferenceGetTypesOfService.Response> {
+    async getTypesOfService(@Body() { typeOfServiceIds }: ReferenceGetTypesOfService.Request) {
         try {
             return await this.typeOfServiceService.getTypesOfService(typeOfServiceIds);
         }

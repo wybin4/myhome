@@ -1,5 +1,5 @@
 import { IGeneralMeter, IIndividualMeter, MeterType, RequireHomeOrApartment } from '@myhome/interfaces';
-import {  IsNumber, IsString } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 
 export namespace ReferenceAddMeter {
     export const topic = 'reference.add-meter.command';

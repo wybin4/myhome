@@ -18,13 +18,14 @@ export class TypeOfServiceEntity implements ITypeOfService {
         }
     }
 
-    public getTypeOfService() {
+    public get(): ITypeOfService {
         return {
             name: this.name,
             unitId: this.unitId,
         }
     }
-    public getTypeOfServiceWithId() {
+
+    public getWithId() {
         return {
             id: this.id,
             name: this.name,

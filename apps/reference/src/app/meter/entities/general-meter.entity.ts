@@ -36,7 +36,7 @@ export class GeneralMeterEntity implements IGeneralMeter {
         }
     }
 
-    public getGeneralMeter() {
+    public get(): IGeneralMeter {
         return {
             typeOfServiceId: this.typeOfServiceId,
             houseId: this.houseId,
@@ -47,7 +47,7 @@ export class GeneralMeterEntity implements IGeneralMeter {
         }
     }
 
-    public async updateGeneralMeter(verifiedAt: Date) {
+    public async update(verifiedAt: Date) {
         this.verifiedAt = verifiedAt;
         return this;
     }

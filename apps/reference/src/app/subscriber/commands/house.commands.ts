@@ -4,12 +4,12 @@ import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 import { HouseService } from '../services/house.service';
 
-@Controller()
+@Controller('house')
 export class HouseCommands {
     constructor(
         private readonly houseService: HouseService
     ) { }
-
+    
     @RMQValidate()
     @RMQRoute(ReferenceAddHouse.topic)
     async addHouse(@Body() dto: ReferenceAddHouse.Request) {

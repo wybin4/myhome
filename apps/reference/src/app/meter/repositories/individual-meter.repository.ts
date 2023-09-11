@@ -11,20 +11,20 @@ export class IndividualMeterRepository {
         private readonly individualMeterRepository: Repository<IndividualMeterEntity>,
     ) { }
 
-    async createIndividualMeter(individualMeter: IndividualMeterEntity) {
+    async create(individualMeter: IndividualMeterEntity) {
         return this.individualMeterRepository.save(individualMeter);
     }
 
-    async findIndividualMeterById(id: number) {
+    async findById(id: number) {
         return this.individualMeterRepository.findOne({ where: { id } });
     }
 
-    async findIndividualMeterByFNumber(factoryNumber: string) {
+    async findByFNumber(factoryNumber: string) {
         return this.individualMeterRepository.findOne({ where: { factoryNumber } });
     }
-    async updateIndividualMeter(meter: IndividualMeterEntity) {
+    async update(meter: IndividualMeterEntity) {
         await this.individualMeterRepository.update(meter.id, meter);
-        return this.findIndividualMeterById(meter.id);
+        return this.findById(meter.id);
     }
     async findExpiredIndividualMeters(): Promise<IndividualMeterEntity[]> {
         const currentDate = new Date();
@@ -44,7 +44,7 @@ export class IndividualMeterRepository {
         });
     }
 
-    async saveIndividualMeters(meters: IndividualMeterEntity[]): Promise<IndividualMeterEntity[]> {
+    async save(meters: IndividualMeterEntity[]): Promise<IndividualMeterEntity[]> {
         return this.individualMeterRepository.save(meters);
     }
 }

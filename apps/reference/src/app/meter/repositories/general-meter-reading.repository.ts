@@ -10,11 +10,11 @@ export class GeneralMeterReadingRepository {
         private readonly generalMeterReadingRepository: Repository<GeneralMeterReadingEntity>,
     ) { }
 
-    async createGeneralMeterReading(generalMeterReading: GeneralMeterReadingEntity) {
+    async create(generalMeterReading: GeneralMeterReadingEntity) {
         return this.generalMeterReadingRepository.save(generalMeterReading);
     }
 
-    async findGeneralMeterReadingById(id: number) {
+    async findById(id: number) {
         return this.generalMeterReadingRepository.findOne({ where: { id } });
     }
 

@@ -36,7 +36,7 @@ export class IndividualMeterEntity implements IIndividualMeter {
         }
     }
 
-    public getIndividualMeter() {
+    public get(): IIndividualMeter {
         return {
             typeOfServiceId: this.typeOfServiceId,
             apartmentId: this.apartmentId,
@@ -47,7 +47,7 @@ export class IndividualMeterEntity implements IIndividualMeter {
         }
     }
 
-    public async updateIndividualMeter(verifiedAt: Date) {
+    public async update(verifiedAt: Date) {
         this.verifiedAt = verifiedAt;
         return this;
     }

@@ -1,7 +1,8 @@
 import { Body, Controller } from '@nestjs/common';
-import { RMQRoute, RMQValidate } from 'nestjs-rmq';
+import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ReferenceAddMeter, ReferenceGetMeter, ReferenceUpdateMeter } from '@myhome/contracts';
 import { MeterService } from '../services/meter.service';
+import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
 @Controller()
 export class MeterController {
@@ -12,20 +13,32 @@ export class MeterController {
     @RMQValidate()
     @RMQRoute(ReferenceGetMeter.topic)
     async getMeter(@Body() { id, meterType }: ReferenceGetMeter.Request) {
-        return this.meterService.getMeter(id, meterType);
+        try {
+            return this.meterService.getMeter(id, meterType);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 
     @RMQValidate()
     @RMQRoute(ReferenceAddMeter.topic)
     async addMeter(@Body() dto: ReferenceAddMeter.Request) {
-        return this.meterService.addMeter(dto);
+        try {
+            return this.meterService.addMeter(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 
 
     @RMQValidate()
     @RMQRoute(ReferenceUpdateMeter.topic)
     async updateMeter(@Body() { id, verifiedAt, meterType }: ReferenceUpdateMeter.Request) {
-        return this.meterService.updateMeter(id, new Date(verifiedAt), meterType);
+        try {
+            return this.meterService.updateMeter(id, new Date(verifiedAt), meterType);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 
 }

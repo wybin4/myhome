@@ -1,7 +1,8 @@
 import { Body, Controller } from '@nestjs/common';
-import { RMQRoute, RMQValidate } from 'nestjs-rmq';
+import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceGetTariffOrNorm, ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
 import { TariffAndNormService } from './tariff-and-norm.service';
+import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
 @Controller()
 export class TariffAndNormController {
@@ -12,25 +13,41 @@ export class TariffAndNormController {
     @RMQValidate()
     @RMQRoute(ReferenceGetTariffOrNorm.topic)
     async getTariffAndNorm(@Body() { id, type }: ReferenceGetTariffOrNorm.Request) {
-        return this.tariffAndNormService.getTariffAndNorm(id, type);
+        try {
+            return this.tariffAndNormService.getTariffAndNorm(id, type);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 
     @RMQValidate()
     @RMQRoute(ReferenceAddTariffOrNorm.topic)
     async addTariffAndNorm(@Body() dto: ReferenceAddTariffOrNorm.Request) {
-        return this.tariffAndNormService.addTariffAndNorm(dto);
+        try {
+            return this.tariffAndNormService.addTariffAndNorm(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 
     @RMQValidate()
     @RMQRoute(ReferenceUpdateTariffOrNorm.topic)
     async updateTariffAndNorm(@Body() dto: ReferenceUpdateTariffOrNorm.Request) {
-        return this.tariffAndNormService.updateTariffAndNorm(dto);
+        try {
+            return this.tariffAndNormService.updateTariffAndNorm(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 
     @RMQValidate()
     @RMQRoute(ReferenceGetAllTariffs.topic)
     async getAllTariffs(@Body() dto: ReferenceGetAllTariffs.Request) {
-        return this.tariffAndNormService.getAllTariffs(dto);
+        try {
+            return this.tariffAndNormService.getAllTariffs(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
     }
 }
 

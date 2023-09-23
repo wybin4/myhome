@@ -1,10 +1,10 @@
-import { AccountUserInfo, CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, ReferenceGetCommon, ReferenceGetHouse, ReferenceGetSubscribersAllInfo } from "@myhome/contracts";
+import { AccountUserInfo, CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, ReferenceGetHouse, ReferenceGetSubscribersAllInfo } from "@myhome/contracts";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentRepository } from "../single-payment-document.repository";
 import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
 import { CalculationState, UserRole } from "@myhome/interfaces";
-import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, HOUSE_NOT_EXIST, MANAG_COMP_NOT_EXIST, RMQException, SUBSCRIBERS_NOT_EXIST } from "@myhome/constants";
+import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, HOUSE_NOT_EXIST, MANAG_COMP_NOT_EXIST, RMQException, SUBSCRIBERS_NOT_EXIST, getCommon } from "@myhome/constants";
 import { GetSinglePaymentDocumentSaga } from "../sagas/get-single-payment-document.saga";
 import { PdfService } from "./pdf.service";
 import { ISpdHouse, ISpdManagementCompany } from "../interfaces/subscriber.interface";
@@ -70,7 +70,7 @@ export class SinglePaymentDocumentService {
             dto.houseId
         );
 
-        const { typesOfService, units } = await this.getCommon();
+        const { typesOfService, units } = await getCommon(this.rmqService);
 
         const {
             detailIds, detailsInfo,
@@ -177,19 +177,6 @@ export class SinglePaymentDocumentService {
                 (ReferenceGetSubscribersAllInfo.topic, { ids: subscriberIds });
         } catch (e) {
             throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
-        }
-    }
-
-    private async getCommon(): Promise<ReferenceGetCommon.Response> {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetCommon.Request,
-                    ReferenceGetCommon.Response
-                >
-                (ReferenceGetCommon.topic, {});
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
         }
     }
 }

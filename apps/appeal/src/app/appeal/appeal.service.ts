@@ -2,8 +2,8 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQError, RMQService } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { AppealRepository, TypeOfAppealRepository } from "./repositories/appeal.repository";
-import { APPEAL_NOT_EXIST, MANAG_COMP_NOT_EXIST, RMQException, SUBSCRIBER_NOT_EXIST, TYPE_OF_APPEAL_NOT_EXIST } from "@myhome/constants";
-import { AccountUserInfo, AddNotification, AppealAddAppeal, ReferenceGetManagementCompany, ReferenceGetSubscriber } from "@myhome/contracts";
+import { APPEAL_NOT_EXIST, TYPE_OF_APPEAL_NOT_EXIST, getSubscriber, checkUser } from "@myhome/constants";
+import { AddNotification, AppealAddAppeal, ReferenceGetManagementCompany } from "@myhome/contracts";
 import { AppealEntity } from "./entities/appeal.entity";
 import { AppealType, NotificationType, UserRole } from "@myhome/interfaces";
 
@@ -30,20 +30,10 @@ export class AppealService {
         if (!typeOfAppeal) {
             throw new RMQError(TYPE_OF_APPEAL_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
         }
-        try {
-            await this.rmqService.send
-                <AccountUserInfo.Request, AccountUserInfo.Response>
-                (AccountUserInfo.topic, { id: dto.managementCompanyId, role: UserRole.ManagementCompany });
-        } catch (e) {
-            throw new RMQError(MANAG_COMP_NOT_EXIST, ERROR_TYPE.RMQ, HttpStatus.NOT_FOUND);
-        }
-        try {
-            await this.rmqService.send
-                <ReferenceGetSubscriber.Request, ReferenceGetSubscriber.Response>
-                (ReferenceGetSubscriber.topic, { id: dto.subscriberId });
-        } catch (e) {
-            throw new RMQException(SUBSCRIBER_NOT_EXIST.message(dto.subscriberId), SUBSCRIBER_NOT_EXIST.status);
-        }
+
+        await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
+        await getSubscriber(this.rmqService, dto.subscriberId);
+
         const newAppealEntity = new AppealEntity({
             managementCompanyId: dto.managementCompanyId,
             typeOfAppealId: dto.typeOfAppealId,

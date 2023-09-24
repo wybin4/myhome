@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { IGetMeterReading, IGetPublicUtility, IMunicipalTariff, ISubscriber, TariffAndNormType } from "@myhome/interfaces";
+import { IGetMeterReading, IGetPublicUtility, IMunicipalTariff, TariffAndNormType } from "@myhome/interfaces";
 import { GetPublicUtilities, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscribers } from "@myhome/contracts";
 import { RMQException, SUBSCRIBERS_NOT_EXIST, TARIFFS_NOT_EXIST } from "@myhome/constants";
 
@@ -14,8 +14,7 @@ export class PublicUtilityService {
         { subscriberIds, managementCompanyId }: GetPublicUtilities.Request
     ): Promise<GetPublicUtilities.Response> {
         const result: IGetPublicUtility[] = [];
-        const { subscribers } = await this.getSubscribers(subscriberIds);
-        const { meterReadings } = await this.getMeterReadingsBySID(subscribers, managementCompanyId);
+        const { meterReadings } = await this.getMeterReadingsBySID(subscriberIds, managementCompanyId);
         const tariffs = await this.getPublicUtilityTariffs(managementCompanyId) as unknown as Array<IMunicipalTariff>;
 
         for (const meterReading of meterReadings) {
@@ -44,7 +43,7 @@ export class PublicUtilityService {
     }
 
     private async getMeterReadingsBySID(
-        subscribers: ISubscriber[], managementCompanyId: number
+        subscriberIds: number[], managementCompanyId: number
     ): Promise<ReferenceGetMeterReadingBySID.Response> {
         try {
             return await this.rmqService.send
@@ -55,7 +54,7 @@ export class PublicUtilityService {
                 (
                     ReferenceGetMeterReadingBySID.topic,
                     {
-                        subscribers: subscribers,
+                        subscriberIds: subscriberIds,
                         managementCompanyId
                     });
         } catch (e) {

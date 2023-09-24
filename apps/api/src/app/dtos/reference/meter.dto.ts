@@ -1,5 +1,5 @@
 import { MeterType, RequireHomeOrApartment } from "@myhome/interfaces";
-import { IsNumber, IsString } from "class-validator";
+import { IsNumber, IsString, IsArray } from "class-validator";
 
 export class AddMeterDto {
     @IsNumber()
@@ -63,4 +63,9 @@ export class GetMeterReadingDto {
 
     @IsString()
     meterType!: MeterType;
+}
+
+export class GetMetersAllInfoBySID {
+    @IsArray()
+    subscriberIds!: number[];
 }

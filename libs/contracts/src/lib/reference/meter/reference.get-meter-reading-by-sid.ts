@@ -1,12 +1,12 @@
 import { IsArray, IsNumber } from 'class-validator';
-import { IGetMeterReadings, ISubscriber } from '@myhome/interfaces';
+import { IGetMeterReadings } from '@myhome/interfaces';
 
 export namespace ReferenceGetMeterReadingBySID {
     export const topic = 'reference.get-meter-reading-by-sid.query';
 
     export class Request {
         @IsArray()
-        subscribers!: ISubscriber[];
+        subscriberIds!: number[];
 
         @IsNumber()
         managementCompanyId!: number;

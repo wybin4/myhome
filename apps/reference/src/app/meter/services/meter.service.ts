@@ -1,4 +1,9 @@
-import { METER_NOT_EXIST, INCORRECT_METER_TYPE, APART_NOT_EXIST, METER_ALREADY_EXIST, HOUSE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, RMQException, getGenericObject, addGenericObject } from "@myhome/constants";
+import {
+    METER_NOT_EXIST, INCORRECT_METER_TYPE, APART_NOT_EXIST,
+    METER_ALREADY_EXIST, HOUSE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST,
+    RMQException, getGenericObject, addGenericObject,
+    getCommon, SUBSCRIBERS_NOT_EXIST
+} from "@myhome/constants";
 import { IGeneralMeter, IIndividualMeter, MeterType } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { GeneralMeterEntity } from "../entities/general-meter.entity";
@@ -6,25 +11,31 @@ import { IndividualMeterEntity } from "../entities/individual-meter.entity";
 import { GeneralMeterRepository } from "../repositories/general-meter.repository";
 import { IndividualMeterRepository } from "../repositories/individual-meter.repository";
 import { ReferenceAddMeter, ReferenceExpireMeter } from "@myhome/contracts";
-import { ApartmentRepository } from "../../subscriber/repositories/apartment.repository";
 import { HouseRepository } from "../../subscriber/repositories/house.repository";
 import { ApartmentEntity } from "../../subscriber/entities/apartment.entity";
 import { HouseEntity } from "../../subscriber/entities/house.entity";
 import { MeterEventEmitter } from "../meter.event-emitter";
 import { Cron } from "@nestjs/schedule";
 import { TypeOfServiceRepository } from "../../common/repositories/type-of-service.repository";
+import { RMQService } from "nestjs-rmq";
+import { MeterReadingService } from "./meter-reading.service";
+import { SubscriberRepository } from "../../subscriber/repositories/subscriber.repository";
+import { ApartmentRepository } from "../../subscriber/repositories/apartment.repository";
 
 export type Meters = IndividualMeterEntity | GeneralMeterEntity;
 
 @Injectable()
 export class MeterService {
     constructor(
+        private readonly rmqService: RMQService,
         private readonly individualMeterRepository: IndividualMeterRepository,
         private readonly generalMeterRepository: GeneralMeterRepository,
-        private readonly apartmentRepository: ApartmentRepository,
+        private readonly subscriberRepository: SubscriberRepository,
         private readonly houseRepository: HouseRepository,
+        private readonly apartmentRepository: ApartmentRepository,
         private readonly meterEventEmitter: MeterEventEmitter,
         private readonly typeOfServicesRepository: TypeOfServiceRepository,
+        private readonly meterReadingService: MeterReadingService,
     ) { }
 
     @Cron('0 9 * * *')
@@ -50,6 +61,57 @@ export class MeterService {
         for (const meter of meters) {
             meter.expire();
         }
+    }
+
+    public async getMetersAllInfoBySID(subscriberIds: number[]) {
+        const subscriber = await this.subscriberRepository.findMany(subscriberIds);
+        if (!subscriber) {
+            throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
+        }
+
+        const { typesOfService, units } = await getCommon(this.rmqService);
+
+        const apartmentWithSubscriber = subscriber.map(subscriber => {
+            return {
+                subscriberId: subscriber.id,
+                apartmentId: subscriber.apartmentId,
+                numberOfRegistered: 0,
+            };
+        });
+
+        const apartmentsWithMeters = await this.meterReadingService.
+            getMeterReadingsByAIDsWithAllMeterInfo(apartmentWithSubscriber, 15, 25);
+
+        return apartmentsWithMeters.map(apartment => {
+            return {
+                apartmentId: apartment.apartmentId,
+                meters: apartment.meters.map(meter => {
+                    const currentTypeOfService = typesOfService.find(obj => obj.id === meter.typeOfServiceId);
+                    const currentUnit = units.find(obj => obj.id === currentTypeOfService.unitId);
+
+                    const currentReading = meter.reading && meter.reading.current.length ? meter.reading.current[0].reading : 0;
+                    const previousReading = meter.reading && meter.reading.previous.length ? meter.reading.previous[0].reading : 0;
+                    const previousReadAt = meter.reading && meter.reading.previous.length ? meter.reading.previous[0].readAt : new Date(0);
+
+                    return {
+                        id: meter.id,
+                        factoryNumber: meter.factoryNumber,
+                        verifiedAt: meter.verifiedAt,
+                        issuedAt: meter.issuedAt,
+
+                        typeOfServiceId: currentTypeOfService.id,
+                        typeOfServiceName: currentTypeOfService.name,
+                        unitName: currentUnit.name,
+
+                        readings: {
+                            current: currentReading,
+                            previous: previousReading,
+                            previousReadAt: previousReadAt,
+                        }
+                    };
+                })
+            }
+        });
     }
 
     public async getMeter(id: number, meterType: MeterType) {

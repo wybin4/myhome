@@ -22,6 +22,7 @@ export * from './lib/reference/subscriber/reference.update-subscriber';
 export * from './lib/reference/meter/reference.expire-meter';
 export * from './lib/reference/meter/reference.add-meter';
 export * from './lib/reference/meter/reference.get-meter';
+export * from './lib/reference/meter/reference.get-meters-all-info-by-sid';
 export * from './lib/reference/meter/reference.update-meter';
 export * from './lib/reference/meter/reference.add-meter-reading';
 export * from './lib/reference/meter/reference.get-meter-reading';

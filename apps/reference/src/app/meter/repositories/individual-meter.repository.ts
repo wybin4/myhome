@@ -35,16 +35,24 @@ export class IndividualMeterRepository {
             },
         });
     }
-    async findByApartmentAndStatus(apartmentId: number, status: MeterStatus[]): Promise<IndividualMeterEntity[]> {
+    async findByApartments(apartmentIds: number[]): Promise<IndividualMeterEntity[]> {
         return this.individualMeterRepository.find({
             where: {
-                apartmentId,
-                status: In(status),
+                apartmentId: In(apartmentIds)
             },
         });
     }
 
     async save(meters: IndividualMeterEntity[]): Promise<IndividualMeterEntity[]> {
         return this.individualMeterRepository.save(meters);
+    }
+
+    async findActiveIndividualMetersByAID(apartmentId: number): Promise<IndividualMeterEntity[]> {
+        return this.individualMeterRepository.find({
+            where: {
+                apartmentId,
+                status: MeterStatus.Active,
+            },
+        });
     }
 }

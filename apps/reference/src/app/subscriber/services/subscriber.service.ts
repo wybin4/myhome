@@ -1,5 +1,5 @@
-import { getGenericObject, SUBSCRIBER_NOT_EXIST, RMQException, APART_NOT_EXIST, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, APARTS_NOT_EXIST, HOUSES_NOT_EXIST, addGenericObject, getGenericObjects } from "@myhome/constants";
-import { ReferenceAddSubscriber, AccountUsersInfo, AccountUserInfo } from "@myhome/contracts";
+import { getGenericObject, SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, APARTS_NOT_EXIST, HOUSES_NOT_EXIST, addGenericObject, getGenericObjects, checkUser, checkApartment } from "@myhome/constants";
+import { ReferenceAddSubscriber, AccountUsersInfo } from "@myhome/contracts";
 import { SubscriberStatus, ISubscriberAllInfo, UserRole, ISubscriber } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { SubscriberEntity } from "../entities/subscriber.entity";
@@ -30,11 +30,8 @@ export class SubscriberService {
 	}
 
 	async addSubscriber(dto: ReferenceAddSubscriber.Request) {
-		const apartment = await this.apartmentRepository.findById(dto.apartmentId);
-		if (!apartment) {
-			throw new RMQException(APART_NOT_EXIST.message(dto.apartmentId), APART_NOT_EXIST.status);
-		}
-		await this.checkOwner(dto.ownerId);
+		await checkApartment(this.rmqService, dto.apartmentId);
+		await checkUser(this.rmqService, dto.ownerId, UserRole.Owner);
 		const existedSubscriber = await this.subscriberRepository.findByPersonalAccount(dto.personalAccount);
 		if (existedSubscriber) {
 			throw new RMQException(SUBSCRIBER_ALREADY_EXIST, HttpStatus.CONFLICT);
@@ -156,16 +153,4 @@ export class SubscriberService {
 		}
 	}
 
-	private async checkOwner(id: number) {
-		try {
-			await this.rmqService.send
-				<
-					AccountUserInfo.Request,
-					AccountUserInfo.Response
-				>
-				(AccountUserInfo.topic, { id: id, role: UserRole.Owner });
-		} catch (e) {
-			throw new RMQException(e.message, e.status);
-		}
-	}
 }

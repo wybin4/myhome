@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { GeneralMeterReadingEntity } from '../entities/general-meter-reading.entity';
 
 @Injectable()
@@ -18,17 +18,17 @@ export class GeneralMeterReadingRepository {
         return this.generalMeterReadingRepository.findOne({ where: { id } });
     }
 
-    async findReadingsByMeterIDAndPeriods(generalMeterId: number, startOfPreviousMonth: Date, endOfPreviousMonth: Date, startOfCurrentMonth: Date, endOfCurrentMonth: Date) {
-        const previousMonthReadings = await this.generalMeterReadingRepository.findOne({
+    async findReadingsByMeterIDsAndPeriods(meterIds: number[], startOfPreviousMonth: Date, endOfPreviousMonth: Date, startOfCurrentMonth: Date, endOfCurrentMonth: Date) {
+        const previousMonthReadings = await this.generalMeterReadingRepository.find({
             where: {
-                generalMeterId,
+                generalMeterId: In(meterIds),
                 readAt: Between(startOfPreviousMonth, endOfPreviousMonth),
             },
         });
 
-        const currentMonthReadings = await this.generalMeterReadingRepository.findOne({
+        const currentMonthReadings = await this.generalMeterReadingRepository.find({
             where: {
-                generalMeterId,
+                generalMeterId: In(meterIds),
                 readAt: Between(startOfCurrentMonth, endOfCurrentMonth),
             },
         });

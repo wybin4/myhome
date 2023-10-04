@@ -2,7 +2,7 @@ import {
     METER_NOT_EXIST, INCORRECT_METER_TYPE, APART_NOT_EXIST,
     METER_ALREADY_EXIST, HOUSE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST,
     RMQException, getGenericObject, addGenericObject,
-    getCommon, SUBSCRIBERS_NOT_EXIST
+    getCommon, SUBSCRIBERS_NOT_EXIST, APARTS_NOT_EXIST, HOUSES_NOT_EXIST
 } from "@myhome/constants";
 import { IGeneralMeter, IIndividualMeter, MeterType } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
@@ -64,18 +64,30 @@ export class MeterService {
     }
 
     public async getMetersAllInfoBySID(subscriberIds: number[]) {
-        const subscriber = await this.subscriberRepository.findMany(subscriberIds);
-        if (!subscriber) {
+        const subscribers = await this.subscriberRepository.findMany(subscriberIds);
+        if (!subscribers) {
             throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
+        }
+
+        const apartmentIds = subscribers.map(obj => obj.apartmentId);
+        const apartments = await this.apartmentRepository.findMany(apartmentIds);
+        if (!apartments) {
+            throw new RMQException(APARTS_NOT_EXIST.message, APARTS_NOT_EXIST.status);
+        }
+
+        const houseIds = apartments.map(obj => obj.houseId);
+        const houses = await this.houseRepository.findMany(houseIds);
+        if (!houses) {
+            throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
         }
 
         const { typesOfService, units } = await getCommon(this.rmqService);
 
-        const apartmentWithSubscriber = subscriber.map(subscriber => {
+        const apartmentWithSubscriber = subscribers.map(subscriber => {
             return {
                 subscriberId: subscriber.id,
                 apartmentId: subscriber.apartmentId,
-                numberOfRegistered: 0,
+                numberOfRegistered: 0
             };
         });
 
@@ -83,8 +95,14 @@ export class MeterService {
             getMeterReadingsByAIDsWithAllMeterInfo(apartmentWithSubscriber, 15, 25);
 
         return apartmentsWithMeters.map(apartment => {
+            const currentApartment = apartments.find(obj => obj.id === apartment.apartmentId);
+            const apartmentNumber = currentApartment.apartmentNumber;
+            const currentHouse = houses.find(obj => obj.id === currentApartment.houseId);
+
             return {
                 apartmentId: apartment.apartmentId,
+                apartmentNumber: currentApartment.apartmentNumber,
+                apartmentFullAddress: `${currentHouse.city}, ${currentHouse.street}, кв. ${apartmentNumber}`,
                 meters: apartment.meters.map(meter => {
                     const currentTypeOfService = typesOfService.find(obj => obj.id === meter.typeOfServiceId);
                     const currentUnit = units.find(obj => obj.id === currentTypeOfService.unitId);

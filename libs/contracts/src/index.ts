@@ -4,20 +4,25 @@ export * from './lib/account/account.user-info';
 export * from './lib/account/account.users-info';
 export * from './lib/account/account.change-profile';
 
-export * from './lib/reference/subscriber/reference.add-house';
-export * from './lib/reference/subscriber/reference.add-apartment';
-export * from './lib/reference/subscriber/reference.add-subscriber';
-export * from './lib/reference/subscriber/reference.get-house';
-export * from './lib/reference/subscriber/reference.get-apartments-by-subscribers';
-export * from './lib/reference/subscriber/reference.get-apartment';
-export * from './lib/reference/subscriber/reference.get-subscriber';
-export * from './lib/reference/subscriber/reference.get-subscribers';
-export * from './lib/reference/subscriber/reference.get-subscribers-all-info';
-export * from './lib/reference/subscriber/reference.get-subscribers-by-house';
-export * from './lib/reference/subscriber/reference.get-apartments-by-subscribers';
-export * from './lib/reference/subscriber/reference.get-management-company';
-export * from './lib/reference/subscriber/reference.update-house';
-export * from './lib/reference/subscriber/reference.update-subscriber';
+export * from './lib/reference/subscriber/house/reference.add-house';
+export * from './lib/reference/subscriber/house/reference.update-house';
+export * from './lib/reference/subscriber/house/reference.get-house';
+export * from './lib/reference/subscriber/house/reference.get-houses-by-mcid';
+
+export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-subscribers';
+export * from './lib/reference/subscriber/apartment/reference.add-apartment';
+export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-subscribers';
+export * from './lib/reference/subscriber/apartment/reference.get-apartment';
+export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-mcid';
+
+export * from './lib/reference/subscriber/subscriber/reference.add-subscriber';
+export * from './lib/reference/subscriber/subscriber/reference.get-subscriber';
+export * from './lib/reference/subscriber/subscriber/reference.get-subscribers';
+export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-all-info';
+export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-house';
+export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-mcid';
+export * from './lib/reference/subscriber/subscriber/reference.get-management-company';
+export * from './lib/reference/subscriber/subscriber/reference.update-subscriber';
 
 export * from './lib/reference/meter/reference.expire-meter';
 export * from './lib/reference/meter/reference.add-meter';

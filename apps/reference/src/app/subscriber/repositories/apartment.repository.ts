@@ -26,8 +26,12 @@ export class ApartmentRepository {
             .getOne();
     }
 
-    async findAllByHouse(houseId: number) {
+    async findManyByHouse(houseId: number) {
         return this.apartmentRepository.find({ where: { houseId } });
+    }
+
+    async findManyByHouses(houseIds: number[]) {
+        return this.apartmentRepository.find({ where: { houseId: In(houseIds) } });
     }
 
     async findMany(apartmentIds: number[]) {

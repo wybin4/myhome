@@ -299,7 +299,7 @@ export class MeterReadingService {
             return {
                 subscriberId: currSubscriber.id,
                 apartmentId: currSubscriber.apartmentId,
-                numberOfRegistered: obj.numberOfRegistered
+                numberOfRegistered: obj.numberOfRegistered,
             };
         });
     }

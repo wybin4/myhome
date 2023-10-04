@@ -7,12 +7,12 @@ export interface ISinglePaymentDocument {
     penalty?: number;
     deposit?: number;
     createdAt: Date;
+    status: CalculationState;
 }
 
 export enum CalculationState {
     Started = 'Started',
     DetailsCalculated = 'DetailsCalculated',
     CorrectionsCalculated = 'CorrectionsCalculated',
-    Calculated = 'Calculated',
     Cancelled = 'Cancelled',
 }

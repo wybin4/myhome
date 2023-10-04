@@ -1,5 +1,5 @@
 import { getGenericObject, SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, APARTS_NOT_EXIST, HOUSES_NOT_EXIST, addGenericObject, getGenericObjects, checkUser, checkApartment } from "@myhome/constants";
-import { ReferenceAddSubscriber, AccountUsersInfo } from "@myhome/contracts";
+import { ReferenceAddSubscriber, AccountUsersInfo, ReferenceGetSubscribersByMCId } from "@myhome/contracts";
 import { SubscriberStatus, ISubscriberAllInfo, UserRole, ISubscriber } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { SubscriberEntity } from "../entities/subscriber.entity";
@@ -81,7 +81,7 @@ export class SubscriberService {
 	}
 
 	async getSubscribersByHouse(houseId: number) {
-		const apartments = await this.apartmentRepository.findAllByHouse(houseId);
+		const apartments = await this.apartmentRepository.findManyByHouse(houseId);
 		const apartmentIds = apartments.map(obj => obj.id);
 		return { subscriberIds: await this.subscriberRepository.findIdsByApartmentIds(apartmentIds) };
 	}
@@ -138,6 +138,36 @@ export class SubscriberService {
 		}
 
 		return { subscribers: subscribersInfo };
+	}
+
+	async getSubscribersByMCId(managementCompanyId: number):
+		Promise<ReferenceGetSubscribersByMCId.Response> {
+		await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
+		const houseItems = await this.houseRepository.findManyByMCId(managementCompanyId);
+		if (!houseItems.length) {
+			throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
+		}
+		const houseIds = houseItems.map(obj => obj.id);
+
+		const apartmentItems = await this.apartmentRepository.findManyByHouses(houseIds);
+		const apartmentIds = apartmentItems.map(obj => obj.id);
+
+		const subscriberItems = await this.subscriberRepository.findManyByApartmentIds(apartmentIds);
+		const ownerIds = subscriberItems.map(obj => obj.ownerId);
+		const { profiles: ownerItems } = await this.getOwners(ownerIds);
+
+		return {
+			subscribers: subscriberItems.map(subscriber => {
+				const currentApart = apartmentItems.find(obj => obj.id === subscriber.apartmentId);
+				const currentOwner = ownerItems.find(obj => obj.id === subscriber.ownerId);
+				const currentHouse = houseItems.find(obj => obj.id === currentApart.houseId);
+				return {
+					...subscriber,
+					ownerName: currentOwner.name,
+					apartmentName: `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}, кв. ${currentApart.apartmentNumber}`
+				};
+			})
+		};
 	}
 
 	private async getOwners(ownerIds: number[]) {

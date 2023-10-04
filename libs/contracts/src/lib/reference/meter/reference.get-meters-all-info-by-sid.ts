@@ -15,6 +15,9 @@ export namespace ReferenceGetMetersAllInfoBySID {
 
 export interface IGetMeterByAIDs {
     apartmentId: number;
+    apartmentFullAddress: string;
+    apartmentNumber: number;
+
     meters: IGetMeterByAID[];
 }
 

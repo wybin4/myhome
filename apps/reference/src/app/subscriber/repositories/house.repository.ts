@@ -18,6 +18,10 @@ export class HouseRepository {
         return this.houseRepository.findOne({ where: { id } });
     }
 
+    async findManyByMCId(managementCompanyId: number) {
+        return this.houseRepository.find({ where: { managementCompanyId } });
+    }
+
     async delete(id: number): Promise<void> {
         await this.houseRepository.delete({ id });
     }

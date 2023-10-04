@@ -38,6 +38,14 @@ export class SubscriberRepository {
         return subscribers.map(subscriber => subscriber.id);
     }
 
+    async findManyByApartmentIds(apartmentIds: number[]) {
+        return this.subscriberRepository.find({
+            where: {
+                apartmentId: In(apartmentIds),
+            }
+        });
+    }
+
     async findMany(subscriberIds: number[]) {
         return this.subscriberRepository.find({
             where: {

@@ -28,6 +28,11 @@ export class GetHouseDto {
     id: number;
 }
 
+export class GetHousesByMCIdDto {
+    @IsNumber()
+    managementCompanyId: number;
+}
+
 export class UpdateHouseDto {
     @IsNumber()
     id: number;

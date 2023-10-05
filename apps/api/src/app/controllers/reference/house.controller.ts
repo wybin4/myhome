@@ -22,7 +22,7 @@ export class HouseController {
     }
 
     @HttpCode(200)
-    @Post('get-houses')
+    @Post('get-houses-by-mcid')
     async getHousesByMCId(@Body() dto: GetHousesByMCIdDto) {
         try {
             return await this.rmqService.send<

@@ -2,6 +2,7 @@ export * from './lib/account/account.login';
 export * from './lib/account/account.register';
 export * from './lib/account/account.user-info';
 export * from './lib/account/account.users-info';
+export * from './lib/account/account.get-owners-by-mcid';
 export * from './lib/account/account.change-profile';
 
 export * from './lib/reference/subscriber/house/reference.add-house';
@@ -21,6 +22,7 @@ export * from './lib/reference/subscriber/subscriber/reference.get-subscribers';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-all-info';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-house';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-mcid';
+export * from './lib/reference/subscriber/subscriber/reference.get-owners-by-mcid';
 export * from './lib/reference/subscriber/subscriber/reference.get-management-company';
 export * from './lib/reference/subscriber/subscriber/reference.update-subscriber';
 

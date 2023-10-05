@@ -24,3 +24,8 @@ export class GetApartmentDto {
     @IsNumber()
     id: number;
 }
+
+export class GetApartmentsByMCIdDto {
+    @IsNumber()
+    managementCompanyId!: number;
+}

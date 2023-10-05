@@ -140,9 +140,7 @@ export class SubscriberService {
 		return { subscribers: subscribersInfo };
 	}
 
-	async getSubscribersByMCId(managementCompanyId: number):
-		Promise<ReferenceGetSubscribersByMCId.Response> {
-		await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
+	private async getOwnerIdsByMCId(managementCompanyId: number) {
 		const houseItems = await this.houseRepository.findManyByMCId(managementCompanyId);
 		if (!houseItems.length) {
 			throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
@@ -153,7 +151,24 @@ export class SubscriberService {
 		const apartmentIds = apartmentItems.map(obj => obj.id);
 
 		const subscriberItems = await this.subscriberRepository.findManyByApartmentIds(apartmentIds);
-		const ownerIds = subscriberItems.map(obj => obj.ownerId);
+		return {
+			houseItems,
+			apartmentItems,
+			subscriberItems,
+			ownerIds: subscriberItems.map(obj => obj.ownerId),
+		};
+	}
+
+	async getOwnersByMCId(managementCompanyId: number) {
+		const { ownerIds } = await this.getOwnerIdsByMCId(managementCompanyId);
+		return { ownerIds: ownerIds }
+	}
+
+	async getSubscribersByMCId(managementCompanyId: number):
+		Promise<ReferenceGetSubscribersByMCId.Response> {
+		await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
+
+		const { houseItems, apartmentItems, subscriberItems, ownerIds } = await this.getOwnerIdsByMCId(managementCompanyId);
 		const { profiles: ownerItems } = await this.getOwners(ownerIds);
 
 		return {

@@ -69,7 +69,7 @@ export class ApartmentService {
 				const currentHouse = houseItems.find(obj => obj.id === apartment.houseId);
 				return {
 					...apartment,
-					houseName: `${currentHouse.city}, ${currentHouse.street}`,
+					houseName: `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}`,
 				};
 			})
 		};

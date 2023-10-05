@@ -10,7 +10,7 @@ export namespace ReferenceGetSubscribersByMCId {
     }
 
     export class Response {
-        subscribers!: ISubscriber[];
+        subscribers!: IGetSubscribersByMCId[];
     }
 }
 

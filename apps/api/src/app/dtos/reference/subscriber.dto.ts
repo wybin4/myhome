@@ -27,3 +27,8 @@ export class UpdateSubscriberDto {
     @IsNumber()
     id: number;
 }
+
+export class GetSubscribersByMCIdDto {
+    @IsNumber()
+    managementCompanyId!: number;
+}

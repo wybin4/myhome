@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { ReferenceAddApartment, ReferenceGetApartment } from '@myhome/contracts';
+import { ReferenceAddApartment, ReferenceGetApartment, ReferenceGetApartmentsByMCId } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
-import { GetApartmentDto, AddApartmentDto } from '../../dtos/reference/apartment.dto';
+import { GetApartmentDto, AddApartmentDto, GetApartmentsByMCIdDto } from '../../dtos/reference/apartment.dto';
 import { CatchError } from '../../error.filter';
 
 @Controller('apartment')
@@ -16,6 +16,19 @@ export class ApartmentController {
                 ReferenceGetApartment.Request,
                 ReferenceGetApartment.Response
             >(ReferenceGetApartment.topic, dto);
+        } catch (e) {
+            CatchError(e);
+        }
+    }
+
+    @HttpCode(200)
+    @Post('get-apartments-by-mcid')
+    async getApartmentsByMCId(@Body() dto: GetApartmentsByMCIdDto) {
+        try {
+            return await this.rmqService.send<
+                ReferenceGetApartmentsByMCId.Request,
+                ReferenceGetApartmentsByMCId.Response
+            >(ReferenceGetApartmentsByMCId.topic, dto);
         } catch (e) {
             CatchError(e);
         }

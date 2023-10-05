@@ -8,3 +8,8 @@ export class UserInfoDto {
     @IsString()
     role: UserRole;
 }
+
+export class GetOwnersByMCIdDto {
+    @IsNumber()
+    managementCompanyId: number;
+}

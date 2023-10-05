@@ -18,7 +18,11 @@ export class GeneralMeterReadingRepository {
         return this.generalMeterReadingRepository.findOne({ where: { id } });
     }
 
-    async findReadingsByMeterIDsAndPeriods(meterIds: number[], startOfPreviousMonth: Date, endOfPreviousMonth: Date, startOfCurrentMonth: Date, endOfCurrentMonth: Date) {
+    async findReadingsByMeterIDsAndPeriods(
+        meterIds: number[],
+        startOfPreviousMonth: Date, endOfPreviousMonth: Date,
+        startOfCurrentMonth: Date, endOfCurrentMonth: Date
+    ) {
         const previousMonthReadings = await this.generalMeterReadingRepository.find({
             where: {
                 generalMeterId: In(meterIds),

@@ -1,4 +1,4 @@
-import { IGeneralMeter, IIndividualMeter, MeterType, RequireHomeOrApartment } from '@myhome/interfaces';
+import { IMeter, MeterType, RequireHomeOrApartment } from '@myhome/interfaces';
 import { IsNumber, IsString } from 'class-validator';
 
 export namespace ReferenceAddMeter {
@@ -28,7 +28,7 @@ export namespace ReferenceAddMeter {
     }
 
     export class Response {
-        meter!: IIndividualMeter | IGeneralMeter;
+        meter!: IMeter;
     }
 }
 

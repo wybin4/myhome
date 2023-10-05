@@ -17,6 +17,8 @@ export class IndividualMeterReadingRepository {
     async findById(id: number) {
         return this.individualMeterReadingRepository.findOne({ where: { id } });
     }
+
+    // показания за последние 7 месяцев
     async findReadingsByMeterIDsAndPeriod(meterIds: number[], startOfMonth: Date, endOfMonth: Date) {
 
         const currentMonthReadings = await this.individualMeterReadingRepository.find({
@@ -34,5 +36,28 @@ export class IndividualMeterReadingRepository {
             take: 7,
         });
         return { currentMonthReadings, previousReadings };
+    }
+
+    // показания за последние 2 месяца
+    async findReadingsByMeterIDsAndPeriods(
+        meterIds: number[],
+        startOfPreviousMonth: Date, endOfPreviousMonth: Date,
+        startOfCurrentMonth: Date, endOfCurrentMonth: Date
+    ) {
+        const previousMonthReadings = await this.individualMeterReadingRepository.find({
+            where: {
+                individualMeterId: In(meterIds),
+                readAt: Between(startOfPreviousMonth, endOfPreviousMonth),
+            },
+        });
+
+        const currentMonthReadings = await this.individualMeterReadingRepository.find({
+            where: {
+                individualMeterId: In(meterIds),
+                readAt: Between(startOfCurrentMonth, endOfCurrentMonth),
+            },
+        });
+
+        return { previousMonthReadings, currentMonthReadings };
     }
 }

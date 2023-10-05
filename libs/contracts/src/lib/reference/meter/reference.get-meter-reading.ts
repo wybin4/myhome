@@ -1,5 +1,5 @@
 import { IsNumber, IsString } from 'class-validator';
-import { IGeneralMeterReading, IIndividualMeterReading, MeterType } from '@myhome/interfaces';
+import {  IMeterReading, MeterType } from '@myhome/interfaces';
 
 export namespace ReferenceGetMeterReading {
     export const topic = 'reference.get-meter-reading.query';
@@ -13,6 +13,6 @@ export namespace ReferenceGetMeterReading {
     }
 
     export class Response {
-        meterReading!: IIndividualMeterReading | IGeneralMeterReading;
+        meterReading!: IMeterReading;
     }
 }

@@ -1,36 +1,39 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
 
-export interface IIndividualMeter {
+
+export interface IMeter {
     id?: number;
     typeOfServiceId: number;
-    apartmentId: number;
     factoryNumber: string;
     verifiedAt: Date;
     issuedAt: Date;
     status: MeterStatus;
 }
 
-export interface IGeneralMeter {
+export interface IMeterReading {
     id?: number;
-    typeOfServiceId: number;
-    houseId: number;
-    factoryNumber: string;
-    verifiedAt: Date;
-    issuedAt: Date;
-    status: MeterStatus;
-}
-
-export interface IIndividualMeterReading {
-    id?: number;
-    individualMeterId: number;
     reading: number;
     readAt: Date;
 }
 
-export interface IGeneralMeterReading {
-    id?: number;
+export interface IIndividualMeter extends IMeter {
+    apartmentId: number;
+}
+
+export interface IGeneralMeter extends IMeter {
+    houseId: number;
+}
+
+export interface IIndividualMeterReading extends IMeterReading {
+    individualMeterId: number;
+}
+
+export interface IGeneralMeterReading extends IMeterReading {
     generalMeterId: number;
+}
+
+export interface IGetReading {
     reading: number;
     readAt: Date;
 }

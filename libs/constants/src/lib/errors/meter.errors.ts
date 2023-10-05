@@ -8,6 +8,10 @@ export const METERS_NOT_EXIST = {
     message: 'Такие счётчики не существуют',
     status: HttpStatus.NOT_FOUND
 };
+export const METER_READINGS_NOT_EXIST = {
+    message: 'Такие показания счётчиков не существуют',
+    status: HttpStatus.NOT_FOUND
+};
 export const METER_READING_NOT_EXIST = {
     message: (id: number) => `Показание с id=${id} не существует`,
     status: HttpStatus.NOT_FOUND

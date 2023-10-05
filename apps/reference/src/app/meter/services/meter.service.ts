@@ -2,9 +2,9 @@ import {
     METER_NOT_EXIST, INCORRECT_METER_TYPE, APART_NOT_EXIST,
     METER_ALREADY_EXIST, HOUSE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST,
     RMQException, getGenericObject, addGenericObject,
-    getCommon, SUBSCRIBERS_NOT_EXIST, APARTS_NOT_EXIST, HOUSES_NOT_EXIST
+    SUBSCRIBERS_NOT_EXIST, APARTS_NOT_EXIST, HOUSES_NOT_EXIST, checkUser, METERS_NOT_EXIST
 } from "@myhome/constants";
-import { IGeneralMeter, IIndividualMeter, MeterType } from "@myhome/interfaces";
+import { IApartment, IGeneralMeter, IGeneralMeterReading, IIndividualMeter, IIndividualMeterReading, IMeter, IMeterReading, MeterType, UserRole } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { GeneralMeterEntity } from "../entities/general-meter.entity";
 import { IndividualMeterEntity } from "../entities/individual-meter.entity";
@@ -21,6 +21,8 @@ import { RMQService } from "nestjs-rmq";
 import { MeterReadingService } from "./meter-reading.service";
 import { SubscriberRepository } from "../../subscriber/repositories/subscriber.repository";
 import { ApartmentRepository } from "../../subscriber/repositories/apartment.repository";
+import { CommonService } from "../../common/services/common.service";
+import { TypeOfServiceService } from "../../common/services/type-of-service.service";
 
 export type Meters = IndividualMeterEntity | GeneralMeterEntity;
 
@@ -36,6 +38,8 @@ export class MeterService {
         private readonly meterEventEmitter: MeterEventEmitter,
         private readonly typeOfServicesRepository: TypeOfServiceRepository,
         private readonly meterReadingService: MeterReadingService,
+        private readonly commonService: CommonService,
+        private readonly typeOfServiceService: TypeOfServiceService
     ) { }
 
     @Cron('0 9 * * *')
@@ -81,7 +85,7 @@ export class MeterService {
             throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
         }
 
-        const { typesOfService, units } = await getCommon(this.rmqService);
+        const { typesOfService, units } = await this.commonService.getCommon();
 
         const apartmentWithSubscriber = subscribers.map(subscriber => {
             return {
@@ -153,6 +157,85 @@ export class MeterService {
                             id,
                             METER_NOT_EXIST
                         )
+                };
+            default:
+                throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);
+        }
+    }
+
+    public async getMetersByMCId(managementCompanyId: number, meterType: MeterType) {
+        await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
+        const houseItems = await this.houseRepository.findManyByMCId(managementCompanyId);
+        if (!houseItems.length) {
+            throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
+        }
+        const houseIds = houseItems.map(obj => obj.id);
+
+        let apartmentItems: IApartment[];
+        let apartmentIds: number[];
+        let meters: IMeter[];
+        let meterIds: number[];
+        let readings: {
+            readings: {
+                previousMonthReadings: IMeterReading[];
+                currentMonthReadings: IMeterReading[];
+            }
+        };
+
+        const { typesOfService } = await this.typeOfServiceService.getAll();
+
+        switch (meterType) {
+            case (MeterType.General):
+                meters = await this.generalMeterRepository.findManyByHouses(houseIds);
+                if (!meters.length) {
+                    throw new RMQException(METERS_NOT_EXIST.message, METERS_NOT_EXIST.status);
+                }
+                meterIds = meters.map(m => m.id);
+                readings = await this.meterReadingService.getMeterReadingsByMIDs(
+                    meterIds, MeterType.General, 15, 25
+                ); // ИСПРАВИТЬ
+
+                return {
+                    meters: meters.map(meter => {
+                        const currentTypeOfService = typesOfService.find(obj => obj.id === meter.typeOfServiceId);
+                        const currentReading = readings.readings.currentMonthReadings.find(
+                            (obj: IGeneralMeterReading) => obj.generalMeterId === meter.id);
+                        const previousReading = readings.readings.previousMonthReadings.find(
+                            (obj: IGeneralMeterReading) => obj.generalMeterId === meter.id);
+                        return {
+                            ...meter,
+                            typeOfServiceName: currentTypeOfService.name,
+                            currentReading: currentReading ? currentReading : undefined,
+                            previousReading: previousReading ? previousReading : undefined
+                        };
+                    })
+                };
+            case (MeterType.Individual):
+                apartmentItems = await this.apartmentRepository.findManyByHouses(houseIds);
+                apartmentIds = apartmentItems.map(a => a.id);
+                meters = await this.individualMeterRepository.findByApartments(apartmentIds);
+                if (!meters.length) {
+                    throw new RMQException(METERS_NOT_EXIST.message, METERS_NOT_EXIST.status);
+                }
+                meterIds = meters.map(m => m.id);
+                readings = await this.meterReadingService.getMeterReadingsByMIDs(
+                    meterIds, MeterType.Individual, 15, 25
+                ); // ИСПРАВИТЬ
+
+                return {
+                    meters: meters.map(meter => {
+                        const currentTypeOfService = typesOfService.find(obj => obj.id === meter.typeOfServiceId);
+                        const currentReading = readings.readings.currentMonthReadings.find(
+                            (obj: IIndividualMeterReading) => obj.individualMeterId === meter.id);
+                        const previousReading = readings.readings.previousMonthReadings.find(
+                            (obj: IIndividualMeterReading) => obj.individualMeterId === meter.id);
+                        return {
+                            ...meter,
+                            typeOfServiceName: currentTypeOfService.name,
+                            currentReading: currentReading,
+                            previousReading: previousReading
+                        };
+                    })
                 };
             default:
                 throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);

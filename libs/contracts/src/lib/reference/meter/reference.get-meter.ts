@@ -1,5 +1,5 @@
 import { IsNumber, IsString } from 'class-validator';
-import { IGeneralMeter, IIndividualMeter, MeterType } from '@myhome/interfaces';
+import { IMeter, MeterType } from '@myhome/interfaces';
 
 export namespace ReferenceGetMeter {
     export const topic = 'reference.get-meter.query';
@@ -13,6 +13,6 @@ export namespace ReferenceGetMeter {
     }
 
     export class Response {
-        meter!: IIndividualMeter | IGeneralMeter;
+        meter!: IMeter;
     }
 }

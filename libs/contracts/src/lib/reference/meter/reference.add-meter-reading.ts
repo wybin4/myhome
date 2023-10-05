@@ -1,4 +1,4 @@
-import { IGeneralMeterReading, IIndividualMeterReading, MeterType } from '@myhome/interfaces';
+import { IMeterReading, MeterType } from '@myhome/interfaces';
 import { IsNumber, IsString } from 'class-validator';
 
 export namespace ReferenceAddMeterReading {
@@ -19,7 +19,7 @@ export namespace ReferenceAddMeterReading {
     }
 
     export class Response {
-        meterReading!: IIndividualMeterReading | IGeneralMeterReading;
+        meterReading!: IMeterReading;
     }
 }
 

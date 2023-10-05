@@ -60,4 +60,11 @@ export class GeneralMeterRepository {
         });
     }
 
+    async findManyByHouses(houseIds: number[]): Promise<GeneralMeterEntity[]> {
+        return this.generalMeterRepository.find({
+            where: {
+                houseId: In(houseIds)
+            },
+        });
+    }
 }

@@ -18,7 +18,7 @@ import { TypeOfServiceService } from "./services/type-of-service.service";
     TypeOrmModule.forFeature([TypeOfServiceEntity, UnitEntity]),
   ],
   providers: [TypeOfServiceRepository, UnitRepository, CommonService, UnitService, TypeOfServiceService],
-  exports: [TypeOfServiceRepository, UnitRepository],
+  exports: [TypeOfServiceRepository, UnitRepository, TypeOfServiceService, CommonService],
   controllers: [TypeOfServiceController, CommonController],
 })
 

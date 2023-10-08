@@ -73,6 +73,7 @@ export * from './lib/correction/deposit/correction.get-deposit';
 export * from './lib/correction/deposit/correction.add-deposit';
 export * from './lib/correction/deposit/correction.update-deposit';
 export * from './lib/correction/penalty/correction.add-penalty-calculation-rule';
+export * from './lib/correction/penalty/correction.get-penalty-calculation-rules-by-mcid';
 export * from './lib/correction/penalty/correction.add-penalty';
 export * from './lib/correction/correction.get-correction';
 

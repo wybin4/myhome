@@ -22,7 +22,7 @@ export class TypeOfServiceRepository {
         return this.typeOfServiceRepository.find();
     }
 
-    async findManyById(typeOfServiceIds: number[]) {
+    async findMany(typeOfServiceIds: number[]) {
         return this.typeOfServiceRepository.find({
             where: {
                 id: In(typeOfServiceIds),

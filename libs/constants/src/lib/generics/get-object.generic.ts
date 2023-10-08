@@ -43,7 +43,7 @@ export async function getGenericObjects<T extends GenericEntity>(
     error: { message: string; status: HttpStatus },
 ): Promise<IEntity[] | undefined> {
     if (repository.findMany) {
-        const tItems = await repository?.findMany(ids);
+        const tItems = await repository.findMany(ids);
         if (!tItems.length) {
             throw new RMQException(error.message, error.status);
         }

@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
-import { CorrectionAddPenaltyCalculationRule } from '@myhome/contracts';
-import { AddPenaltyCalculationRuleDto } from '../../dtos/correction/penalty.dto';
+import { CorrectionAddPenaltyCalculationRule, CorrectionGetPenaltyCalculationRulesByMCId } from '@myhome/contracts';
+import { AddPenaltyCalculationRuleDto, GetPenaltyCalculationRulesByMCIdDto } from '../../dtos/correction/penalty.dto';
 
 @Controller('penalty')
 export class PenaltyController {
@@ -16,6 +16,19 @@ export class PenaltyController {
                 CorrectionAddPenaltyCalculationRule.Request,
                 CorrectionAddPenaltyCalculationRule.Response
             >(CorrectionAddPenaltyCalculationRule.topic, dto);
+        } catch (e) {
+            CatchError(e);
+        }
+    }
+
+    @HttpCode(200)
+    @Post('get-penalty-rules-by-mcid')
+    async getPenaltyRulesByMCId(@Body() dto: GetPenaltyCalculationRulesByMCIdDto) {
+        try {
+            return await this.rmqService.send<
+                CorrectionGetPenaltyCalculationRulesByMCId.Request,
+                CorrectionGetPenaltyCalculationRulesByMCId.Response
+            >(CorrectionGetPenaltyCalculationRulesByMCId.topic, dto);
         } catch (e) {
             CatchError(e);
         }

@@ -39,4 +39,15 @@ export class PenaltyRuleRepository {
             },
         }).exec();
     }
+    async findByMCId(
+        managementCompanyId: number,
+    ): Promise<PenaltyRule[]> {
+        return this.penaltyRuleModel.aggregate([
+            {
+                $match: {
+                    'penaltyCalculationRules.managementCompanyId': managementCompanyId,
+                },
+            }
+        ]);
+    }
 }

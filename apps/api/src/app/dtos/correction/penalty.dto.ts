@@ -16,3 +16,8 @@ export class AddPenaltyCalculationRuleDto {
     @IsNumber()
     priority!: number;
 }
+
+export class GetPenaltyCalculationRulesByMCIdDto {
+    @IsNumber()
+    managementCompanyId: number;
+}

@@ -16,7 +16,7 @@ export class TypeOfServiceService {
         if (!typesOfService || typesOfService.length === 0) {
             throw new RMQException(TYPES_OF_SERVICE_NOT_EXIST.message, TYPES_OF_SERVICE_NOT_EXIST.status);
         }
-        const gettedTypesOfService = typesOfService.map(type => type.getWithId());
+        const gettedTypesOfService = typesOfService.map(type => type.get());
 
         return { typesOfService: gettedTypesOfService };
     }

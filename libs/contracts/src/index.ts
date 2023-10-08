@@ -40,6 +40,7 @@ export * from './lib/reference/meter/reference.get-meter-reading-by-hid';
 export * from './lib/reference/tariff-and-norm/reference.update-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.add-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.get-tariff-and-norm';
+export * from './lib/reference/tariff-and-norm/reference.get-tariffs-and-norms-by-mcid';
 export * from './lib/reference/tariff-and-norm/reference.get-all-tariffs';
 
 export * from './lib/reference/common/reference.get-type-of-service';

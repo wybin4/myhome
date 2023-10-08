@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { FindOneOptions, FindOptionsWhere, ObjectLiteral, Repository } from "typeorm";
+import { FindOneOptions, FindOptionsWhere, In, ObjectLiteral, Repository } from "typeorm";
 import { MunicipalTariffEntity, NormEntity, SeasonalityFactorEntity, SocialNormEntity } from "./entities/base-tariff-and-norm.entity";
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
 import { TypeOfNorm } from "@myhome/interfaces";
@@ -11,6 +11,7 @@ interface BaseTariffAndNorm extends ObjectLiteral {
 
 export abstract class IGenericTariffAndNormRepository<T extends BaseTariffAndNorm> {
     abstract findById(id: number): Promise<T>;
+    abstract findByMCId(managementCompanyId: number): Promise<T[]>;
     abstract create(item: T): Promise<T>;
     abstract delete(id: number): Promise<void>;
     abstract update(item: T): Promise<T>;
@@ -32,6 +33,13 @@ export class GenericTariffAndNormRepository<T extends BaseTariffAndNorm> impleme
         return this.repository.findOne(findOptions);
     }
 
+    async findByMCId(managementCompanyId: number): Promise<T[]> {
+        const findOptions: FindOneOptions<T> = {
+            where: { managementCompanyId } as unknown as FindOptionsWhere<T>,
+        };
+        return this.repository.find(findOptions);
+    }
+
     async delete(id: number): Promise<void> {
         await this.repository.delete(id);
     }
@@ -49,14 +57,6 @@ export class NormRepository extends GenericTariffAndNormRepository<NormEntity> {
         private readonly normRepository: Repository<NormEntity>,
     ) {
         super(normRepository);
-    }
-
-    async findByMCID(managementCompanyId: number): Promise<NormEntity[] | undefined> {
-        return await this.normRepository.find({
-            where: {
-                managementCompanyId,
-            },
-        });
     }
 
     async findByMCIDAndType(managementCompanyId: number, typeOfNorm: TypeOfNorm): Promise<NormEntity[] | undefined> {
@@ -77,14 +77,6 @@ export class MunicipalTariffRepository extends GenericTariffAndNormRepository<Mu
         private readonly municipalTariffRepository: Repository<MunicipalTariffEntity>,
     ) {
         super(municipalTariffRepository);
-    }
-
-    async findAllByManagementCID(managementCompanyId: number): Promise<MunicipalTariffEntity[]> {
-        return this.municipalTariffRepository.find({
-            where: {
-                managementCompanyId: managementCompanyId
-            },
-        });
     }
 }
 
@@ -117,10 +109,18 @@ export class CommonHouseNeedTariffRepository extends GenericTariffAndNormReposit
         super(сommonHouseNeedTariffRepository);
     }
 
-    async findAllByHouseID(houseId: number): Promise<CommonHouseNeedTariffEntity[]> {
+    async findByHouseId(houseId: number): Promise<CommonHouseNeedTariffEntity[]> {
         return this.сommonHouseNeedTariffRepository.find({
             where: {
                 houseId: houseId
+            },
+        });
+    }
+
+    async findByHouseIds(houseIds: number[]): Promise<CommonHouseNeedTariffEntity[]> {
+        return this.сommonHouseNeedTariffRepository.find({
+            where: {
+                houseId: In(houseIds)
             },
         });
     }

@@ -1,5 +1,5 @@
 import { IsNumber, IsString } from 'class-validator';
-import { IGetReading, IMeter, MeterType } from '@myhome/interfaces';
+import { IMeter, MeterType } from '@myhome/interfaces';
 
 export namespace ReferenceGetMetersByMCId {
     export const topic = 'reference.get-meters-by-mcid.query';
@@ -19,6 +19,9 @@ export namespace ReferenceGetMetersByMCId {
 
 export interface IGetMetersByMCId extends IMeter {
     typeOfServiceName: string;
-    currentReading: IGetReading;
-    previousReading: IGetReading;
+    houseName: string;
+    currentReading: number;
+    currentReadAt: Date;
+    previousReading: number;
+    previousReadAt: Date;
 }

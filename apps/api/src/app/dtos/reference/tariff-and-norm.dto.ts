@@ -51,6 +51,14 @@ export class GetTariffAndNormDto {
     type: TariffAndNormType;
 }
 
+export class GetTariffsAndNormsByMCIdDto {
+    @IsNumber()
+    managementCompanyId: number;
+
+    @IsString()
+    type: TariffAndNormType;
+}
+
 export class UpdateTariffAndNormDto {
     @IsNumber()
     id: number;

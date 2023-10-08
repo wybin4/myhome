@@ -202,8 +202,12 @@ export class MeterService {
                             (obj: IGeneralMeterReading) => obj.generalMeterId === meter.id);
                         const previousReading = readings.readings.previousMonthReadings.find(
                             (obj: IGeneralMeterReading) => obj.generalMeterId === meter.id);
+
+                        const currentHouse = houseItems.find(obj => obj.id === (meter as IGeneralMeter).houseId);
+
                         return {
                             ...meter,
+                            houseName: `${currentHouse.city}, ${currentHouse.street}`,
                             typeOfServiceName: currentTypeOfService.name,
                             currentReading: currentReading ? currentReading : undefined,
                             previousReading: previousReading ? previousReading : undefined
@@ -229,11 +233,19 @@ export class MeterService {
                             (obj: IIndividualMeterReading) => obj.individualMeterId === meter.id);
                         const previousReading = readings.readings.previousMonthReadings.find(
                             (obj: IIndividualMeterReading) => obj.individualMeterId === meter.id);
+
+                        const currentApartment = apartmentItems.find(obj => obj.id === (meter as IIndividualMeter).apartmentId);
+                        const apartmentNumber = currentApartment.apartmentNumber;
+                        const currentHouse = houseItems.find(obj => obj.id === currentApartment.houseId);
+
                         return {
                             ...meter,
+                            houseName: `${currentHouse.city}, ${currentHouse.street}, кв. ${apartmentNumber}`,
                             typeOfServiceName: currentTypeOfService.name,
-                            currentReading: currentReading,
-                            previousReading: previousReading
+                            currentReading: currentReading ? currentReading.reading : undefined,
+                            currentReadAt: currentReading ? currentReading.readAt : undefined,
+                            previousReading: previousReading ? previousReading.reading : undefined,
+                            previousReadAt: previousReading ? previousReading.readAt : undefined
                         };
                     })
                 };

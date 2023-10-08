@@ -33,11 +33,6 @@ export interface IGeneralMeterReading extends IMeterReading {
     generalMeterId: number;
 }
 
-export interface IGetReading {
-    reading: number;
-    readAt: Date;
-}
-
 export enum MeterType {
     General = 'General',
     Individual = 'Individual',

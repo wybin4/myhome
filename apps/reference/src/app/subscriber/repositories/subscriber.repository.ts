@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { SubscriberEntity } from '../entities/subscriber.entity';
+import { SubscriberStatus } from '@myhome/interfaces';
 
 @Injectable()
 export class SubscriberRepository {
@@ -42,6 +43,7 @@ export class SubscriberRepository {
         return this.subscriberRepository.find({
             where: {
                 apartmentId: In(apartmentIds),
+                status: SubscriberStatus.Active
             }
         });
     }

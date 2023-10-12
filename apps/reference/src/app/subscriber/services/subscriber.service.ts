@@ -176,10 +176,13 @@ export class SubscriberService {
 				const currentApart = apartmentItems.find(obj => obj.id === subscriber.apartmentId);
 				const currentOwner = ownerItems.find(obj => obj.id === subscriber.ownerId);
 				const currentHouse = houseItems.find(obj => obj.id === currentApart.houseId);
+				const houseName = `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}`;
 				return {
 					...subscriber,
 					ownerName: currentOwner.name,
-					apartmentName: `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}, кв. ${currentApart.apartmentNumber}`
+					houseId: currentHouse.id,
+					houseName,
+					apartmentName: `${houseName}, кв. ${currentApart.apartmentNumber}`
 				};
 			})
 		};

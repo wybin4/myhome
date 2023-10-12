@@ -17,6 +17,7 @@ import { NotificationController } from './controllers/notification/notification.
 import { SinglePaymentDocumentController } from './controllers/single-payment-document/single-payment-document.controller';
 import { PenaltyController } from './controllers/correction/penalty.controller';
 import { VotingController } from './controllers/voting/voting.controller';
+import { CBRController } from './controllers/correction/cbr.controller';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { VotingController } from './controllers/voting/voting.controller';
       NotificationController,
       SinglePaymentDocumentController,
       PenaltyController,
-      VotingController
+      VotingController,
+      CBRController
     ],
 })
 export class AppModule { }

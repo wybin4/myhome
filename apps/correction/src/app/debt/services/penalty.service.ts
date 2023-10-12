@@ -117,11 +117,12 @@ export class PenaltyService {
         // Получаем все правила вычисления пени
         const penaltyRules = await this.penaltyRuleService.getAllPenaltyRules();
         // Получаем ключевую ставку
-        let keyRateData: [{ period: Date, value: number }];
         if (!keyRate) {
             try {
-                keyRateData = await this.cbrService.getKeyRates(debtHistory.date, new Date());
-                keyRate = keyRateData[0].value;
+                keyRate = await this.cbrService.getKeyRate({
+                    startDate: debtHistory.date,
+                    endDate: new Date()
+                });
             } catch (e) {
                 throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
             }
@@ -182,13 +183,14 @@ export class PenaltyService {
         const penaltyRules = await this.penaltyRuleService.getAllPenaltyRules();
 
         // Получаем ключевую ставку
-        let keyRateData: [{ period: Date, value: number }];
         if (!keyRate) {
             const today = new Date();
             const lastMonth = new Date(today.setMonth(today.getMonth() - 1));
             try {
-                keyRateData = await this.cbrService.getKeyRates(lastMonth, today);
-                keyRate = keyRateData[0].value;
+                keyRate = await this.cbrService.getKeyRate({
+                    startDate: lastMonth,
+                    endDate: new Date()
+                });
             } catch (e) {
                 throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
             }

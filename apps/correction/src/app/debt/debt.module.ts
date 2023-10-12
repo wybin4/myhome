@@ -11,6 +11,7 @@ import { PenaltyRuleSeeder } from "./seeds/penalty-rule.seed";
 import { PenaltyController } from "./controllers/penalty.controller";
 import { PenaltyRule, PenaltyRuleSchema } from "./models/penalty-rule.model";
 import { PenaltyRuleRepository } from "./repositories/penalty-rule.repository";
+import { CBRController } from "./controllers/cbr.controller";
 
 @Module({
     imports: [
@@ -23,7 +24,7 @@ import { PenaltyRuleRepository } from "./repositories/penalty-rule.repository";
         DebtService, DebtRepository,
         PenaltyService, PenaltyRuleService, CBRService, PenaltyRuleRepository, PenaltyRuleSeeder
     ],
-    controllers: [DebtController, PenaltyController],
+    controllers: [DebtController, PenaltyController, CBRController],
     exports: [DebtRepository, PenaltyRuleRepository, PenaltyService, DebtService],
 })
 

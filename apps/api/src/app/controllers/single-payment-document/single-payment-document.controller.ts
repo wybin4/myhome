@@ -17,13 +17,11 @@ export class SinglePaymentDocumentController {
                 GetSinglePaymentDocument.Response
             >(GetSinglePaymentDocument.topic, dto);
             const pdf = Buffer.from(pdfBuffer, 'binary');
-            // Установка заголовков для отправки файла
             res.set({
                 'Content-Type': 'application/pdf',
                 'Content-Disposition': 'attachment; filename=example.pdf',
                 'Content-Length': pdf.length
             });
-            // Отправка PDF файла клиенту
             res.end(pdf);
         } catch (e) {
             CatchError(e);

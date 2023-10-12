@@ -76,6 +76,7 @@ export * from './lib/correction/penalty/correction.add-penalty-calculation-rule'
 export * from './lib/correction/penalty/correction.get-penalty-calculation-rules-by-mcid';
 export * from './lib/correction/penalty/correction.add-penalty';
 export * from './lib/correction/correction.get-correction';
+export * from './lib/correction/cbr/correction.get-key-rate';
 
 export * from './lib/payment/payment.get-payment-link';
 

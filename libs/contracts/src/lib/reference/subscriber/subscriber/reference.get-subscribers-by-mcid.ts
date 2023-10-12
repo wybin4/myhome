@@ -16,5 +16,8 @@ export namespace ReferenceGetSubscribersByMCId {
 
 export interface IGetSubscribersByMCId extends ISubscriber {
     ownerName: string;
+    
+    houseId: number;
+    houseName: string;
     apartmentName: string;
 }

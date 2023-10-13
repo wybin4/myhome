@@ -1,11 +1,11 @@
-export interface ISpdSubscriber {
-    id: number; name: string; address: string; personalAccount: string; apartmentArea: number; livingArea: number; numberOfRegistered: number;
-}
+import { ISubscriberAllInfo } from "@myhome/interfaces";
+
+export type ISpdSubscriber = ISubscriberAllInfo;
 
 export interface ISpdManagementCompany {
     name: string; address: string; phone: string; email: string;
 }
 
 export interface ISpdHouse {
-    livingArea: number; noLivingArea: number; commonArea: number;
+    id: number; livingArea: number; noLivingArea: number; commonArea: number;
 }

@@ -1,5 +1,5 @@
 export interface ISpdQR {
-    qrCodeBuffer: Buffer; qrCodeX: number; qrCodeY: number; qrCodeSize: number;
+    qrCodeBuffer: Buffer; qrCodeX: number; qrCodeY: number; qrCodeSize: number; subscriberId: number;
 };
 
 export interface ISpdBarcode {

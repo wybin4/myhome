@@ -1,18 +1,22 @@
-import { RequireHomeOrManagementCompany } from "@myhome/interfaces";
+import { RequireSubscriberIdsOrHouseIds } from "@myhome/interfaces";
 import { IsArray, IsNumber, IsOptional } from "class-validator";
 
 export namespace GetSinglePaymentDocument {
     export const topic = 'single-payment-document.get-single-payment-document.command';
 
     export class Request {
+        @IsOptional()
         @IsArray()
-        subscriberIds!: number[];
+        @RequireSubscriberIdsOrHouseIds()
+        subscriberIds?: number[];
 
-        @RequireHomeOrManagementCompany()
-        managementCompanyId?: number;
+        @IsOptional()
+        @IsArray()
+        @RequireSubscriberIdsOrHouseIds()
+        houseIds?: number[];
 
-        @RequireHomeOrManagementCompany()
-        houseId?: number;
+        @IsNumber()
+        managementCompanyId!: number;
 
         @IsOptional()
         @IsNumber()

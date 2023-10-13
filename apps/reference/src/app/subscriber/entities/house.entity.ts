@@ -44,6 +44,7 @@ export class HouseEntity implements IHouse {
 
     public get(): IHouse {
         return {
+            id: this.id,
             managementCompanyId: this.managementCompanyId,
             city: this.city,
             street: this.street,

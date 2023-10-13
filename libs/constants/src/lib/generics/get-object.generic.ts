@@ -41,7 +41,7 @@ export async function getGenericObjects<T extends GenericEntity>(
     createInstance: (item: T) => T,
     ids: number[],
     error: { message: string; status: HttpStatus },
-): Promise<IEntity[] | undefined> {
+): Promise<T[] | undefined> {
     if (repository.findMany) {
         const tItems = await repository.findMany(ids);
         if (!tItems.length) {
@@ -49,7 +49,7 @@ export async function getGenericObjects<T extends GenericEntity>(
         }
         const gettedTNs = [];
         for (const tItem of tItems) {
-            gettedTNs.push(createInstance(tItem).get());
+            gettedTNs.push(createInstance(tItem));
         }
         return gettedTNs;
     } else return undefined;

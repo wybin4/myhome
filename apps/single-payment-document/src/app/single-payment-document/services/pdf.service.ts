@@ -17,6 +17,19 @@ export class PdfService {
     private arialBold = join(__dirname, '.', 'assets', 'Arial-Bold.ttf');
     private arial = join(__dirname, '.', 'assets', 'Arial.ttf');
 
+    private formatPeriod(date: Date) {
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${month}.${year}`;
+    }
+
+    private formatDate(date: Date) {
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${year}-${month}-${day}`;
+    }
+
     public getFixed(value: number, fix: number) {
         if (Number(value) && Number(value) !== 0) {
             return Number(value).toFixed(fix);
@@ -40,62 +53,81 @@ export class PdfService {
         } else return undefined;
     }
 
-    async generatePdf(
-        house: ISpdHouse, managementC: ISpdManagementCompany, subscribers: ISpdSubscriber[],
+    private getMeterReadingsWithHouse(
+        subscribers: ISpdSubscriber[],
+        meterReadingsData: ISpdMeterReadings[],
+        houses: ISpdHouse[]
+    ) {
+        const allReadings: ISpdReadings[] = [];
+        // Для каждого subscriberId
+        for (const meterReadings of meterReadingsData) {
+            const currentSubscriber = subscribers.find(obj => obj.id === meterReadings.subscriberId);
+            const currentHouse = houses.find(obj => obj.id === currentSubscriber.houseId);
+
+            const reading: ISpdReading[] = [];
+            for (const meterReading of meterReadings.readings) {
+                const individualReadingString = meterReading.individualReadings.reading;
+                const commonReadingString = meterReading.commonReadings.reading;
+                reading.push(
+                    { reading: meterReading.typeOfServiceName, readingAlign: 'left' },
+                    { reading: individualReadingString, readingAlign: 'left' },
+                    { reading: this.getFixed(meterReading.individualReadings.difference, 3), readingAlign: 'right' },
+                    { reading: meterReading.unitName, readingAlign: 'center' },
+                    { reading: `${currentSubscriber.livingArea}/${currentHouse.livingArea}`, readingAlign: 'right' },
+                    { reading: this.getFixed(meterReading.norm.individual, 3), readingAlign: 'right' },
+                    { reading: this.getFixed(meterReading.norm.common, 3), readingAlign: 'right' },
+                    { reading: commonReadingString, readingAlign: 'left' },
+                    { reading: this.getFixed(meterReading.commonReadings.difference, 3), readingAlign: 'right' },
+                    { reading: this.getFixed(meterReading.totalVolume, 3), readingAlign: 'right' },
+                )
+            }
+            allReadings.push({
+                readings: reading,
+                subscriberId: currentSubscriber.id
+            });
+        };
+        return allReadings;
+    }
+
+    private getMeterReadings(
+        subscribers: ISpdSubscriber[],
+        meterReadingsData: ISpdMeterReadings[],
+        livingArea: number
+    ) {
+        const allReadings: ISpdReadings[] = [];
+        // Для каждого subscriberId
+        for (const meterReadings of meterReadingsData) {
+            const currentSubscriber = subscribers.find(obj => obj.id === meterReadings.subscriberId);
+
+            const reading: ISpdReading[] = [];
+            for (const meterReading of meterReadings.readings) {
+                const individualReadingString = meterReading.individualReadings.reading;
+                const commonReadingString = meterReading.commonReadings.reading;
+                reading.push(
+                    { reading: meterReading.typeOfServiceName, readingAlign: 'left' },
+                    { reading: individualReadingString, readingAlign: 'left' },
+                    { reading: this.getFixed(meterReading.individualReadings.difference, 3), readingAlign: 'right' },
+                    { reading: meterReading.unitName, readingAlign: 'center' },
+                    { reading: `${currentSubscriber.livingArea}/${livingArea}`, readingAlign: 'right' },
+                    { reading: this.getFixed(meterReading.norm.individual, 3), readingAlign: 'right' },
+                    { reading: this.getFixed(meterReading.norm.common, 3), readingAlign: 'right' },
+                    { reading: commonReadingString, readingAlign: 'left' },
+                    { reading: this.getFixed(meterReading.commonReadings.difference, 3), readingAlign: 'right' },
+                    { reading: this.getFixed(meterReading.totalVolume, 3), readingAlign: 'right' },
+                )
+            }
+            allReadings.push({
+                readings: reading,
+                subscriberId: currentSubscriber.id
+            });
+        };
+        return allReadings;
+    }
+
+    private getServices(
         detailsInfo: ISpdDetailInfo[],
-        SPDs: ISpd[], meterReadingsData: ISpdMeterReadings[]
-    ): Promise<Buffer> {
-        const qrCodeText = "ST00012|Name=ООО 'Служба 100'|PersonalAcc=40703810552090063242|BankName=Юго-Западный Банк ПАО 'Сбербанк России'|BIC=046025302|CorrespAcc=30102110600000000602|Sum=171505|PayeeINN=6368082584|DocDate=2023-07-28|lastName=ИВАНОВ|firstName=ИВАН|middleName=ИВАНОВИЧ|payerAddress=Малюгина, дом № 14, кв. 125|persAcc=97472855|paymPeriod=07.2023|category=0|serviceName=30581|Fine=0";
-        // Генерация QR-кода в виде Buffer
-        const qr: ISpdQR = {
-            qrCodeBuffer: await this.generateQRCodeBuffer(qrCodeText),
-            qrCodeSize: 156,
-            qrCodeX: 55,
-            qrCodeY: 200,
-        }
-
-        const barcodeText = '589744282507230181505';
-        const barcode: ISpdBarcode = {
-            barcodeText: barcodeText,
-            barcodeBuffer: await this.generateBarcodeBuffer(barcodeText),
-            barCodeSizeX: 230,
-            barCodeSizeY: 42,
-            barCodeX: 830,
-            barCodeY: 103,
-        }
-
-        const operator: ISpdOperator = {
-            operatorTextHigh: `ОПЕРАТОР ПО РАСЧЕТУ ПЛАТЕЖЕЙ: ООО 'Служба 100' ИНН/КПП 6168086584 / 616801001
-р/сч 42712810522090113212 в Юго-Западный Банк ПАО 'Сбербанк России' БИК 046015632 к/с 30102810610000000602`,
-            operatorTextLow: `Оператор по расчету платежей: ООО 'Служба 100' ИНН/КПП 6168086584 / 616801001
-р/сч 42712810522090113212 в Юго-Западный Банк ПАО 'Сбербанк России' БИК 046015632 к/с 30102810610000000602`
-        }
-
-        // const subscriber: ISpdSubscriber = {
-        //     name: 'ИВАНОВ ИВАН ИВАНОВИЧ',
-        //     address: 'Малюгина, дом № 15, кв. 145',
-        //     personalAccount: '97442835',
-        //     apartmentArea: 65.4,
-        //     livingArea: 56.7,
-        //     numberOfRegistered: 2,
-        // }
-
-        // const managementC: ISpdManagementCompany = {
-        //     name: "ООО 'УК Мой дом'",
-        //     address: 'Малюгина, дом № 15',
-        //     phone: '242-23-95',
-        //     email: 'myhouse@mail.ru'
-        // }
-
-        // const spd: ISpd = {
-        //     amount: 1582.71, month: 'Август 2023 г.', penalty: 0, deposit: 0, debt: 0,
-        // }
-
-        const payment: ISpdPayment = {
-            amount: 1532.18,
-            payedAt: new Date('03.07.2023')
-        }
-
+        SPDs: ISpd[]
+    ) {
         // Проходимся по каждой детали с своим subscriberId
         const allSpdServices: { services: ISpdService[]; subscriberId: number; }[] = [];
         for (const detail of detailsInfo) {
@@ -148,95 +180,71 @@ export class PdfService {
                 subscriberId: detail.subscriberId,
             });
         }
-        // const services: ISpdService[] = [
-        //     {
-        //         title: 'Жилищные услуги',
-        //         titleColSpan: 4,
-        //         titleAlign: 'left',
-        //         titleBold: true,
-        //         servicesBold: true,
-        //         services: ['635.18', '231.41', '866.59', '', '', '866.59', '866.59']
-        //     },
-        //     {
-        //         title: 'СодОбщИмущ',
-        //         titleColSpan: 1,
-        //         titleAlign: 'left',
-        //         services: ['м2', '29.53', '', '7.31', '215.86', '', '215.86', '', '', '215.86', '215.86']
-        //     },
-        //     {
-        //         title: 'Коммунальные услуги',
-        //         titleColSpan: 4,
-        //         titleAlign: 'left',
-        //         titleBold: true,
-        //         servicesBold: true,
-        //         services: ['848.46', '', '848.46', '', '', '', '848.46', '848.46']
-        //     },
-        //     {
-        //         title: 'Итого к оплате за расчетный период:',
-        //         titleColSpan: 4,
-        //         titleAlign: 'right',
-        //         titleBold: true,
-        //         services: ['', '', '1715.05', 'x', '', '1715.05', '1715.05']
-        //     },
-        //     {
-        //         title: 'Всего с учетом пени:',
-        //         titleColSpan: 8,
-        //         titleAlign: 'right',
-        //         titleBold: true,
-        //         servicesBold: true,
-        //         services: ['1715.05', '1715.05']
-        //     },
-        // ];
-        const allReadings: ISpdReadings[] = [];
-        // Для каждого subscriberId
-        for (const meterReadings of meterReadingsData) {
-            const currentSubscriber = subscribers.find(obj => obj.id === meterReadings.subscriberId);
+        return allSpdServices;
+    }
 
-            const reading: ISpdReading[] = [];
-            for (const meterReading of meterReadings.readings) {
-                const individualReadingString = meterReading.individualReadings.reading;
-                const commonReadingString = meterReading.commonReadings.reading;
-                reading.push(
-                    { reading: meterReading.typeOfServiceName, readingAlign: 'left' },
-                    { reading: individualReadingString, readingAlign: 'left' },
-                    { reading: this.getFixed(meterReading.individualReadings.difference, 3), readingAlign: 'right' },
-                    { reading: meterReading.unitName, readingAlign: 'center' },
-                    { reading: `${currentSubscriber.livingArea}/${house.livingArea}`, readingAlign: 'right' },
-                    { reading: this.getFixed(meterReading.norm.individual, 3), readingAlign: 'right' },
-                    { reading: this.getFixed(meterReading.norm.common, 3), readingAlign: 'right' },
-                    { reading: commonReadingString, readingAlign: 'left' },
-                    { reading: this.getFixed(meterReading.commonReadings.difference, 3), readingAlign: 'right' },
-                    { reading: this.getFixed(meterReading.totalVolume, 3), readingAlign: 'right' },
-                )
-            }
-            allReadings.push({
-                readings: reading,
-                subscriberId: currentSubscriber.id
-            });
-        };
+    private async getQR(
+        subscriber: ISpdSubscriber,
+        amount: number
+    ): Promise<ISpdQR> {
+        const lastName = subscriber.name.split(" ")[0];
+        const firstName = subscriber.name.split(" ")[1];
+        const middleName = subscriber.name.split(" ")[2];
+        const bankData = "ST00012|Name=ООО 'Служба 100'|PersonalAcc=40703810552090063242|BankName=Юго-Западный Банк ПАО 'Сбербанк России'|BIC=046025302|CorrespAcc=30102110600000000602"
+        const sum = `Sum=${amount}|PayeeINN=6368082584|DocDate=${this.formatDate(new Date())}`;
+        const name = `lastName=${lastName}|firstName=${firstName}|middleName=${middleName}`;
+        const accountData = `payerAddress=${subscriber.address}|persAcc=${subscriber.personalAccount}`;
+        const additional = `paymPeriod=${this.formatPeriod(new Date())}|category=0|serviceName=30581|Fine=0`;
+        const qrCodeText = [bankData, sum, name, accountData, additional].join("|");
+        // Генерация QR-кода в виде Buffer
+        return {
+            qrCodeBuffer: await this.generateQRCodeBuffer(qrCodeText),
+            qrCodeSize: 156,
+            qrCodeX: 55,
+            qrCodeY: 200,
+            subscriberId: subscriber.id
+        }
+    }
 
-        // const readings: ISpdReading[][] = [[
-        //     {
-        //         reading: 'Теп.эн.СОИД',
-        //         readingAlign: 'left',
-        //     }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
-        //     {
-        //         reading: 'Гкал',
-        //         readingAlign: 'center',
-        //     },
-        //     {
-        //         reading: '29.53/2299.2',
-        //         readingAlign: 'right',
-        //     }, { reading: '', readingAlign: 'left' },
-        //     {
-        //         reading: '0.001',
-        //         readingAlign: 'right',
-        //     },
-        //     {
-        //         reading: '0.594',
-        //         readingAlign: 'right',
-        //     }, { reading: '', readingAlign: 'left' }, { reading: '', readingAlign: 'left' },
-        // ]];
+    private async getQRS(subscribers: ISpdSubscriber[], SPDs: ISpd[]) {
+        const qrs: ISpdQR[] = [];
+        for (const subscriber of subscribers) {
+            const currentSPD = SPDs.find(obj => obj.subscriberId === subscriber.id);
+            qrs.push(await this.getQR(subscriber, currentSPD.amount));
+        }
+        return qrs;
+    }
+
+    async generatePdfByHouses(
+        houses: ISpdHouse[], managementC: ISpdManagementCompany, subscribers: ISpdSubscriber[],
+        detailsInfo: ISpdDetailInfo[],
+        SPDs: ISpd[], meterReadingsData: ISpdMeterReadings[]
+    ): Promise<Buffer> {
+        const barcodeText = '589744282507230181505';
+        const barcode: ISpdBarcode = {
+            barcodeText: barcodeText,
+            barcodeBuffer: await this.generateBarcodeBuffer(barcodeText),
+            barCodeSizeX: 230,
+            barCodeSizeY: 42,
+            barCodeX: 830,
+            barCodeY: 103,
+        }
+
+        const operator: ISpdOperator = {
+            operatorTextHigh: `ОПЕРАТОР ПО РАСЧЕТУ ПЛАТЕЖЕЙ: ООО 'Служба 100' ИНН/КПП 6168086584 / 616801001
+р/сч 42712810522090113212 в Юго-Западный Банк ПАО 'Сбербанк России' БИК 046015632 к/с 30102810610000000602`,
+            operatorTextLow: `Оператор по расчету платежей: ООО 'Служба 100' ИНН/КПП 6168086584 / 616801001
+р/сч 42712810522090113212 в Юго-Западный Банк ПАО 'Сбербанк России' БИК 046015632 к/с 30102810610000000602`
+        }
+
+        const payment: ISpdPayment = {
+            amount: 1532.18,
+            payedAt: new Date('03.07.2023')
+        }
+
+        const meterReadings = this.getMeterReadingsWithHouse(subscribers, meterReadingsData, houses);
+        const services = this.getServices(detailsInfo, SPDs);
+        const qrs = await this.getQRS(subscribers, SPDs);
 
         try {
             const pdfBuffer: Buffer = await new Promise(resolve => {
@@ -248,13 +256,15 @@ export class PdfService {
 
                     const currentSPD = SPDs.find(obj => obj.subscriberId === subscriber.id);
 
+                    const currentQR = qrs.find(obj => obj.subscriberId === subscriber.id);
                     const top = new Top(this.arial, this.arialBold, doc);
-                    top.getTop(qr, barcode, operator, subscriber, managementC, currentSPD);
+                    top.getTop(currentQR, barcode, operator, subscriber, managementC, currentSPD);
 
-                    const currentService = allSpdServices.find(obj => obj.subscriberId === subscriber.id);
-                    const currentReadings = allReadings.find(obj => obj.subscriberId === subscriber.id);
+                    const currentService = services.find(obj => obj.subscriberId === subscriber.id);
+                    const currentReadings = meterReadings.find(obj => obj.subscriberId === subscriber.id);
+                    const currentHouse = houses.find(obj => obj.id === subscriber.houseId);
                     const bottom = new Bottom(this.arial, this.arialBold, doc, currentService.services, currentReadings.readings);
-                    bottom.getLow(operator, barcodeText, subscriber, currentSPD, house, payment);
+                    bottom.getLow(operator, barcodeText, subscriber, currentSPD, currentHouse, payment);
 
                     if (count != subscribers.length) {
                         doc.addPage();

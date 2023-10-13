@@ -1,5 +1,5 @@
 export interface IHouse {
-    id?: number;
+    id: number;
     managementCompanyId: number;
     city: string;
     street: string;

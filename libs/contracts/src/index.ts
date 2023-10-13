@@ -8,6 +8,7 @@ export * from './lib/account/account.change-profile';
 export * from './lib/reference/subscriber/house/reference.add-house';
 export * from './lib/reference/subscriber/house/reference.update-house';
 export * from './lib/reference/subscriber/house/reference.get-house';
+export * from './lib/reference/subscriber/house/reference.get-houses';
 export * from './lib/reference/subscriber/house/reference.get-houses-by-mcid';
 
 export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-subscribers';
@@ -20,7 +21,8 @@ export * from './lib/reference/subscriber/subscriber/reference.add-subscriber';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscriber';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-all-info';
-export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-house';
+export * from './lib/reference/subscriber/subscriber/reference.get-subscriber-ids-by-house';
+export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-houses';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-mcid';
 export * from './lib/reference/subscriber/subscriber/reference.get-owners-by-mcid';
 export * from './lib/reference/subscriber/subscriber/reference.get-management-company';

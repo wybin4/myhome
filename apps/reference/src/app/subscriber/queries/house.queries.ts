@@ -2,7 +2,7 @@ import { Body, Controller } from '@nestjs/common';
 import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 import { HouseService } from '../services/house.service';
-import { ReferenceGetHouse, ReferenceGetHousesByMCId } from '@myhome/contracts';
+import { ReferenceGetHouse, ReferenceGetHouses, ReferenceGetHousesByMCId } from '@myhome/contracts';
 
 @Controller()
 export class HouseQueries {
@@ -15,6 +15,16 @@ export class HouseQueries {
     async getHouse(@Body() { id }: ReferenceGetHouse.Request) {
         try {
             return await this.houseService.getHouse(id);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
+    }
+
+    @RMQValidate()
+    @RMQRoute(ReferenceGetHouses.topic)
+    async getHouses(@Body() { houseIds }: ReferenceGetHouses.Request) {
+        try {
+            return await this.houseService.getHouses(houseIds);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { GetCommonHouseNeeds, ReferenceGetAllTariffs, ReferenceGetAllTypesOfService, ReferenceGetApartmentsBySubscribers, ReferenceGetHouse, ReferenceGetMeterReadingByHID, ReferenceGetSubscribersByHouse } from "@myhome/contracts";
+import { GetCommonHouseNeeds, ReferenceGetAllTariffs, ReferenceGetAllTypesOfService, ReferenceGetApartmentsBySubscribers, ReferenceGetHouse, ReferenceGetMeterReadingByHID, ReferenceGetSubscriberIdsByHouse } from "@myhome/contracts";
 import { CANT_GET_SUBSCRIBERS_BY_HOUSE_ID, FAILED_TO_GET_INDIVIDUAL_READINGS, HOUSE_NOT_EXIST, RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { PublicUtilityService } from "../public-utility/public-utility.service";
 import { ICommonHouseNeedTariff, IGetCommonHouseNeed, IGetDocumentDetail, IGetMeterData, Reading, TariffAndNormType } from "@myhome/interfaces";
@@ -130,8 +130,8 @@ export class CommonHouseNeedService {
 
     private async getSubscriberIdsByHouse(houseId: number) {
         try {
-            return await this.rmqService.send<ReferenceGetSubscribersByHouse.Request, ReferenceGetSubscribersByHouse.Response>(
-                ReferenceGetSubscribersByHouse.topic, { houseId }
+            return await this.rmqService.send<ReferenceGetSubscriberIdsByHouse.Request, ReferenceGetSubscriberIdsByHouse.Response>(
+                ReferenceGetSubscriberIdsByHouse.topic, { houseId }
             );
         } catch (e) {
             throw new RMQException(HOUSE_NOT_EXIST.message(houseId), HOUSE_NOT_EXIST.status);

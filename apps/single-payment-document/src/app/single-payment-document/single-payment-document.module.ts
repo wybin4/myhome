@@ -3,10 +3,10 @@ import { SinglePaymentDocumentController } from "./single-payment-document.contr
 import { SinglePaymentDocumentService } from "./services/single-payment-document.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { SinglePaymentDocumentEntity } from "./entities/single-payment-document.entity";
-import { SinglePaymentDocumentRepository } from "./single-payment-document.repository";
 import { PdfService } from "./services/pdf.service";
 import { SinglePaymentDocumentTotalRepository } from "./repositories/total.repository";
 import { SinglePaymentDocumentTotalEntity } from "./entities/total.entity";
+import { SinglePaymentDocumentRepository } from "./repositories/single-payment-document.repository";
 
 @Module({
     imports: [

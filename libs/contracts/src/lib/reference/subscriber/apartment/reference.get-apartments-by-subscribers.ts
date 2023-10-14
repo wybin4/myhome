@@ -10,6 +10,10 @@ export namespace ReferenceGetApartmentsBySubscribers {
     }
 
     export class Response {
-        apartments!: (IApartment & { subscriber: ISubscriber })[];
+        apartments!: IGetApartmentsBySubscribers[];
     }
+}
+
+interface IGetApartmentsBySubscribers extends IApartment{
+    subscriber: ISubscriber;
 }

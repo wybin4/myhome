@@ -2,7 +2,7 @@ import { ISinglePaymentDocument } from "@myhome/interfaces";
 import { IsNumber } from "class-validator";
 
 export namespace CheckSinglePaymentDocument {
-    export const topic = 'single-payment-document.check-single-payment-document.command';
+    export const topic = 'single-payment-document.check-single-payment-document.query';
 
     export class Request {
         @IsNumber()
@@ -10,6 +10,6 @@ export namespace CheckSinglePaymentDocument {
     }
 
     export class Response {
-        singlePaymentDocument!: ISinglePaymentDocument[];
+        singlePaymentDocument!: ISinglePaymentDocument;
     }
 }

@@ -17,3 +17,13 @@ export class GetSinglePaymentDocumentDto {
     @IsNumber()
     keyRate?: number;
 }
+
+export class GetSinglePaymentDocumentsByMCIdDto {
+    @IsNumber()
+    managementCompanyId!: number;
+}
+
+export class GetSinglePaymentDocumentsBySIdDto {
+    @IsArray()
+    subscriberIds!: number[];
+}

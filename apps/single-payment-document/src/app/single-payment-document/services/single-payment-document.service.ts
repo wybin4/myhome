@@ -1,10 +1,9 @@
-import { AccountUserInfo, CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, ReferenceGetHouses, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
+import {  CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByMCId, GetSinglePaymentDocumentsBySId, ReferenceGetApartmentsAllInfo, ReferenceGetHouses, ReferenceGetHousesByMCId, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { SinglePaymentDocumentRepository } from "../single-payment-document.repository";
 import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
 import { CalculationState, ISubscriberAllInfo, ITypeOfService, IUnit, UserRole } from "@myhome/interfaces";
-import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, HOUSES_NOT_EXIST, MANAG_COMP_NOT_EXIST, RMQException, SUBSCRIBERS_NOT_EXIST, getCommon } from "@myhome/constants";
+import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, CANT_GET_SPDS, HOUSES_NOT_EXIST, RMQException, SUBSCRIBERS_NOT_EXIST, checkUser, getCommon } from "@myhome/constants";
 import { GetSinglePaymentDocumentSaga } from "../sagas/get-single-payment-document.saga";
 import { PdfService } from "./pdf.service";
 import { ISpdHouse, ISpdManagementCompany, ISpdSubscriber } from "../interfaces/subscriber.interface";
@@ -12,6 +11,7 @@ import { ISpd, ISpdDetailInfo } from "../interfaces/single-payment-document.inte
 import { ISpdMeterReadings } from "../interfaces/reading-table.interface";
 import { SinglePaymentDocumentTotalRepository } from "../repositories/total.repository";
 import { SinglePaymentDocumentTotalEntity } from "../entities/total.entity";
+import { SinglePaymentDocumentRepository } from "../repositories/single-payment-document.repository";
 
 @Injectable()
 export class SinglePaymentDocumentService {
@@ -22,8 +22,72 @@ export class SinglePaymentDocumentService {
         private readonly pdfService: PdfService
     ) { }
 
+    async getSinglePaymentDocumentsByMCId(dto: GetSinglePaymentDocumentsByMCId.Request):
+        Promise<GetSinglePaymentDocumentsByMCId.Response> {
+        await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
+        const { houses } = await this.getHousesByMCId(dto.managementCompanyId);
+        const spds = await this.totalRepository.findByMCId(dto.managementCompanyId);
+        if (!spds) {
+            throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
+        }
+
+        const files = spds.map(s => {
+            return {
+                id: s.id,
+                fileName: s.path
+            };
+        });
+
+        const readFiles = await this.pdfService.readFileToBuffer(files);
+
+        return {
+            singlePaymentDocuments: readFiles.map(file => {
+                const currentSPD = spds.find(s => s.id === file.id);
+                const currentHouse = houses.find(h => h.managementCompanyId === currentSPD.managementCompanyId);
+
+                return {
+                    houseId: currentHouse.id,
+                    houseName: `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}`,
+                    fileSize: file.size,
+                    pdfBuffer: (file.buffer).toString('base64'),
+                    createdAt: currentSPD.createdAt
+                };
+            })
+        };
+    }
+
+    async getSinglePaymentDocumentsBySId(dto: GetSinglePaymentDocumentsBySId.Request) {
+        const { apartments } = await this.getApartmentsAllInfo(dto.subscriberIds);
+        const spds = await this.singlePaymentDocumentRepository.findBySIds(dto.subscriberIds);
+        if (!spds) {
+            throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
+        }
+        const files = spds.map(s => {
+            return {
+                id: s.id,
+                fileName: s.path
+            };
+        });
+
+        const readFiles = await this.pdfService.readFileToBuffer(files);
+
+        return {
+            singlePaymentDocuments: readFiles.map(file => {
+                const currentSPD = spds.find(s => s.id === file.id);
+                const currentSubscriber = apartments.find(s => s.subscriberId === currentSPD.subscriberId);
+
+                return {
+                    apartmentName: currentSubscriber.address,
+                    fileSize: file.size,
+                    pdfBuffer: (file.buffer).toString('base64'),
+                    createdAt: currentSPD.createdAt
+                };
+            })
+        };
+    }
+
     async checkSinglePaymentDocument({ id }: CheckSinglePaymentDocument.Request) {
-        const singlePaymentDocument = await this.singlePaymentDocumentRepository.findSinglePaymentDocumentById(id);
+        const singlePaymentDocument = await this.singlePaymentDocumentRepository.findById(id);
         if (!singlePaymentDocument) {
             throw new RMQException(CANT_GET_SPD.message(id), CANT_GET_SPD.status);
         }
@@ -115,9 +179,9 @@ export class SinglePaymentDocumentService {
         }
     }
 
-    async getSinglePaymentDocument(dto: GetSinglePaymentDocument.Request): Promise<string> {
+    async getSinglePaymentDocument(dto: GetSinglePaymentDocument.Request): Promise<GetSinglePaymentDocument.Response> {
         // проверяем managementCompanyId
-        const { profile: managementC } = await this.getManagementC(dto.managementCompanyId);
+        const { profile: managementC } = await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
         const spdManagementC: ISpdManagementCompany = {
             name: managementC.name, address: 'address', phone: 'phone', email: managementC.email,
         }
@@ -176,7 +240,7 @@ export class SinglePaymentDocumentService {
                 createdAt: new Date()
             });
             await this.totalRepository.create(newTotalEntity);
-            return pdfBuffer.toString('binary');
+            return { pdfBuffer: pdfBuffer.toString('binary') };
         } else if (dto.subscriberIds) {
             let { subscribers } = (await this.getSubscribers(dto.subscriberIds));
             if (!subscribers.length) {
@@ -227,7 +291,7 @@ export class SinglePaymentDocumentService {
                 totalId
             );
 
-            return pdfBuffer.toString('binary');
+            return { pdfBuffer: pdfBuffer.toString('binary') };
         }
         else {
             throw new RMQException("Не было переданы ни houseIds, ни subscriberIds", HttpStatus.BAD_REQUEST);
@@ -295,16 +359,16 @@ export class SinglePaymentDocumentService {
         }
     }
 
-    private async getManagementC(managementCId: number) {
+    private async getHousesByMCId(managementCompanyId: number) {
         try {
             return await this.rmqService.send
                 <
-                    AccountUserInfo.Request,
-                    AccountUserInfo.Response
+                    ReferenceGetHousesByMCId.Request,
+                    ReferenceGetHousesByMCId.Response
                 >
-                (AccountUserInfo.topic, { id: managementCId, role: UserRole.ManagementCompany });
+                (ReferenceGetHousesByMCId.topic, { managementCompanyId });
         } catch (e) {
-            throw new RMQException(MANAG_COMP_NOT_EXIST, HttpStatus.NOT_FOUND);
+            throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
         }
     }
 
@@ -317,7 +381,20 @@ export class SinglePaymentDocumentService {
                 >
                 (ReferenceGetSubscribersAllInfo.topic, { ids: subscriberIds });
         } catch (e) {
-            throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
+            throw new RMQException(e.message, e.status);
+        }
+    }
+
+    private async getApartmentsAllInfo(subscriberIds: number[]): Promise<ReferenceGetApartmentsAllInfo.Response> {
+        try {
+            return await this.rmqService.send
+                <
+                    ReferenceGetApartmentsAllInfo.Request,
+                    ReferenceGetApartmentsAllInfo.Response
+                >
+                (ReferenceGetApartmentsAllInfo.topic, { subscriberIds });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
         }
     }
 }

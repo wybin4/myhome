@@ -1,5 +1,5 @@
-import { getGenericObject, APART_NOT_EXIST, RMQException, HOUSE_NOT_EXIST, APART_ALREADY_EXIST, addGenericObject, HOUSES_NOT_EXIST, checkUser } from "@myhome/constants";
-import { ReferenceAddApartment, ReferenceGetApartmentsByMCId } from "@myhome/contracts";
+import { getGenericObject, APART_NOT_EXIST, RMQException, HOUSE_NOT_EXIST, APART_ALREADY_EXIST, addGenericObject, HOUSES_NOT_EXIST, checkUser, SUBSCRIBERS_NOT_EXIST, APARTS_NOT_EXIST } from "@myhome/constants";
+import { ReferenceAddApartment, ReferenceGetApartmentsAllInfo, ReferenceGetApartmentsByMCId } from "@myhome/contracts";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { ApartmentEntity } from "../entities/apartment.entity";
 import { ApartmentRepository } from "../repositories/apartment.repository";
@@ -48,10 +48,53 @@ export class ApartmentService {
 		};
 	}
 
+	async getApartmentsAllInfo(subscriberIds: number[]): Promise<ReferenceGetApartmentsAllInfo.Response> {
+		const subscribers = await this.subscriberRepository.findMany(subscriberIds);
+		if (!subscribers) {
+			throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
+		}
+		const apartmentIds = subscribers.map(obj => obj.apartmentId);
+		const apartments = await this.apartmentRepository.findWithSubscribers(apartmentIds);
+		if (!apartments) {
+			throw new RMQException(APARTS_NOT_EXIST.message, APARTS_NOT_EXIST.status);
+		}
+		const houseIds = apartments.map(apartment => apartment.houseId);
+		const houses = await this.houseRepository.findMany(houseIds);
+		if (!houses) {
+			throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
+		}
+
+		return {
+			apartments: apartments.map((apartment) => {
+				const currentHouse = houses.find(house => house.id === apartment.houseId);
+				const currentSubscriber = subscribers.find(s => s.apartmentId === apartment.id);
+				return {
+					...apartment,
+					subscriberId: currentSubscriber.id,
+					address: `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}, кв. ${apartment.apartmentNumber}`
+				};
+			})
+		};
+	}
+
 	async getApartmentsBySubscribers(subscriberIds: number[]) {
 		const subscribers = await this.subscriberRepository.findMany(subscriberIds);
+		if (!subscribers) {
+			throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
+		}
 		const apartmentIds = subscribers.map(obj => obj.apartmentId);
-		return { apartments: await this.apartmentRepository.findWithSubscribers(apartmentIds) };
+		const apartments = await this.apartmentRepository.findWithSubscribers(apartmentIds);
+		if (!apartments) {
+			throw new RMQException(APARTS_NOT_EXIST.message, APARTS_NOT_EXIST.status);
+		}
+		return {
+			apartments: apartments.map((apartment) => {
+				return {
+					...apartment,
+					subscriber: subscribers.find(s => s.apartmentId === apartment.id)
+				};
+			})
+		};
 	}
 
 	async getApartmentsByMCId(managementCompanyId: number):

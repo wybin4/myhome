@@ -13,6 +13,7 @@ import { ISpdMeterReadings, ISpdReading, ISpdReadingColumn, ISpdReadings } from 
 import { isNumber } from 'class-validator';
 import * as fs from "fs";
 import * as path from "path";
+import { promisify } from 'util';
 
 @Injectable()
 export class PdfService {
@@ -254,6 +255,22 @@ export class PdfService {
 
         const bottom = new Bottom(this.arial, this.arialBold, doc, services, readings);
         bottom.getLow(operator, barcodeText, subscriber, spd, house, payment);
+    }
+
+    async readFileToBuffer(files: { fileName: string; id: number }[]) {
+        const readFileAsync = promisify(fs.readFile);
+        const getStatAsync = promisify(fs.stat);
+        const promises = files.map(async (file) => {
+            try {
+                const buffer = await readFileAsync(file.fileName);
+                const stat = await getStatAsync(file.fileName);
+                return { id: file.id, buffer, size: stat.size };
+            } catch (error) {
+                throw new RMQException("Ошибка при чтении файла", HttpStatus.BAD_REQUEST);
+            }
+        });
+
+        return Promise.all(promises);
     }
 
     private async uploadPdf(pdfBuffer: Buffer, uploadDirectory: string) {

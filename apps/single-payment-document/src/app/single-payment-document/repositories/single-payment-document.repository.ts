@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { IGetCorrection } from '@myhome/interfaces';
 import { SinglePaymentDocumentEntity } from '../entities/single-payment-document.entity';
 
@@ -11,7 +11,7 @@ export class SinglePaymentDocumentRepository {
         private readonly singlePaymentDocumentRepository: Repository<SinglePaymentDocumentEntity>,
     ) { }
 
-    async createSinglePaymentDocument(SinglePaymentDocument: SinglePaymentDocumentEntity) {
+    async create(SinglePaymentDocument: SinglePaymentDocumentEntity) {
         return this.singlePaymentDocumentRepository.save(SinglePaymentDocument);
     }
 
@@ -19,8 +19,12 @@ export class SinglePaymentDocumentRepository {
         return this.singlePaymentDocumentRepository.save(entities);
     }
 
-    async findSinglePaymentDocumentById(id: number) {
+    async findById(id: number) {
         return this.singlePaymentDocumentRepository.findOne({ where: { id } });
+    }
+
+    async findBySIds(subscriberIds: number[]) {
+        return this.singlePaymentDocumentRepository.find({ where: { subscriberId: In(subscriberIds) } });
     }
 
     async update(singlePaymentDocument: SinglePaymentDocumentEntity) {

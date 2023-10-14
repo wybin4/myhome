@@ -22,4 +22,8 @@ export class SinglePaymentDocumentTotalRepository {
         return this.singlePaymentDocumentTotalRepository.findOne({ where: { id } });
     }
 
+    async findByMCId(managementCompanyId: number) {
+        return this.singlePaymentDocumentTotalRepository.find({ where: { managementCompanyId } });
+    }
+
 }

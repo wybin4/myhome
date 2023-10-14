@@ -12,3 +12,7 @@ export const CANT_GET_SPD = {
     message: (spdId: number) => `Невозможно получить ЕПД с id=${spdId}`,
     status: HttpStatus.NOT_FOUND
 };
+export const CANT_GET_SPDS = {
+    message: "Невозможно получить ЕПД",
+    status: HttpStatus.NOT_FOUND
+};

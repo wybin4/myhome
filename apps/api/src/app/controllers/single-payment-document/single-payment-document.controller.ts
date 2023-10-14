@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post, Res } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
-import { GetSinglePaymentDocumentDto } from '../../dtos/single-payment-document/single-payment-document.dto';
-import { GetSinglePaymentDocument } from '@myhome/contracts';
+import { GetSinglePaymentDocumentDto, GetSinglePaymentDocumentsByMCIdDto, GetSinglePaymentDocumentsBySIdDto } from '../../dtos/single-payment-document/single-payment-document.dto';
+import { GetSinglePaymentDocument, GetSinglePaymentDocumentsByMCId, GetSinglePaymentDocumentsBySId } from '@myhome/contracts';
 
 @Controller('single-payment-document')
 export class SinglePaymentDocumentController {
@@ -26,7 +26,32 @@ export class SinglePaymentDocumentController {
         } catch (e) {
             CatchError(e);
         }
+    }
 
+    @HttpCode(200)
+    @Post('get-single-payment-documents-by-mcid')
+    async getSinglePaymentDocumentsByMCId(@Body() dto: GetSinglePaymentDocumentsByMCIdDto) {
+        try {
+            return await this.rmqService.send<
+                GetSinglePaymentDocumentsByMCId.Request,
+                GetSinglePaymentDocumentsByMCId.Response
+            >(GetSinglePaymentDocumentsByMCId.topic, dto);
+        } catch (e) {
+            CatchError(e);
+        }
+    }
+
+    @HttpCode(200)
+    @Post('get-single-payment-documents-by-sid')
+    async getSinglePaymentDocumentsBySId(@Body() dto: GetSinglePaymentDocumentsBySIdDto) {
+        try {
+            return await this.rmqService.send<
+                GetSinglePaymentDocumentsBySId.Request,
+                GetSinglePaymentDocumentsBySId.Response
+                >(GetSinglePaymentDocumentsBySId.topic, dto);
+        } catch (e) {
+            CatchError(e);
+        }
     }
 
 }

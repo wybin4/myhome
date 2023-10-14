@@ -1,14 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ValidationArguments, ValidationOptions, registerDecorator } from "class-validator";
 
-export interface ISinglePaymentDocument {
+export interface ISinglePaymentDocumentTotal {
     id?: number;
     managementCompanyId: number;
+    path: string;
+    createdAt: Date;
+}
+
+export interface ISinglePaymentDocument {
+    id?: number;
+    totalId?: number;
     subscriberId: number;
     amount?: number;
     debt?: number;
     penalty?: number;
     deposit?: number;
+    path?: string;
     createdAt: Date;
     status: CalculationState;
 }

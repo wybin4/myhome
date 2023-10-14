@@ -7,8 +7,8 @@ export class SinglePaymentDocumentEntity implements ISinglePaymentDocument {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ nullable: false })
-    managementCompanyId: number;
+    @Column({ nullable: true })
+    totalId?: number;
 
     @Column({ nullable: false })
     subscriberId: number;
@@ -24,6 +24,9 @@ export class SinglePaymentDocumentEntity implements ISinglePaymentDocument {
 
     @Column('double', { nullable: true })
     deposit?: number;
+
+    @Column({ nullable: true })
+    path?: string;
 
     @Column({ nullable: false })
     createdAt: Date;
@@ -44,12 +47,13 @@ export class SinglePaymentDocumentEntity implements ISinglePaymentDocument {
 
     public get() {
         return {
-            managementCompanyId: this.managementCompanyId,
+            totalId: this.totalId,
             subscriberId: this.subscriberId,
             amount: this.amount,
             debt: this.debt,
             penalty: this.penalty,
             deposit: this.deposit,
+            path: this.path,
             createdAt: this.createdAt
         }
     }
@@ -68,6 +72,12 @@ export class SinglePaymentDocumentEntity implements ISinglePaymentDocument {
         this.debt = debt;
         this.penalty = penalty;
         this.deposit = deposit;
+        return this;
+    }
+
+    public setTotal(totalId: number, path: string) {
+        this.totalId = totalId;
+        this.path = path;
         return this;
     }
 }

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SinglePaymentDocumentEntity } from './entities/single-payment-document.entity';
 import { IGetCorrection } from '@myhome/interfaces';
+import { SinglePaymentDocumentEntity } from '../entities/single-payment-document.entity';
 
 @Injectable()
 export class SinglePaymentDocumentRepository {

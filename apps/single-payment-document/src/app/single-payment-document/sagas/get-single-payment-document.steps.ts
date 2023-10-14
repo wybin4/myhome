@@ -1,5 +1,5 @@
 import { GetSinglePaymentDocumentSagaState } from "./get-single-payment-document.state";
-import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
+import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
 import { CANT_ADD_DOCUMENT_DETAILS, RMQException } from "@myhome/constants";
 import { HttpStatus } from "@nestjs/common";
 import { CalculationState, IDocumentDetail, IFullDocumentDetail, IFullMeterData, IGetCorrection, IGetDocumentDetail, IGetMeterData, ITypeOfService, IUnit, Reading } from "@myhome/interfaces";

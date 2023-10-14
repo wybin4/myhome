@@ -1,5 +1,5 @@
 import { GetSinglePaymentDocumentSaga } from "./get-single-payment-document.saga";
-import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
+import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
 import { IGetCorrection, ITypeOfService, IUnit } from "@myhome/interfaces";
 import { ISpdDetailInfo } from "../interfaces/single-payment-document.interface";
 import { ISpdMeterReadings } from "../interfaces/reading-table.interface";

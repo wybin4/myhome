@@ -1,8 +1,8 @@
-import { AccountUserInfo, CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, ReferenceGetHouses, ReferenceGetSubscribersAllInfo, ReferenceGetSubscriberIdsByHouse, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
+import { AccountUserInfo, CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, ReferenceGetHouses, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentRepository } from "../single-payment-document.repository";
-import { SinglePaymentDocumentEntity } from "../single-payment-document.entity";
+import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
 import { CalculationState, ISubscriberAllInfo, ITypeOfService, IUnit, UserRole } from "@myhome/interfaces";
 import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, HOUSES_NOT_EXIST, MANAG_COMP_NOT_EXIST, RMQException, SUBSCRIBERS_NOT_EXIST, getCommon } from "@myhome/constants";
 import { GetSinglePaymentDocumentSaga } from "../sagas/get-single-payment-document.saga";
@@ -10,12 +10,15 @@ import { PdfService } from "./pdf.service";
 import { ISpdHouse, ISpdManagementCompany, ISpdSubscriber } from "../interfaces/subscriber.interface";
 import { ISpd, ISpdDetailInfo } from "../interfaces/single-payment-document.interface";
 import { ISpdMeterReadings } from "../interfaces/reading-table.interface";
+import { SinglePaymentDocumentTotalRepository } from "../repositories/total.repository";
+import { SinglePaymentDocumentTotalEntity } from "../entities/total.entity";
 
 @Injectable()
 export class SinglePaymentDocumentService {
     constructor(
         private readonly rmqService: RMQService,
         private readonly singlePaymentDocumentRepository: SinglePaymentDocumentRepository,
+        private readonly totalRepository: SinglePaymentDocumentTotalRepository,
         private readonly pdfService: PdfService
     ) { }
 
@@ -41,7 +44,6 @@ export class SinglePaymentDocumentService {
         for (const subscriberId of subscriberIds) {
             const SPDEntity =
                 new SinglePaymentDocumentEntity({
-                    managementCompanyId: managementCompanyId,
                     subscriberId: subscriberId,
                     createdAt: new Date(),
                     status: CalculationState.Started
@@ -103,7 +105,10 @@ export class SinglePaymentDocumentService {
                 };
             });
 
-            return { SPDs, detailsInfo, meterReadingsData };
+            return {
+                SPDs, SPDEntities: singlePaymentDocumentsWithCorrection,
+                detailsInfo, meterReadingsData
+            };
         } catch (e) {
             await this.revertCalculateDetails(detailIds);
             throw new RMQException(e.message, e.status);
@@ -111,6 +116,7 @@ export class SinglePaymentDocumentService {
     }
 
     async getSinglePaymentDocument(dto: GetSinglePaymentDocument.Request): Promise<string> {
+        // проверяем managementCompanyId
         const { profile: managementC } = await this.getManagementC(dto.managementCompanyId);
         const spdManagementC: ISpdManagementCompany = {
             name: managementC.name, address: 'address', phone: 'phone', email: managementC.email,
@@ -118,18 +124,21 @@ export class SinglePaymentDocumentService {
 
         const allDetailsInfo: ISpdDetailInfo[] = [];
         const allSPDs: ISpd[] = [];
+        const allSPDEntities: SinglePaymentDocumentEntity[] = [];
         const allMeterReadings: ISpdMeterReadings[] = [];
 
+        // получаем виды услуг и единицы измерения
         const { typesOfService, units } = await getCommon(this.rmqService);
 
+        // если ЕПД нужны по домам
         if (dto.houseIds) {
             const spdHouses: ISpdHouse[] = [];
             const subscribers: ISpdSubscriber[] = [];
 
+            // получаем дома и абонентов в них
             const { houses } = await this.getSubscribersByHouses(dto.houseIds);
-
             for (const house of houses) {
-                const { detailsInfo, SPDs, meterReadingsData } =
+                const { detailsInfo, SPDs, SPDEntities, meterReadingsData } =
                     await this.getSinglePaymentDocumentForOneHouse(
                         house.subscribers, house.house.id,
                         dto.managementCompanyId, dto.keyRate,
@@ -151,14 +160,23 @@ export class SinglePaymentDocumentService {
 
                 allDetailsInfo.push(...detailsInfo);
                 allSPDs.push(...SPDs);
+                allSPDEntities.push(...SPDEntities);
                 allMeterReadings.push(...meterReadingsData);
             }
 
-            return (await this.pdfService.generatePdfByHouses(
+            const { pdfBuffer, fileName } = await this.pdfService.generatePdf(
                 spdHouses, spdManagementC, subscribers,
                 allDetailsInfo,
                 allSPDs, allMeterReadings,
-            )).toString('binary');
+            );
+
+            const newTotalEntity = new SinglePaymentDocumentTotalEntity({
+                managementCompanyId: dto.managementCompanyId,
+                path: fileName,
+                createdAt: new Date()
+            });
+            await this.totalRepository.create(newTotalEntity);
+            return pdfBuffer.toString('binary');
         } else if (dto.subscriberIds) {
             let { subscribers } = (await this.getSubscribers(dto.subscriberIds));
             if (!subscribers.length) {
@@ -174,7 +192,7 @@ export class SinglePaymentDocumentService {
 
             for (const house of houses) {
                 const currentSubscribers = subscribers.filter(s => s.houseId === house.id);
-                const { detailsInfo, SPDs, meterReadingsData } =
+                const { detailsInfo, SPDs, SPDEntities, meterReadingsData } =
                     await this.getSinglePaymentDocumentForOneHouse(
                         currentSubscribers, house.id,
                         dto.managementCompanyId, dto.keyRate,
@@ -183,18 +201,59 @@ export class SinglePaymentDocumentService {
 
                 allDetailsInfo.push(...detailsInfo);
                 allSPDs.push(...SPDs);
+                allSPDEntities.push(...SPDEntities);
                 allMeterReadings.push(...meterReadingsData);
             }
 
-            return (await this.pdfService.generatePdfByHouses(
+            const { pdfBuffer, fileName } = await this.pdfService.generatePdf(
                 houses, spdManagementC, subscribers,
                 allDetailsInfo,
                 allSPDs, allMeterReadings,
-            )).toString('binary');
+            );
+
+            const newTotalEntity = new SinglePaymentDocumentTotalEntity({
+                managementCompanyId: dto.managementCompanyId,
+                path: fileName,
+                createdAt: new Date()
+            });
+            const total = await this.totalRepository.create(newTotalEntity);
+            const totalId = total.id;
+
+            this.generateSubscribersPdf(
+                houses, spdManagementC, subscribers,
+                allDetailsInfo,
+                allSPDs, allSPDEntities,
+                allMeterReadings,
+                totalId
+            );
+
+            return pdfBuffer.toString('binary');
         }
         else {
             throw new RMQException("Не было переданы ни houseIds, ни subscriberIds", HttpStatus.BAD_REQUEST);
         }
+    }
+
+    private async generateSubscribersPdf(
+        houses: ISpdHouse[], managementC: ISpdManagementCompany, subscribers: ISpdSubscriber[],
+        detailsInfo: ISpdDetailInfo[],
+        SPDs: ISpd[], SPDEntities: SinglePaymentDocumentEntity[],
+        meterReadingsData: ISpdMeterReadings[],
+        totalId: number
+    ) {
+        const files = await this.pdfService.generatePdfs(
+            houses, managementC, subscribers,
+            detailsInfo,
+            SPDs, meterReadingsData
+        );
+
+        const newSPDEntities: SinglePaymentDocumentEntity[]
+            = SPDEntities.map((spd) => {
+                const currentPath = files.find(f => f.subscriberId === spd.subscriberId);
+                return spd.setTotal(totalId, currentPath.fileName);
+            });
+        await this.singlePaymentDocumentRepository
+            .updateMany(newSPDEntities);
     }
 
     private async revertCalculateDetails(detailIds: number[]) {
@@ -217,7 +276,7 @@ export class SinglePaymentDocumentService {
                     ReferenceGetSubscribersByHouses.Request,
                     ReferenceGetSubscribersByHouses.Response
                 >
-                (ReferenceGetSubscriberIdsByHouse.topic, { houseIds });
+                (ReferenceGetSubscribersByHouses.topic, { houseIds });
         } catch (e) {
             throw new RMQException(e.message, e.status);
         }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ISpdQR, ISpdBarcode } from '../interfaces/code.interface';
 import { ISpdOperator } from '../interfaces/operator.interface';
 import { ISpd, ISpdDetailInfo, ISpdPayment } from '../interfaces/single-payment-document.interface';
@@ -11,6 +11,8 @@ import * as PDFDocument from 'pdfkit';
 import { ISpdService, ISpdServiceColumn } from '../interfaces/service-table.interface';
 import { ISpdMeterReadings, ISpdReading, ISpdReadingColumn, ISpdReadings } from '../interfaces/reading-table.interface';
 import { isNumber } from 'class-validator';
+import * as fs from "fs";
+import * as path from "path";
 
 @Injectable()
 export class PdfService {
@@ -215,11 +217,7 @@ export class PdfService {
         return qrs;
     }
 
-    async generatePdfByHouses(
-        houses: ISpdHouse[], managementC: ISpdManagementCompany, subscribers: ISpdSubscriber[],
-        detailsInfo: ISpdDetailInfo[],
-        SPDs: ISpd[], meterReadingsData: ISpdMeterReadings[]
-    ): Promise<Buffer> {
+    private async getMockValues() {
         const barcodeText = '589744282507230181505';
         const barcode: ISpdBarcode = {
             barcodeText: barcodeText,
@@ -241,7 +239,99 @@ export class PdfService {
             amount: 1532.18,
             payedAt: new Date('03.07.2023')
         }
+        return { barcode, barcodeText, operator, payment };
+    }
 
+    private getDocForOne(
+        subscriber: ISpdSubscriber, spd: ISpd,
+        barcode: ISpdBarcode, barcodeText: string, qr: ISpdQR, operator: ISpdOperator,
+        services: ISpdService[], readings: ISpdReading[], house: ISpdHouse,
+        payment: ISpdPayment, managementC: ISpdManagementCompany,
+        doc: PDFKit.PDFDocument
+    ) {
+        const top = new Top(this.arial, this.arialBold, doc);
+        top.getTop(qr, barcode, operator, subscriber, managementC, spd);
+
+        const bottom = new Bottom(this.arial, this.arialBold, doc, services, readings);
+        bottom.getLow(operator, barcodeText, subscriber, spd, house, payment);
+    }
+
+    private async uploadPdf(pdfBuffer: Buffer, uploadDirectory: string) {
+
+        const filename = `pdf_${Date.now()}.pdf`;
+        fs.writeFile(path.join(uploadDirectory, filename), pdfBuffer, (err) => {
+            if (err) {
+                throw new RMQException("Невозможно сохранить файл", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        });
+
+        return path.join(uploadDirectory, filename);
+    }
+
+    async generatePdfs(
+        houses: ISpdHouse[], managementC: ISpdManagementCompany, subscribers: ISpdSubscriber[],
+        detailsInfo: ISpdDetailInfo[],
+        SPDs: ISpd[], meterReadingsData: ISpdMeterReadings[]
+    ): Promise<{ subscriberId: number; fileName: string }[]> {
+        const { barcode, barcodeText, operator, payment } = await this.getMockValues();
+        const meterReadings = this.getMeterReadingsWithHouse(subscribers, meterReadingsData, houses);
+        const services = this.getServices(detailsInfo, SPDs);
+        const qrs = await this.getQRS(subscribers, SPDs);
+
+        const files: { subscriberId: number; fileName: string }[] = [];
+        const uploadDirectory = './uploads';
+        if (!fs.existsSync(uploadDirectory)) {
+            fs.mkdirSync(uploadDirectory);
+        }
+
+        for (const subscriber of subscribers) {
+            try {
+                const pdfBuffer: Buffer = await new Promise(resolve => {
+                    const doc = new PDFDocument.default({ compress: false, size: 'A2', layout: 'portrait' });
+                    const currentHouse = houses.find(obj => obj.id === subscriber.houseId);
+                    const currentService = services.find(obj => obj.subscriberId === subscriber.id);
+                    const currentReadings = meterReadings.find(obj => obj.subscriberId === subscriber.id);
+                    const currentSPD = SPDs.find(obj => obj.subscriberId === subscriber.id);
+
+                    const currentQR = qrs.find(obj => obj.subscriberId === subscriber.id);
+
+                    this.getDocForOne(
+                        subscriber, currentSPD,
+                        barcode, barcodeText, currentQR,
+                        operator, currentService.services, currentReadings.readings,
+                        currentHouse, payment, managementC,
+                        doc
+                    );
+
+                    const buffer = [];
+                    doc.on('data', buffer.push.bind(buffer));
+                    doc.on('end', () => {
+                        const data = Buffer.concat(buffer);
+                        resolve(data);
+                    });
+
+                    doc.end();
+                });
+
+                const fileName = await this.uploadPdf(pdfBuffer, uploadDirectory);
+                files.push({
+                    fileName: fileName,
+                    subscriberId: subscriber.id
+                });
+            } catch (e) {
+                throw new RMQException(e.message, e.status);
+            }
+        }
+
+        return files;
+    }
+
+    async generatePdf(
+        houses: ISpdHouse[], managementC: ISpdManagementCompany, subscribers: ISpdSubscriber[],
+        detailsInfo: ISpdDetailInfo[],
+        SPDs: ISpd[], meterReadingsData: ISpdMeterReadings[]
+    ): Promise<{ pdfBuffer: Buffer; fileName: string }> {
+        const { barcode, barcodeText, operator, payment } = await this.getMockValues();
         const meterReadings = this.getMeterReadingsWithHouse(subscribers, meterReadingsData, houses);
         const services = this.getServices(detailsInfo, SPDs);
         const qrs = await this.getQRS(subscribers, SPDs);
@@ -254,17 +344,20 @@ export class PdfService {
                 for (const subscriber of subscribers) {
                     count++;
 
+                    const currentHouse = houses.find(obj => obj.id === subscriber.houseId);
+                    const currentService = services.find(obj => obj.subscriberId === subscriber.id);
+                    const currentReadings = meterReadings.find(obj => obj.subscriberId === subscriber.id);
                     const currentSPD = SPDs.find(obj => obj.subscriberId === subscriber.id);
 
                     const currentQR = qrs.find(obj => obj.subscriberId === subscriber.id);
-                    const top = new Top(this.arial, this.arialBold, doc);
-                    top.getTop(currentQR, barcode, operator, subscriber, managementC, currentSPD);
 
-                    const currentService = services.find(obj => obj.subscriberId === subscriber.id);
-                    const currentReadings = meterReadings.find(obj => obj.subscriberId === subscriber.id);
-                    const currentHouse = houses.find(obj => obj.id === subscriber.houseId);
-                    const bottom = new Bottom(this.arial, this.arialBold, doc, currentService.services, currentReadings.readings);
-                    bottom.getLow(operator, barcodeText, subscriber, currentSPD, currentHouse, payment);
+                    this.getDocForOne(
+                        subscriber, currentSPD,
+                        barcode, barcodeText, currentQR,
+                        operator, currentService.services, currentReadings.readings,
+                        currentHouse, payment, managementC,
+                        doc
+                    )
 
                     if (count != subscribers.length) {
                         doc.addPage();
@@ -280,7 +373,14 @@ export class PdfService {
 
                 doc.end();
             });
-            return pdfBuffer;
+
+            const uploadDirectory = './uploads';
+            if (!fs.existsSync(uploadDirectory)) {
+                fs.mkdirSync(uploadDirectory);
+            }
+            const fileName = await this.uploadPdf(pdfBuffer, uploadDirectory);
+            return { pdfBuffer, fileName };
+
         } catch (e) {
             throw new RMQException(e.message, e.status);
         }

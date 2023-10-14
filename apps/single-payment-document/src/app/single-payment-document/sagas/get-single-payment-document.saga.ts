@@ -2,7 +2,7 @@ import { RMQService } from 'nestjs-rmq';
 import { GetSinglePaymentDocumentSagaState } from './get-single-payment-document.state';
 import { GetSinglePaymentDocumentSagaStateCancelled, GetSinglePaymentDocumentSagaStateCorrectionsCalculated, GetSinglePaymentDocumentSagaStateDetailsCalculated, GetSinglePaymentDocumentSagaStateStarted } from './get-single-payment-document.steps';
 import { CalculationState } from '@myhome/interfaces';
-import { SinglePaymentDocumentEntity } from '../single-payment-document.entity';
+import { SinglePaymentDocumentEntity } from '../entities/single-payment-document.entity';
 
 export class GetSinglePaymentDocumentSaga {
 	private state: GetSinglePaymentDocumentSagaState;

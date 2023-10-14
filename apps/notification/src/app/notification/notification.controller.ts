@@ -17,7 +17,11 @@ export class NotificationController {
     @RMQValidate()
     @RMQRoute(GetNotification.topic)
     async getNotification(@Body() { id }: GetNotification.Request) {
-        return this.notificationService.getNotification(id);
+        try {
+            return this.notificationService.getNotification(id);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+        }
     }
 
     @RMQValidate()

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { VotingEntity } from '../entities/voting.entity';
 
 @Injectable()
@@ -18,10 +18,10 @@ export class VotingRepository {
         return this.votingRepository.findOne({ where: { id } });
     }
 
-    async findVotingsByMCId(managementCompanyId: number) {
+    async findVotingsByHouseIds(houseIds: number[]) {
         return this.votingRepository.find({
             where: {
-                managementCompanyId: managementCompanyId,
+                houseId: In(houseIds),
             }
         });
     }

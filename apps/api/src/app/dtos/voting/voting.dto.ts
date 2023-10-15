@@ -1,9 +1,9 @@
-import { IOption, RequireSubscriberOrManagementCompany } from "@myhome/interfaces";
+import { IOption } from "@myhome/interfaces";
 import { IsArray, IsDate, IsNumber, IsString, MaxLength } from "class-validator";
 
 export class AddVotingDto {
     @IsNumber()
-    managementCompanyId!: number;
+    houseId!: number;
 
     @IsString()
     @MaxLength(255)
@@ -24,12 +24,9 @@ export class GetVotingDto {
     id!: number;
 }
 
-export class GetVotingsDto {
-    @RequireSubscriberOrManagementCompany()
-    subscriberId?: number;
-
-    @RequireSubscriberOrManagementCompany()
-    managementCompanyId?: number;
+export class GetVotingsByMCIdDto {
+    @IsNumber()
+    managementCompanyId: number;
 }
 
 

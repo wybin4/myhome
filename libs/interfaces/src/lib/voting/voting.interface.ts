@@ -1,12 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ValidationOptions, registerDecorator, ValidationArguments } from "class-validator";
-
 export interface IVoting {
     id?: number;
-    managementCompanyId: number;
+    houseId: number;
     title: string;
     createdAt: Date;
     expiredAt: Date;
+    status: VotingStatus;
+}
+
+export enum VotingStatus {
+    Open = 'Open',
+    Close = 'Close'
 }
 
 export interface IOption {
@@ -18,26 +21,4 @@ export interface IOption {
 
 export interface IVotingWithOptions {
     voting: IVoting; options: IOption[];
-}
-
-export function RequireSubscriberOrManagementCompany(validationOptions?: ValidationOptions) {
-    return function (object: any, propertyName: string) {
-        registerDecorator({
-            name: 'RequireSubscriberOrManagementCompany',
-            target: object.constructor,
-            propertyName: propertyName,
-            options: validationOptions,
-            validator: {
-                validate(value: any, args: ValidationArguments) {
-                    const subscriberId = (args.object as any).subscriberId;
-                    const managementCompanyId = (args.object as any).managementCompanyId;
-                    return !!subscriberId || !!managementCompanyId;
-                },
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                defaultMessage(args: ValidationArguments) {
-                    return `Введите subscriberId или managementCompanyId`;
-                },
-            },
-        });
-    };
 }

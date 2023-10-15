@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { AddVoting, GetVoting, GetVotings, UpdateVoting } from '@myhome/contracts';
+import { AddVoting, GetVoting, GetVotingsByMCId, UpdateVoting } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
-import { AddVotingDto, GetVotingDto, GetVotingsDto, UpdateVotingDto } from '../../dtos/voting/voting.dto';
+import { AddVotingDto, GetVotingDto, GetVotingsByMCIdDto, UpdateVotingDto } from '../../dtos/voting/voting.dto';
 
 @Controller('voting')
 export class VotingController {
@@ -22,13 +22,13 @@ export class VotingController {
     }
 
     @HttpCode(200)
-    @Post('get-votings')
-    async getVotings(@Body() dto: GetVotingsDto) {
+    @Post('get-votings-by-mcid')
+    async getVotingsByMCId(@Body() dto: GetVotingsByMCIdDto) {
         try {
             return await this.rmqService.send<
-                GetVotings.Request,
-                GetVotings.Response
-            >(GetVotings.topic, dto);
+                GetVotingsByMCId.Request,
+                GetVotingsByMCId.Response
+            >(GetVotingsByMCId.topic, dto);
         } catch (e) {
             CatchError(e);
         }

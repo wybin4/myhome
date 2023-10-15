@@ -6,7 +6,7 @@ export namespace AddVoting {
 
     export class Request {
         @IsNumber()
-        managementCompanyId!: number;
+        houseId!: number;
 
         @IsString()
         @MaxLength(255)

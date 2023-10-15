@@ -1,5 +1,5 @@
-import { AppealStatus, IAppeal } from '@myhome/interfaces';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IAppeal } from '@myhome/interfaces';
+import { IsNumber, IsString } from 'class-validator';
 
 export namespace AppealAddAppeal {
     export const topic = 'appeal.add-appeal.command';
@@ -16,10 +16,6 @@ export namespace AppealAddAppeal {
 
         @IsString()
         createdAt!: string;
-
-        @IsOptional()
-        @IsString()
-        status?: AppealStatus;
 
         data: unknown;
     }

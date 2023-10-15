@@ -1,7 +1,8 @@
 import { Controller, Body, Post } from "@nestjs/common";
-import { RMQValidate, RMQRoute } from "nestjs-rmq";
+import { RMQValidate, RMQRoute, RMQError } from "nestjs-rmq";
 import { VotingService } from "./voting.service";
-import { AddVoting, GetVoting, GetVotings, UpdateVoting } from '@myhome/contracts';
+import { AddVoting, GetVoting, GetVotingsByMCId, UpdateVoting } from '@myhome/contracts';
+import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 
 @Controller('voting')
 export class VotingController {
@@ -12,28 +13,44 @@ export class VotingController {
     @Post('add-voting')
     @RMQValidate()
     @RMQRoute(AddVoting.topic)
-    async createVoting(@Body() dto: AddVoting.Request) {
-        return this.votingService.createVoting(dto);
+    async addVoting(@Body() dto: AddVoting.Request) {
+        try {
+            return this.votingService.addVoting(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+        }
     }
 
     @Post('get-voting')
     @RMQValidate()
     @RMQRoute(GetVoting.topic)
     async getVoting(@Body() { id }: GetVoting.Request) {
-        return this.votingService.getVoting(id);
+        try {
+            return this.votingService.getVoting(id);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+        }
     }
 
     @Post('update-voting')
     @RMQValidate()
     @RMQRoute(UpdateVoting.topic)
     async updateVoting(@Body() { optionId }: UpdateVoting.Request) {
-        return this.votingService.updateVoting(optionId);
+        try {
+            return this.votingService.updateVoting(optionId);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+        }
     }
 
-    @Post('get-votings')
+    @Post('get-votings-by-mcid')
     @RMQValidate()
-    @RMQRoute(GetVotings.topic)
-    async getVotings(@Body() dto: GetVotings.Request) {
-        return this.votingService.getVotings(dto);
+    @RMQRoute(GetVotingsByMCId.topic)
+    async getVotingsByMCId(@Body() { managementCompanyId }: GetVotingsByMCId.Request) {
+        try {
+            return this.votingService.getVotingsByMCId(managementCompanyId);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+        }
     }
 }

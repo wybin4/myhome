@@ -1,4 +1,5 @@
-import { IVoting } from '@myhome/interfaces';
+import { GenericEnumTransformer } from '@myhome/constants';
+import { IVoting, VotingStatus } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('votings')
@@ -7,7 +8,7 @@ export class VotingEntity implements IVoting {
     id: number;
 
     @Column({ nullable: false })
-    managementCompanyId: number;
+    houseId: number;
 
     @Column({ nullable: false })
     title: string;
@@ -18,6 +19,14 @@ export class VotingEntity implements IVoting {
     @Column({ nullable: false })
     expiredAt: Date;
 
+    @Column({
+        nullable: false,
+        type: 'varchar',
+        transformer: GenericEnumTransformer(VotingStatus),
+        default: VotingStatus.Open,
+    })
+    status: VotingStatus;
+
     constructor(data?: Partial<VotingEntity>) {
         if (data) {
             Object.assign(this, data);
@@ -26,10 +35,11 @@ export class VotingEntity implements IVoting {
 
     public get() {
         return {
-            managementCompanyId: this.managementCompanyId,
+            houseId: this.houseId,
             title: this.title,
             createdAt: this.createdAt,
-            expiredAt: this.expiredAt
+            expiredAt: this.expiredAt,
+            status: this.status
         }
     }
 

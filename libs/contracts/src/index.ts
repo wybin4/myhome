@@ -87,6 +87,6 @@ export * from './lib/correction/cbr/correction.get-key-rate';
 export * from './lib/payment/payment.get-payment-link';
 
 export * from './lib/voting/voting.get-voting';
-export * from './lib/voting/voting.get-votings';
+export * from './lib/voting/voting.get-votings-by-mcid';
 export * from './lib/voting/voting.add-voting';
 export * from './lib/voting/voting.update-voting';

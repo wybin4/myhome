@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { VotingRepository } from "./repositories/voting.repository";
-import { AddVoting, GetVoting, GetVotings, ReferenceGetManagementCompany } from "@myhome/contracts";
-import { OPTIONS_NOT_EXIST, OPTION_NOT_EXIST, RMQException, SUBSCRIBER_NOT_EXIST, VOTINGS_FOR_MC_NOT_EXIST, VOTING_NOT_EXIST, checkUser } from '@myhome/constants';
+import { AddVoting, GetVoting, GetVotingsByMCId, ReferenceGetHouse, ReferenceGetHousesByMCId } from "@myhome/contracts";
+import { HOUSES_NOT_EXIST, OPTIONS_NOT_EXIST, OPTION_NOT_EXIST, RMQException, VOTINGS_FOR_MC_NOT_EXIST, VOTING_NOT_EXIST } from '@myhome/constants';
 import { VotingEntity } from "./entities/voting.entity";
 import { RMQService } from "nestjs-rmq";
-import { IVotingWithOptions, UserRole } from "@myhome/interfaces";
 import { OptionEntity } from "./entities/option.entity";
 import { OptionRepository } from "./repositories/option.repository";
+import { VotingStatus } from "@myhome/interfaces";
 
 @Injectable()
 export class VotingService {
@@ -16,9 +16,9 @@ export class VotingService {
         private readonly rmqService: RMQService,
     ) { }
 
-    public async createVoting(dto: AddVoting.Request): Promise<AddVoting.Response> {
+    public async addVoting(dto: AddVoting.Request): Promise<AddVoting.Response> {
+        await this.getHouse(dto.houseId);
         const newVotingEntity = new VotingEntity(dto);
-        await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
         const newVoting = await this.votingRepository.create(newVotingEntity);
 
         const options: OptionEntity[] = dto.options.map(option => {
@@ -60,18 +60,13 @@ export class VotingService {
         return { voting: gettedVoting, options: gettedOptions };
     }
 
-    public async getVotings(dto: GetVotings.Request): Promise<GetVotings.Response> {
-        if (dto.subscriberId) {
-            const { managementCompanyId } = await this.getMCIdBySubscriber(dto.subscriberId);
-            return { votings: await this.getVotingsByMCId(managementCompanyId) };
-        } else if (dto.managementCompanyId) {
-            await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
-            return { votings: await this.getVotingsByMCId(dto.managementCompanyId) };
+    async getVotingsByMCId(managementCompanyId: number): Promise<GetVotingsByMCId.Response> {
+        const { houses } = await this.getHousesByMCId(managementCompanyId);
+        if (!houses) {
+            throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
         }
-    }
-
-    private async getVotingsByMCId(managementCompanyId: number): Promise<IVotingWithOptions[]> {
-        const votings = await this.votingRepository.findVotingsByMCId(managementCompanyId);
+        const houseIds = houses.map(h => h.id);
+        const votings = await this.votingRepository.findVotingsByHouseIds(houseIds);
         if (!votings.length) {
             throw new RMQException(VOTINGS_FOR_MC_NOT_EXIST.message(managementCompanyId), VOTINGS_FOR_MC_NOT_EXIST.status);
         }
@@ -82,30 +77,44 @@ export class VotingService {
             throw new RMQException(OPTION_NOT_EXIST.message, OPTION_NOT_EXIST.status);
         }
 
-        const gettedVotings: IVotingWithOptions[] = [];
-        for (const voting of votings) {
-            const gettedOptions = options.map(option => {
-                if (option.votingId === voting.id) return new OptionEntity(option).get();
-            });
-
-            gettedVotings.push({
-                voting: new VotingEntity(voting),
-                options: gettedOptions
-            });
-        }
-        return gettedVotings;
+        return {
+            votings: votings.map(voting => {
+                const currentOptions = options.filter(opt => opt.votingId === voting.id);
+                let result: OptionEntity | undefined;
+                if (voting.status === VotingStatus.Close) {
+                    result = currentOptions.reduce((max, obj) => (obj.numberOfVotes > max.numberOfVotes ? obj : max), currentOptions[0]);
+                } else result = undefined;
+                return {
+                    result: result ? result.text : undefined,
+                    ...voting
+                };
+            })
+        };
     }
 
-    private async getMCIdBySubscriber(subscriberId: number) {
+    private async getHousesByMCId(managementCompanyId: number) {
         try {
             return await this.rmqService.send
                 <
-                    ReferenceGetManagementCompany.Request,
-                    ReferenceGetManagementCompany.Response
+                    ReferenceGetHousesByMCId.Request,
+                    ReferenceGetHousesByMCId.Response
                 >
-                (ReferenceGetManagementCompany.topic, { subscriberId: subscriberId });
+                (ReferenceGetHousesByMCId.topic, { managementCompanyId });
         } catch (e) {
-            throw new RMQException(SUBSCRIBER_NOT_EXIST.message(subscriberId), SUBSCRIBER_NOT_EXIST.status);
+            throw new RMQException(e.message, e.status);
+        }
+    }
+
+    private async getHouse(houseId: number) {
+        try {
+            return await this.rmqService.send
+                <
+                    ReferenceGetHouse.Request,
+                    ReferenceGetHouse.Response
+                >
+                (ReferenceGetHouse.topic, { id: houseId });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
         }
     }
 }

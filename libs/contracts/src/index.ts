@@ -55,10 +55,11 @@ export * from './lib/email/email.register';
 
 export * from './lib/appeal/appeal.add-appeal';
 export * from './lib/appeal/appeal.get-appeal';
+export * from './lib/appeal/appeal.get-appeals-by-mcid';
 
-export * from './lib/notification/notification.add-notification';
-export * from './lib/notification/notification.get-notification';
-export * from './lib/notification/notification.read-notification';
+export * from './lib/notification/house-notification/notification.add-house-notification';
+export * from './lib/notification/house-notification/notification.get-house-notification';
+export * from './lib/notification/house-notification/notification.get-house-notifications-by-mcid';
 
 export * from './lib/document-detail/document-detail.get-public-utilities';
 export * from './lib/document-detail/document-detail.get-common-house-needs';

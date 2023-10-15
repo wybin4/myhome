@@ -13,7 +13,7 @@ import { SubscriberController } from './controllers/reference/subscriber.control
 import { AuthController } from './controllers/account/auth.controller';
 import { TariffAndNormController } from './controllers/reference/tariff-and-norm.controller';
 import { AppealController } from './controllers/appeal/appeal.controller';
-import { NotificationController } from './controllers/notification/notification.controller';
+import { HouseNotificationController } from './controllers/notification/house-notification.controller';
 import { SinglePaymentDocumentController } from './controllers/single-payment-document/single-payment-document.controller';
 import { PenaltyController } from './controllers/correction/penalty.controller';
 import { VotingController } from './controllers/voting/voting.controller';
@@ -33,7 +33,7 @@ import { CBRController } from './controllers/correction/cbr.controller';
       MeterController,
       TariffAndNormController,
       AppealController,
-      NotificationController,
+      HouseNotificationController,
       SinglePaymentDocumentController,
       PenaltyController,
       VotingController,

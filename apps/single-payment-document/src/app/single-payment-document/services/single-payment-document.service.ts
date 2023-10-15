@@ -1,4 +1,4 @@
-import {  CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByMCId, GetSinglePaymentDocumentsBySId, ReferenceGetApartmentsAllInfo, ReferenceGetHouses, ReferenceGetHousesByMCId, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
+import { CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByMCId, GetSinglePaymentDocumentsBySId, ReferenceGetApartmentsAllInfo, ReferenceGetHouses, ReferenceGetHousesByMCId, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
@@ -46,8 +46,11 @@ export class SinglePaymentDocumentService {
                 const currentHouse = houses.find(h => h.managementCompanyId === currentSPD.managementCompanyId);
 
                 return {
+                    id: currentSPD.id,
                     houseId: currentHouse.id,
-                    houseName: `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}`,
+                    city: currentHouse.city,
+                    street: currentHouse.street,
+                    houseName: currentHouse.houseNumber,
                     fileSize: file.size,
                     pdfBuffer: (file.buffer).toString('base64'),
                     createdAt: currentSPD.createdAt
@@ -56,7 +59,8 @@ export class SinglePaymentDocumentService {
         };
     }
 
-    async getSinglePaymentDocumentsBySId(dto: GetSinglePaymentDocumentsBySId.Request) {
+    async getSinglePaymentDocumentsBySId(dto: GetSinglePaymentDocumentsBySId.Request):
+        Promise<GetSinglePaymentDocumentsBySId.Response> {
         const { apartments } = await this.getApartmentsAllInfo(dto.subscriberIds);
         const spds = await this.singlePaymentDocumentRepository.findBySIds(dto.subscriberIds);
         if (!spds) {
@@ -77,6 +81,7 @@ export class SinglePaymentDocumentService {
                 const currentSubscriber = apartments.find(s => s.subscriberId === currentSPD.subscriberId);
 
                 return {
+                    id: currentSPD.id,
                     apartmentName: currentSubscriber.address,
                     fileSize: file.size,
                     pdfBuffer: (file.buffer).toString('base64'),

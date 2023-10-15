@@ -1,10 +1,17 @@
 import { UserRole } from "./account/user.interface";
 
-export interface INotification {
+export interface IHouseNotification {
+    id?: number;
+    houseId: number;
+    type: HouseNotificationType;
+    createdAt: Date;
+    text: string;
+}
+
+export interface IServiceNotification {
     id?: number;
     userId: number;
     userRole: UserRole;
-    notificationType: NotificationType;
     message: string;
     createdAt: Date;
     readAt?: Date;
@@ -16,6 +23,8 @@ export enum NotificationStatus {
     Unread = 'Unread',
 }
 
-export enum NotificationType {
-    SentAppeal = 'Отправлено обращение',
+export enum HouseNotificationType {
+    Accident = 'Accident',
+    EngineeringWorks = 'EngineeringWorks',
+    Other = 'Other'
 }

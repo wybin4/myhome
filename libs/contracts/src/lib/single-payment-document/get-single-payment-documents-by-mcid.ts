@@ -14,7 +14,10 @@ export namespace GetSinglePaymentDocumentsByMCId {
 }
 
 export interface IGetSinglePaymentDocumentsByMCId {
+    id: number;
     houseId: number;
+    city: string;
+    street: string;
     houseName: string;
     fileSize: number;
     pdfBuffer: string;

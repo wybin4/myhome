@@ -1,4 +1,3 @@
-import { ISinglePaymentDocument } from "@myhome/interfaces";
 import { IsArray } from "class-validator";
 
 export namespace GetSinglePaymentDocumentsBySId {
@@ -10,6 +9,14 @@ export namespace GetSinglePaymentDocumentsBySId {
     }
 
     export class Response {
-        singlePaymentDocuments!: ISinglePaymentDocument[];
+        singlePaymentDocuments!: IGetSinglePaymentDocumentsBySId[];
     }
+}
+
+export interface IGetSinglePaymentDocumentsBySId {
+    id: number;
+    apartmentName: string;
+    fileSize: number;
+    pdfBuffer: string;
+    createdAt: Date;
 }

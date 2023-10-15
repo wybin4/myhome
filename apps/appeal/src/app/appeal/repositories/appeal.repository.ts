@@ -11,16 +11,20 @@ export class AppealRepository {
         private readonly appealRepository: Repository<AppealEntity>,
     ) { }
 
-    async createAppeal(Appeal: AppealEntity) {
+    async create(Appeal: AppealEntity) {
         return this.appealRepository.save(Appeal);
     }
 
-    async findAppealById(id: number) {
+    async findById(id: number) {
         return this.appealRepository.findOne({ where: { id } });
     }
 
-    async closeAppeal(id: number): Promise<AppealEntity | undefined> {
-        const appeal = await this.findAppealById(id);
+    async findByMCId(managementCompanyId: number) {
+        return this.appealRepository.find({ where: { managementCompanyId } });
+    }
+
+    async close(id: number): Promise<AppealEntity | undefined> {
+        const appeal = await this.findById(id);
         if (appeal) {
             appeal.status = AppealStatus.Closed;
             return this.appealRepository.save(appeal);
@@ -28,8 +32,8 @@ export class AppealRepository {
         return undefined;
     }
 
-    async rejectAppeal(id: number): Promise<AppealEntity | undefined> {
-        const appeal = await this.findAppealById(id);
+    async reject(id: number): Promise<AppealEntity | undefined> {
+        const appeal = await this.findById(id);
         if (appeal) {
             appeal.status = AppealStatus.Rejected;
             return this.appealRepository.save(appeal);
@@ -46,11 +50,15 @@ export class TypeOfAppealRepository {
         private readonly typeOfAppealRepository: Repository<TypeOfAppealEntity>,
     ) { }
 
-    async createTypeOfAppeal(typeOfAppeal: TypeOfAppealEntity) {
+    async create(typeOfAppeal: TypeOfAppealEntity) {
         return this.typeOfAppealRepository.save(typeOfAppeal);
     }
 
     async findById(id: number) {
         return this.typeOfAppealRepository.findOne({ where: { id } });
+    }
+
+    async findMany() {
+        return this.typeOfAppealRepository.find();
     }
 }

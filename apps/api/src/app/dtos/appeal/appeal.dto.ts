@@ -28,3 +28,8 @@ export class GetAppealDto {
     @IsNumber()
     id: number;
 }
+
+export class GetAppealsByMCIdDto {
+    @IsNumber()
+    managementCompanyId: number;
+}

@@ -36,8 +36,9 @@ export class AppealEntity implements IAppeal {
         }
     }
 
-    public getAppeal() {
+    public get() {
         return {
+            id: this.id,
             managementCompanyId: this.managementCompanyId,
             typeOfAppealId: this.typeOfAppealId,
             subscriberId: this.subscriberId,

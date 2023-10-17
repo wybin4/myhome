@@ -1,7 +1,7 @@
-import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, RMQException, MISSING_PREVIOUS_READING, FAILED_TO_GET_METER_READINGS, FAILED_TO_GET_READINGS_WITHOUT_NORMS, NORMS_NOT_EXIST, HOUSE_NOT_EXIST, FAILED_TO_GET_CURRENT_READINGS, APARTS_NOT_EXIST, getGenericObject, addGenericObject, SUBSCRIBERS_NOT_EXIST, METER_READINGS_NOT_EXIST } from "@myhome/constants";
+import { METER_READING_NOT_EXIST, INCORRECT_METER_TYPE, METER_NOT_EXIST, NORM_NOT_EXIST, RMQException, MISSING_PREVIOUS_READING, FAILED_TO_GET_METER_READINGS, FAILED_TO_GET_READINGS_WITHOUT_NORMS, NORMS_NOT_EXIST, HOUSE_NOT_EXIST, FAILED_TO_GET_CURRENT_READINGS, getGenericObject, addGenericObject, METER_READINGS_NOT_EXIST } from "@myhome/constants";
 import { IGeneralMeterReading, IGetMeterReading, IGetMeterReadings, IIndividualMeterReading, IMeterReading, INorm, MeterStatus, MeterType, Reading, TypeOfNorm } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { ReferenceAddMeterReading, ReferenceGetMeterReadingBySID, ReferenceGetMeterReadingByHID } from "@myhome/contracts";
+import { ReferenceAddMeterReading, ReferenceGetIndividualMeterReadings, ReferenceGetMeterReadingByHID } from "@myhome/contracts";
 import { GeneralMeterReadingEntity } from "../entities/general-meter-reading.entity";
 import { IndividualMeterReadingEntity } from "../entities/individual-meter-reading.entity";
 import { GeneralMeterReadingRepository } from "../repositories/general-meter-reading.repository";
@@ -333,37 +333,63 @@ export class MeterReadingService {
     }
 
     private async getApartmentsBySIDs(subscriberIds: number[]): Promise<IApartmentAndSubscriber[]> {
-        const subscribers = await this.subscriberRepository.findMany(subscriberIds);
-        if (!subscribers && !subscribers.length) {
-            throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
-        }
+        const subscribers = await this.subscriberRepository.findManyWithApartments(subscriberIds);
 
-        const dtoApartmentIds = subscribers.map(obj => obj.apartmentId);
-        const apartments = await this.apartmentRepository.findMany(dtoApartmentIds);
-        if (!apartments.length) {
-            throw new RMQException(APARTS_NOT_EXIST.message, APARTS_NOT_EXIST.status);
-        }
-
-        return apartments.map(obj => {
-            const currSubscriber = subscribers.find(sub => sub.apartmentId === obj.id);
+        return subscribers.map(subscriber => {
             return {
-                subscriberId: currSubscriber.id,
-                apartmentId: currSubscriber.apartmentId,
-                numberOfRegistered: obj.numberOfRegistered,
+                subscriberId: subscriber.id,
+                apartmentId: subscriber.apartmentId,
+                numberOfRegistered: subscriber.apartment.numberOfRegistered,
             };
         });
     }
 
-    public async getMeterReadingBySID(
-        dto: ReferenceGetMeterReadingBySID.Request
-    ) {
-        const norms = await this.normRepository.findByMCIDAndType(dto.managementCompanyId, TypeOfNorm.Individual);
+    private async getSubscribersByHId(houseId: number): Promise<IApartmentAndSubscriber[]> {
+        const subscribers = await this.subscriberRepository.findByHIds([houseId]);
+
+        return subscribers.map(subscriber => {
+            return {
+                subscriberId: subscriber.id,
+                apartmentId: subscriber.apartmentId,
+                numberOfRegistered: subscriber.apartment.numberOfRegistered,
+            };
+        });
+    }
+
+    public async getIndividualMeterReadings(
+        dto: ReferenceGetIndividualMeterReadings.Request
+    ): Promise<ReferenceGetIndividualMeterReadings.Response> {
+        if (dto.subscriberIds) {
+            const subscriberAndAparts = await this.getApartmentsBySIDs(dto.subscriberIds);
+            return {
+                meterReadings: await this.getIndividualMeterReadingsFromDB(
+                    dto.managementCompanyId,
+                    subscriberAndAparts
+                )
+            };
+        } else if (dto.houseId) {
+            const subscriberAndAparts = await this.getSubscribersByHId(dto.houseId);
+            return {
+                meterReadings: await this.getIndividualMeterReadingsFromDB(
+                    dto.managementCompanyId,
+                    subscriberAndAparts
+                )
+            };
+        }
+        else {
+            throw new RMQException("Не было передано ни houseId, ни subscribersIds", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private async getIndividualMeterReadingsFromDB(
+        managementCompanyId: number,
+        subscriberAndAparts: IApartmentAndSubscriber[]
+    ): Promise<IGetMeterReadings[]> {
+        const norms = await this.normRepository.findByMCIDAndType(managementCompanyId, TypeOfNorm.Individual);
         if (!norms.length) {
             throw new RMQException(NORMS_NOT_EXIST.message, NORMS_NOT_EXIST.status);
         }
 
-
-        const subscriberAndAparts = await this.getApartmentsBySIDs(dto.subscriberIds);
         const apartmentWithMeterReadings = await this.getMeterReadingsByAIDs(subscriberAndAparts, 15, 25); // ИСПРАВИТЬ!!!!
 
         const newMeterReading: IGetMeterReadings[] = [];
@@ -401,7 +427,7 @@ export class MeterReadingService {
             });
         }
 
-        return { meterReadings: newMeterReading };
+        return newMeterReading;
     }
 
     private async getActiveIndividualMeterReadings(

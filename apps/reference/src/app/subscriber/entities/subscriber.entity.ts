@@ -37,6 +37,7 @@ export class SubscriberEntity implements ISubscriber {
 
     public get(): ISubscriber {
         return {
+            id: this.id,
             ownerId: this.ownerId,
             apartmentId: this.apartmentId,
             personalAccount: this.personalAccount,

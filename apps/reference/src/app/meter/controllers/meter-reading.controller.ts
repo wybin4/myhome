@@ -2,7 +2,7 @@ import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ReferenceAddMeterReading, ReferenceGetMeterReading } from '@myhome/contracts';
 import { MeterReadingService } from '../services/meter-reading.service';
-import { ReferenceGetMeterReadingByHID, ReferenceGetMeterReadingBySID } from '@myhome/contracts';
+import { ReferenceGetMeterReadingByHID, ReferenceGetIndividualMeterReadings } from '@myhome/contracts';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
 @Controller('meter-reading')
@@ -32,10 +32,10 @@ export class MeterReadingController {
     }
 
     @RMQValidate()
-    @RMQRoute(ReferenceGetMeterReadingBySID.topic)
-    async getMeterReadingBySID(@Body() dto: ReferenceGetMeterReadingBySID.Request) {
+    @RMQRoute(ReferenceGetIndividualMeterReadings.topic)
+    async getIndividualMeterReadings(@Body() dto: ReferenceGetIndividualMeterReadings.Request) {
         try {
-            return await this.meterReadingService.getMeterReadingBySID(dto);
+            return await this.meterReadingService.getIndividualMeterReadings(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { HouseEntity } from '../entities/house.entity';
+import { SubscriberStatus } from '@myhome/interfaces';
 
 @Injectable()
 export class HouseRepository {
@@ -11,15 +12,25 @@ export class HouseRepository {
     ) { }
 
     async create(house: HouseEntity) {
-        return this.houseRepository.save(house);
+        return await this.houseRepository.save(house);
     }
 
     async findById(id: number) {
-        return this.houseRepository.findOne({ where: { id } });
+        return await this.houseRepository.findOne({ where: { id } });
     }
 
     async findManyByMCId(managementCompanyId: number) {
-        return this.houseRepository.find({ where: { managementCompanyId } });
+        return await this.houseRepository.find({ where: { managementCompanyId } });
+    }
+
+    async findManyWithSubscribers(houseIds: number[]) {
+        return await this.houseRepository
+            .createQueryBuilder('house')
+            .innerJoinAndSelect('house.apartments', 'apartment')
+            .innerJoinAndSelect('apartment.subscriber', 'subscriber')
+            .where('house.id IN (:...houseIds)', { houseIds })
+            .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
+            .getMany();
     }
 
     async delete(id: number): Promise<void> {
@@ -28,11 +39,11 @@ export class HouseRepository {
 
     async update(house: HouseEntity) {
         await this.houseRepository.update(house.id, house);
-        return this.findById(house.id);
+        return await this.findById(house.id);
     }
 
     async findMany(ids: number[]) {
-        return this.houseRepository.find({
+        return await this.houseRepository.find({
             where: {
                 id: In(ids),
             }

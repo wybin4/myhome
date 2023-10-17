@@ -1,6 +1,9 @@
 import { GenericEnumTransformer } from '@myhome/constants';
 import { IIndividualMeter, MeterStatus, SubscriberStatus } from '@myhome/interfaces';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { ApartmentEntity } from '../../subscriber/entities/apartment.entity';
+import { IndividualMeterReadingEntity } from './individual-meter-reading.entity';
+import { TypeOfServiceEntity } from '../../common/entities/type-of-service.entity';
 
 @Entity('individual_meters')
 export class IndividualMeterEntity implements IIndividualMeter {
@@ -12,6 +15,15 @@ export class IndividualMeterEntity implements IIndividualMeter {
 
     @Column({ nullable: false })
     apartmentId: number;
+
+    @ManyToOne(() => ApartmentEntity, (apartment) => apartment.individualMeters)
+    apartment: ApartmentEntity;
+
+    @OneToMany(() => IndividualMeterReadingEntity, (individualMeterReading) => individualMeterReading.individualMeter)
+    individualMeterReadings: IndividualMeterReadingEntity[];
+
+    @ManyToOne(() => TypeOfServiceEntity, (typeOfService) => typeOfService.individualMeters)
+    typeOfService: TypeOfServiceEntity;
 
     @Column({ nullable: false })
     factoryNumber: string;

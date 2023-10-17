@@ -4,7 +4,7 @@ import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 import { ApartmentService } from '../services/apartment.service';
 import { ReferenceGetApartment, ReferenceGetApartmentsBySubscribers, ReferenceGetApartmentsByMCId, ReferenceGetApartmentsAllInfo } from '@myhome/contracts';
 
-@Controller()
+@Controller('apartment')
 export class ApartmentQueries {
     constructor(
         private readonly apartmentService: ApartmentService

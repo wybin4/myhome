@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { GetCommonHouseNeeds, ReferenceGetAllTariffs, ReferenceGetAllTypesOfService, ReferenceGetApartmentsBySubscribers, ReferenceGetHouse, ReferenceGetMeterReadingByHID, ReferenceGetSubscriberIdsByHouse } from "@myhome/contracts";
-import { CANT_GET_SUBSCRIBERS_BY_HOUSE_ID, FAILED_TO_GET_INDIVIDUAL_READINGS, HOUSE_NOT_EXIST, RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
+import { GetCommonHouseNeeds, ReferenceGetAllTariffs, ReferenceGetAllTypesOfService, ReferenceGetApartmentsBySubscribers, ReferenceGetHouse, ReferenceGetMeterReadingByHID } from "@myhome/contracts";
+import { FAILED_TO_GET_INDIVIDUAL_READINGS, HOUSE_NOT_EXIST, RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { PublicUtilityService } from "../public-utility/public-utility.service";
 import { ICommonHouseNeedTariff, IGetCommonHouseNeed, IGetDocumentDetail, IGetMeterData, Reading, TariffAndNormType } from "@myhome/interfaces";
 
@@ -128,16 +128,6 @@ export class CommonHouseNeedService {
         }
     }
 
-    private async getSubscriberIdsByHouse(houseId: number) {
-        try {
-            return await this.rmqService.send<ReferenceGetSubscriberIdsByHouse.Request, ReferenceGetSubscriberIdsByHouse.Response>(
-                ReferenceGetSubscriberIdsByHouse.topic, { houseId }
-            );
-        } catch (e) {
-            throw new RMQException(HOUSE_NOT_EXIST.message(houseId), HOUSE_NOT_EXIST.status);
-        }
-    }
-
     private async getAllTypesOfService() {
         try {
             return await this.rmqService.send<ReferenceGetAllTypesOfService.Request, ReferenceGetAllTypesOfService.Response>(
@@ -149,12 +139,7 @@ export class CommonHouseNeedService {
     }
 
     private async getPUSum(houseId: number, managementCompanyId: number) {
-        const temp = await this.getSubscriberIdsByHouse(houseId);
-        let subscriberIds: number[];
-        if (temp) {
-            subscriberIds = temp.subscriberIds;
-        } else throw new RMQException(CANT_GET_SUBSCRIBERS_BY_HOUSE_ID.message, CANT_GET_SUBSCRIBERS_BY_HOUSE_ID.status);
-        const { publicUtilities } = await this.publicUtilityService.getPublicUtility({ subscriberIds, managementCompanyId });
+        const { publicUtilities } = await this.publicUtilityService.getPublicUtilityByHId(houseId, managementCompanyId);
         const typesOfService = (await this.getAllTypesOfService()).typesOfService.map(obj => obj.id);
         const amountConsumed = [];
         for (const tos of typesOfService) {

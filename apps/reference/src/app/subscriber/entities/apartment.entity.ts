@@ -1,8 +1,9 @@
 import { IApartment } from '@myhome/interfaces';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, OneToMany } from 'typeorm';
 import { HouseEntity } from './house.entity';
 import { SubscriberEntity } from './subscriber.entity';
 import { Min } from 'class-validator';
+import { IndividualMeterEntity } from '../../meter/entities/individual-meter.entity';
 
 @Entity('apartments')
 export class ApartmentEntity implements IApartment {
@@ -14,6 +15,9 @@ export class ApartmentEntity implements IApartment {
 
     @ManyToOne(() => HouseEntity, (house) => house.apartments)
     house: HouseEntity;
+
+    @OneToMany(() => IndividualMeterEntity, (individualMeter) => individualMeter.apartment)
+    individualMeters: IndividualMeterEntity[];
 
     @Column({ nullable: false })
     apartmentNumber: number;
@@ -39,6 +43,7 @@ export class ApartmentEntity implements IApartment {
 
     public get(): IApartment {
         return {
+            id: this.id,
             houseId: this.houseId,
             apartmentNumber: this.apartmentNumber,
             totalArea: this.totalArea,

@@ -1,6 +1,6 @@
-import { getGenericObject, SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, APARTS_NOT_EXIST, HOUSES_NOT_EXIST, addGenericObject, getGenericObjects, checkUser, checkApartment } from "@myhome/constants";
-import { ReferenceAddSubscriber, AccountUsersInfo, ReferenceGetSubscribersByMCId, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersAllInfo } from "@myhome/contracts";
-import { SubscriberStatus, ISubscriberAllInfo, UserRole, ISubscriber } from "@myhome/interfaces";
+import { getGenericObject, SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, addGenericObject, getGenericObjects, checkUser } from "@myhome/constants";
+import { ReferenceAddSubscriber, AccountUsersInfo, ReferenceGetSubscribersByMCId, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersAllInfo, ReferenceGetManagementCompany, ReferenceGetOwnersByMCId } from "@myhome/contracts";
+import { SubscriberStatus, UserRole, ISubscriber } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { SubscriberEntity } from "../entities/subscriber.entity";
 import { ApartmentRepository } from "../repositories/apartment.repository";
@@ -29,8 +29,7 @@ export class SubscriberService {
 		};
 	}
 
-	async addSubscriber(dto: ReferenceAddSubscriber.Request) {
-		await checkApartment(this.rmqService, dto.apartmentId);
+	async addSubscriber(dto: ReferenceAddSubscriber.Request): Promise<ReferenceAddSubscriber.Response> {
 		await checkUser(this.rmqService, dto.ownerId, UserRole.Owner);
 		const existedSubscriber = await this.subscriberRepository.findByPersonalAccount(dto.personalAccount);
 		if (existedSubscriber) {
@@ -60,73 +59,42 @@ export class SubscriberService {
 		]);
 	}
 
-	async getManagementCompany(subscriberId: number) {
-		const subscriber = await this.subscriberRepository.findById(subscriberId);
-		if (!subscriber) {
-			throw new RMQException(SUBSCRIBER_NOT_EXIST.message(subscriberId), SUBSCRIBER_NOT_EXIST.status);
-		}
-		const apartment = await this.apartmentRepository.findById(subscriber.apartmentId);
-		const house = await this.houseRepository.findById(apartment.houseId);
-		return house.managementCompanyId;
-	}
-
-	async getHouseBySID(subscriberId: number) {
-		const subscriber = await this.subscriberRepository.findById(subscriberId);
-		if (!subscriber) {
-			throw new RMQException(SUBSCRIBER_NOT_EXIST.message(subscriberId), SUBSCRIBER_NOT_EXIST.status);
-		}
-		const apartment = await this.apartmentRepository.findById(subscriber.apartmentId);
-		const house = await this.houseRepository.findById(apartment.houseId);
-		return house.managementCompanyId;
-	}
-
-	async getSubscriberIdsByHouse(houseId: number) {
-		const apartments = await this.apartmentRepository.findManyByHouse(houseId);
-		const apartmentIds = apartments.map(obj => obj.id);
-		return { subscriberIds: await this.subscriberRepository.findIdsByApartmentIds(apartmentIds) };
+	async getManagementCompany(subscriberId: number): Promise<ReferenceGetManagementCompany.Response> {
+		const subscriber = await this.subscriberRepository.findByIdAllInfo(subscriberId);
+		return { managementCompanyId: subscriber.apartment.house.managementCompanyId };
 	}
 
 	async getSubscribersByHouses(houseIds: number[]): Promise<ReferenceGetSubscribersByHouses.Response> {
-		const apartments = await this.apartmentRepository.findManyByHouses(houseIds);
-		if (!apartments.length) {
-			throw new RMQException(APARTS_NOT_EXIST.message, APARTS_NOT_EXIST.status);
-		}
-		const apartmentIds = apartments.map(obj => obj.id);
+		const houses = await this.houseRepository.findManyWithSubscribers(houseIds);
+		const ownerIds = houses.map((house) => {
+			if (house.apartments) {
+				return house.apartments
+					.map((apartment) => apartment.subscriber.ownerId);
+			}
+			return [];
+		});
 
-		const realHouseIds = apartments.map(obj => obj.houseId);
-		const houses = await this.houseRepository.findMany(realHouseIds);
-		if (!houses.length) {
-			throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
-		}
-
-		const subscribers = await this.subscriberRepository.findManyByApartmentIds(apartmentIds);
-
-		const ownerIds = subscribers.map(obj => obj.ownerId);
-		const { profiles: owners } = await this.getOwners(ownerIds);
+		const flattenedOwnerIds = ownerIds.flat();
+		const { profiles: owners } = await this.getOwners(flattenedOwnerIds);
 
 		return {
 			houses: houses.map(house => {
 				return {
-					house: house,
-					subscribers: subscribers
-						.filter(subscriber => {
-							const currentApart = apartments.find(obj => obj.id === subscriber.apartmentId);
-							return currentApart.houseId === house.id;
-						})
-						.map(subscriber => {
-							const currentApart = apartments.find(obj => obj.id === subscriber.apartmentId);
-							const currentOwner = owners.find(obj => obj.id === subscriber.ownerId);
-							return {
-								id: subscriber.id,
-								houseId: house.id,
-								name: currentOwner.name,
-								address: house.street + ', дом № ' + house.houseNumber + ', кв. ' + currentApart.apartmentNumber,
-								personalAccount: subscriber.personalAccount,
-								apartmentArea: currentApart.totalArea,
-								livingArea: currentApart.livingArea,
-								numberOfRegistered: currentApart.numberOfRegistered
-							};
-						})
+					house: house.get(),
+					subscribers: house.apartments.map(apartment => {
+						const currentSubscriber = apartment.subscriber;
+						const currentOwner = owners.find(obj => obj.id === currentSubscriber.ownerId);
+						return {
+							id: currentSubscriber.id,
+							houseId: house.id,
+							name: currentOwner.name,
+							address: house.getAddress(false) + ', кв. ' + apartment.apartmentNumber,
+							personalAccount: currentSubscriber.personalAccount,
+							apartmentArea: apartment.totalArea,
+							livingArea: apartment.livingArea,
+							numberOfRegistered: apartment.numberOfRegistered
+						};
+					})
 				};
 			}),
 		};
@@ -145,69 +113,33 @@ export class SubscriberService {
 	}
 
 	async getSubscribersAllInfo(ids: number[]): Promise<ReferenceGetSubscribersAllInfo.Response> {
-		const subscribers = await this.subscriberRepository.findMany(ids);
-		if (!subscribers.length) {
-			throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
-		}
-
-		const apartmentIds = subscribers.map(obj => obj.apartmentId);
-		const apartments = await this.apartmentRepository.findWithSubscribers(apartmentIds);
-		if (!apartments.length) {
-			throw new RMQException(APARTS_NOT_EXIST.message, APARTS_NOT_EXIST.status);
-		}
-
-		const houseIds = apartments.map(obj => obj.houseId);
-		const houses = await this.houseRepository.findMany(houseIds);
-		if (!houses.length) {
-			throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
-		}
+		const subscribers = await this.subscriberRepository.findByIdsAllInfo(ids);
 
 		const ownerIds = subscribers.map(obj => obj.ownerId);
 		const { profiles: owners } = await this.getOwners(ownerIds);
 
-		const subscribersInfo: ISubscriberAllInfo[] = [];
-
-		for (const subscriber of subscribers) {
-			const currentApart = apartments.find(obj => obj.id === subscriber.apartmentId);
-			const currentOwner = owners.find(obj => obj.id === subscriber.ownerId);
-			const currentHouse = houses.find(obj => obj.id === currentApart.houseId);
-
-			subscribersInfo.push({
-				id: subscriber.id,
-				houseId: currentHouse.id,
-				name: currentOwner.name,
-				address: currentHouse.street + ', дом № ' + currentHouse.houseNumber + ', кв. ' + currentApart.apartmentNumber,
-				personalAccount: subscriber.personalAccount,
-				apartmentArea: currentApart.totalArea,
-				livingArea: currentApart.livingArea,
-				numberOfRegistered: currentApart.numberOfRegistered
-			});
-		}
-
-		return { subscribers: subscribersInfo };
-	}
-
-	private async getOwnerIdsByMCId(managementCompanyId: number) {
-		const houseItems = await this.houseRepository.findManyByMCId(managementCompanyId);
-		if (!houseItems.length) {
-			throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
-		}
-		const houseIds = houseItems.map(obj => obj.id);
-
-		const apartmentItems = await this.apartmentRepository.findManyByHouses(houseIds);
-		const apartmentIds = apartmentItems.map(obj => obj.id);
-
-		const subscriberItems = await this.subscriberRepository.findManyByApartmentIds(apartmentIds);
 		return {
-			houseItems,
-			apartmentItems,
-			subscriberItems,
-			ownerIds: subscriberItems.map(obj => obj.ownerId),
+			subscribers: subscribers.map(subscriber => {
+				const currentApart = subscriber.apartment;
+				const currentHouse = subscriber.apartment.house;
+				const currentOwner = owners.find(obj => obj.id === subscriber.ownerId);
+				return {
+					id: subscriber.id,
+					houseId: currentHouse.id,
+					name: currentOwner.name,
+					address: currentHouse.getAddress() + ', кв. ' + currentApart.apartmentNumber,
+					personalAccount: subscriber.personalAccount,
+					apartmentArea: currentApart.totalArea,
+					livingArea: currentApart.livingArea,
+					numberOfRegistered: currentApart.numberOfRegistered
+				};
+			})
 		};
 	}
 
-	async getOwnersByMCId(managementCompanyId: number) {
-		const { ownerIds } = await this.getOwnerIdsByMCId(managementCompanyId);
+	async getOwnersByMCId(managementCompanyId: number): Promise<ReferenceGetOwnersByMCId.Response> {
+		const subscribers = await this.subscriberRepository.findByMCId(managementCompanyId);
+		const ownerIds = subscribers.map(s => s.ownerId);
 		return { ownerIds: ownerIds }
 	}
 
@@ -215,21 +147,21 @@ export class SubscriberService {
 		Promise<ReferenceGetSubscribersByMCId.Response> {
 		await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
 
-		const { houseItems, apartmentItems, subscriberItems, ownerIds } = await this.getOwnerIdsByMCId(managementCompanyId);
+		const subscribers = await this.subscriberRepository.findByMCId(managementCompanyId);
+		const ownerIds = subscribers.map(s => s.ownerId);
 		const { profiles: ownerItems } = await this.getOwners(ownerIds);
 
 		return {
-			subscribers: subscriberItems.map(subscriber => {
-				const currentApart = apartmentItems.find(obj => obj.id === subscriber.apartmentId);
+			subscribers: subscribers.map(subscriber => {
+				const currentApart = subscriber.apartment;
 				const currentOwner = ownerItems.find(obj => obj.id === subscriber.ownerId);
-				const currentHouse = houseItems.find(obj => obj.id === currentApart.houseId);
-				const houseName = `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}`;
+				const currentHouse = subscriber.apartment.house;
 				return {
-					...subscriber,
+					...subscriber.get(),
 					ownerName: currentOwner.name,
 					houseId: currentHouse.id,
-					houseName,
-					apartmentName: `${houseName}, кв. ${currentApart.apartmentNumber}`
+					houseName: currentHouse.getAddress(),
+					apartmentName: `${currentHouse.getAddress()}, кв. ${currentApart.apartmentNumber}`
 				};
 			})
 		};

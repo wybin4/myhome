@@ -1,8 +1,8 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { IGetMeterReading, IGetPublicUtility, IMunicipalTariff, TariffAndNormType } from "@myhome/interfaces";
-import { GetPublicUtilities, ReferenceGetAllTariffs, ReferenceGetMeterReadingBySID, ReferenceGetSubscribers } from "@myhome/contracts";
-import { RMQException, SUBSCRIBERS_NOT_EXIST, TARIFFS_NOT_EXIST } from "@myhome/constants";
+import { GetPublicUtilities, ReferenceGetAllTariffs, ReferenceGetIndividualMeterReadings } from "@myhome/contracts";
+import { RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
 
 @Injectable()
 export class PublicUtilityService {
@@ -10,11 +10,11 @@ export class PublicUtilityService {
         private readonly rmqService: RMQService,
     ) { }
 
-    public async getPublicUtility(
-        { subscriberIds, managementCompanyId }: GetPublicUtilities.Request
-    ): Promise<GetPublicUtilities.Response> {
+    public async getPublicUtilityByHId(
+        houseId: number, managementCompanyId: number
+    ): Promise<{ publicUtilities: IGetPublicUtility[] }> {
         const result: IGetPublicUtility[] = [];
-        const { meterReadings } = await this.getMeterReadingsBySID(subscriberIds, managementCompanyId);
+        const { meterReadings } = await this.getIndividualMeterReadingsByHId(houseId, managementCompanyId);
         const tariffs = await this.getPublicUtilityTariffs(managementCompanyId) as unknown as Array<IMunicipalTariff>;
 
         for (const meterReading of meterReadings) {
@@ -32,29 +32,61 @@ export class PublicUtilityService {
         return { publicUtilities: result };
     }
 
-    private async getSubscribers(subscriberIds: number[]) {
-        try {
-            return await this.rmqService.send<ReferenceGetSubscribers.Request, ReferenceGetSubscribers.Response>(
-                ReferenceGetSubscribers.topic, { ids: subscriberIds }
-            );
-        } catch (e) {
-            throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
+    public async getPublicUtility(
+        { subscriberIds, managementCompanyId }: GetPublicUtilities.Request
+    ): Promise<GetPublicUtilities.Response> {
+        const result: IGetPublicUtility[] = [];
+        const { meterReadings } = await this.getIndividualMeterReadingsBySIds(subscriberIds, managementCompanyId);
+        const tariffs = await this.getPublicUtilityTariffs(managementCompanyId) as unknown as Array<IMunicipalTariff>;
+
+        for (const meterReading of meterReadings) {
+            result.push({
+                subscriberId: meterReading.subscriberId,
+                publicUtility: await this.getPUAmount(meterReading.data, tariffs),
+                meterData: meterReading.data.map(obj => {
+                    return {
+                        fullMeterReadings: obj.fullMeterReadings,
+                        typeOfServiceId: obj.typeOfServiceId
+                    };
+                })
+            });
         }
+        return { publicUtilities: result };
     }
 
-    private async getMeterReadingsBySID(
+    private async getIndividualMeterReadingsBySIds(
         subscriberIds: number[], managementCompanyId: number
-    ): Promise<ReferenceGetMeterReadingBySID.Response> {
+    ): Promise<ReferenceGetIndividualMeterReadings.Response> {
         try {
             return await this.rmqService.send
                 <
-                    ReferenceGetMeterReadingBySID.Request,
-                    ReferenceGetMeterReadingBySID.Response
+                    ReferenceGetIndividualMeterReadings.Request,
+                    ReferenceGetIndividualMeterReadings.Response
                 >
                 (
-                    ReferenceGetMeterReadingBySID.topic,
+                    ReferenceGetIndividualMeterReadings.topic,
                     {
-                        subscriberIds: subscriberIds,
+                        subscriberIds,
+                        managementCompanyId
+                    });
+        } catch (e) {
+            throw new RMQException(e.message, e.code);
+        }
+    }
+
+    private async getIndividualMeterReadingsByHId(
+        houseId: number, managementCompanyId: number,
+    ): Promise<ReferenceGetIndividualMeterReadings.Response> {
+        try {
+            return await this.rmqService.send
+                <
+                    ReferenceGetIndividualMeterReadings.Request,
+                    ReferenceGetIndividualMeterReadings.Response
+                >
+                (
+                    ReferenceGetIndividualMeterReadings.topic,
+                    {
+                        houseId,
                         managementCompanyId
                     });
         } catch (e) {

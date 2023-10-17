@@ -1,4 +1,4 @@
-import { ReferenceGetManagementCompany, ReferenceGetSubscriberIdsByHouse, ReferenceGetSubscribersByMCId, ReferenceGetSubscribers, ReferenceGetSubscribersAllInfo, ReferenceGetSubscriber, ReferenceGetOwnersByMCId, ReferenceGetSubscribersByHouses } from '@myhome/contracts';
+import { ReferenceGetManagementCompany, ReferenceGetSubscribersByMCId, ReferenceGetSubscribers, ReferenceGetSubscribersAllInfo, ReferenceGetSubscriber, ReferenceGetOwnersByMCId, ReferenceGetSubscribersByHouses } from '@myhome/contracts';
 import { Body, Controller } from '@nestjs/common';
 import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
@@ -25,26 +25,6 @@ export class SubscriberQueries {
     async getManagementCompany(@Body() { subscriberId }: ReferenceGetManagementCompany.Request) {
         try {
             return await this.subscriberService.getManagementCompany(subscriberId);
-        } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
-        }
-    }
-
-    @RMQValidate()
-    @RMQRoute(ReferenceGetManagementCompany.topic)
-    async getHouseBySID(@Body() { subscriberId }: ReferenceGetManagementCompany.Request) {
-        try {
-            return await this.subscriberService.getHouseBySID(subscriberId);
-        } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
-        }
-    }
-
-    @RMQValidate()
-    @RMQRoute(ReferenceGetSubscriberIdsByHouse.topic)
-    async getSubscriberIdsByHouse(@Body() { houseId }: ReferenceGetSubscriberIdsByHouse.Request) {
-        try {
-            return await this.subscriberService.getSubscriberIdsByHouse(houseId);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -79,7 +59,7 @@ export class SubscriberQueries {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
-
+    
     @RMQValidate()
     @RMQRoute(ReferenceGetSubscribersByMCId.topic)
     async getSubscribersByMCId(@Body() { managementCompanyId }: ReferenceGetSubscribersByMCId.Request) {

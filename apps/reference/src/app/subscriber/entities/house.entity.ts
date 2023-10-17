@@ -1,6 +1,7 @@
 import { IHouse } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ApartmentEntity } from './apartment.entity';
+import { GeneralMeterEntity } from '../../meter/entities/general-meter.entity';
 
 @Entity('houses')
 export class HouseEntity implements IHouse {
@@ -9,6 +10,9 @@ export class HouseEntity implements IHouse {
 
     @OneToMany(() => ApartmentEntity, (apartment) => apartment.house)
     apartments: ApartmentEntity[];
+
+    @OneToMany(() => GeneralMeterEntity, (generalMeter) => generalMeter.house)
+    generalMeters: GeneralMeterEntity[];
 
     @Column({ nullable: false })
     managementCompanyId: number;
@@ -54,4 +58,13 @@ export class HouseEntity implements IHouse {
             commonArea: this.commonArea
         }
     }
+
+    public getAddress(withCity = true): string {
+        if (withCity) {
+            return `${this.city}, ${this.street} ${this.houseNumber}`;
+        } else {
+            return `${this.street} д. ${this.houseNumber}`;
+        }
+    }
+
 }

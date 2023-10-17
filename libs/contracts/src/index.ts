@@ -22,7 +22,6 @@ export * from './lib/reference/subscriber/subscriber/reference.add-subscriber';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscriber';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-all-info';
-export * from './lib/reference/subscriber/subscriber/reference.get-subscriber-ids-by-house';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-houses';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-mcid';
 export * from './lib/reference/subscriber/subscriber/reference.get-owners-by-mcid';
@@ -37,7 +36,7 @@ export * from './lib/reference/meter/reference.get-meters-all-info-by-sid';
 export * from './lib/reference/meter/reference.update-meter';
 export * from './lib/reference/meter/reference.add-meter-reading';
 export * from './lib/reference/meter/reference.get-meter-reading';
-export * from './lib/reference/meter/reference.get-meter-reading-by-sid';
+export * from './lib/reference/meter/reference.get-individual-meter-readings';
 export * from './lib/reference/meter/reference.get-meter-reading-by-hid';
 
 export * from './lib/reference/tariff-and-norm/reference.update-tariff-and-norm';

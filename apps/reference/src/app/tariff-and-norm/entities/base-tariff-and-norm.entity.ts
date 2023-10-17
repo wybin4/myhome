@@ -1,7 +1,9 @@
 import { GenericEnumTransformer } from '@myhome/constants';
 import { ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
 import { IBaseTariffAndNorm, IMunicipalTariff, INorm, ISeasonalityFactor, ISocialNorm, TypeOfNorm } from '@myhome/interfaces';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { TypeOfServiceEntity } from '../../common/entities/type-of-service.entity';
+import { UnitEntity } from '../../common/entities/unit.entity';
 
 export class BaseTariffAndNormEntity implements IBaseTariffAndNorm {
   @PrimaryGeneratedColumn()
@@ -39,6 +41,12 @@ export class NormEntity extends BaseTariffAndNormEntity implements INorm {
 
   @Column('double', { nullable: false })
   norm: number;
+
+  @ManyToOne(() => TypeOfServiceEntity, (typeOfService) => typeOfService.norms)
+  typeOfService: TypeOfServiceEntity;
+
+  @ManyToOne(() => UnitEntity, (unit) => unit.norms)
+  unit: UnitEntity;
 
   @Column({
     nullable: false,
@@ -78,6 +86,12 @@ export class MunicipalTariffEntity extends BaseTariffAndNormEntity implements IM
   @Column('double', { nullable: true })
   multiplyingFactor: number;
 
+  @ManyToOne(() => TypeOfServiceEntity, (typeOfService) => typeOfService.municipalTariffs)
+  typeOfService: TypeOfServiceEntity;
+
+  @ManyToOne(() => UnitEntity, (unit) => unit.municipalTariffs)
+  unit: UnitEntity;
+
   public get() {
     return {
       managementCompanyId: this.managementCompanyId,
@@ -110,6 +124,12 @@ export class SocialNormEntity extends BaseTariffAndNormEntity implements ISocial
   @Column({ nullable: false })
   amount: number;
 
+  @ManyToOne(() => TypeOfServiceEntity, (typeOfService) => typeOfService.socialNorms)
+  typeOfService: TypeOfServiceEntity;
+
+  @ManyToOne(() => UnitEntity, (unit) => unit.socialNorms)
+  unit: UnitEntity;
+
   public get() {
     return {
       managementCompanyId: this.managementCompanyId,
@@ -137,6 +157,9 @@ export class SeasonalityFactorEntity extends BaseTariffAndNormEntity implements 
 
   @Column('double', { nullable: false })
   coefficient: number;
+
+  @ManyToOne(() => TypeOfServiceEntity, (typeOfService) => typeOfService.seasonalityFactors)
+  typeOfService: TypeOfServiceEntity;
 
   public get() {
     return {

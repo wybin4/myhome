@@ -1,5 +1,6 @@
 import { IGeneralMeterReading } from '@myhome/interfaces';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { GeneralMeterEntity } from './general-meter.entity';
 
 @Entity('general_meter_readings')
 export class GeneralMeterReadingEntity implements IGeneralMeterReading {
@@ -14,6 +15,9 @@ export class GeneralMeterReadingEntity implements IGeneralMeterReading {
 
     @Column({ nullable: false })
     readAt: Date;
+
+    @ManyToOne(() => GeneralMeterEntity, (generalMeter) => generalMeter.generalMeterReadings)
+    generalMeter: GeneralMeterEntity;
 
     constructor(data?: Partial<GeneralMeterReadingEntity>) {
         if (data) {

@@ -1,8 +1,8 @@
-import { Controller, Body, Post } from "@nestjs/common";
-import { RMQValidate, RMQRoute, RMQError } from "nestjs-rmq";
+import {  RMQError, RMQRoute, RMQValidate } from "nestjs-rmq";
 import { VotingService } from "./voting.service";
 import { AddVoting, GetVoting, GetVotingsByMCId, UpdateVoting } from '@myhome/contracts';
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
+import { Body, Controller } from "@nestjs/common";
 
 @Controller('voting')
 export class VotingController {
@@ -10,7 +10,6 @@ export class VotingController {
         private readonly votingService: VotingService,
     ) { }
 
-    @Post('add-voting')
     @RMQValidate()
     @RMQRoute(AddVoting.topic)
     async addVoting(@Body() dto: AddVoting.Request) {
@@ -21,7 +20,6 @@ export class VotingController {
         }
     }
 
-    @Post('get-voting')
     @RMQValidate()
     @RMQRoute(GetVoting.topic)
     async getVoting(@Body() { id }: GetVoting.Request) {
@@ -32,7 +30,6 @@ export class VotingController {
         }
     }
 
-    @Post('update-voting')
     @RMQValidate()
     @RMQRoute(UpdateVoting.topic)
     async updateVoting(@Body() { optionId }: UpdateVoting.Request) {
@@ -43,7 +40,6 @@ export class VotingController {
         }
     }
 
-    @Post('get-votings-by-mcid')
     @RMQValidate()
     @RMQRoute(GetVotingsByMCId.topic)
     async getVotingsByMCId(@Body() { managementCompanyId }: GetVotingsByMCId.Request) {

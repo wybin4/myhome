@@ -3,6 +3,7 @@ import { UserRole } from "./account/user.interface";
 export interface IHouseNotification {
     id?: number;
     houseId: number;
+    title: string;
     type: HouseNotificationType;
     createdAt: Date;
     text: string;

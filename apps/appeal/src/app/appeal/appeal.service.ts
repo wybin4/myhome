@@ -71,7 +71,6 @@ export class AppealService {
             typeOfAppealId: dto.typeOfAppealId,
             subscriberId: dto.subscriberId,
             createdAt: new Date(dto.createdAt),
-            status: dto.status,
             data: String(dto.data),
         });
         const newAppeal = await this.appealRepository.create(newAppealEntity);

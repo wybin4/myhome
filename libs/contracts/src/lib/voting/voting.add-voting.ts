@@ -19,7 +19,7 @@ export namespace AddVoting {
         expiredAt!: Date;
 
         @IsArray()
-        options!: Omit<IOption, 'votingId'>[];
+        options!: string[];
     }
 
     export class Response {

@@ -48,7 +48,8 @@ export class HouseNotificationService {
         };
     }
 
-    public async addHouseNotification(dto: AddHouseNotification.Request) {
+    public async addHouseNotification(dto: AddHouseNotification.Request):
+        Promise<AddHouseNotification.Response> {
         await this.getHouse(dto.houseId);
 
         if (!Object.values(HouseNotificationType).includes(dto.type)) {
@@ -57,6 +58,7 @@ export class HouseNotificationService {
 
         const newHouseNotificationEntity = new HouseNotificationEntity({
             houseId: dto.houseId,
+            title: dto.title,
             text: dto.text,
             type: dto.type,
             createdAt: new Date(dto.createdAt),

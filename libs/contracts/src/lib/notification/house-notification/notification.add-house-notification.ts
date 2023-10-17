@@ -11,6 +11,10 @@ export namespace AddHouseNotification {
         @IsString()
         type!: HouseNotificationType;
 
+        @MaxLength(50)
+        @IsString()
+        title!: string;
+
         @MaxLength(500)
         @IsString()
         text!: string;

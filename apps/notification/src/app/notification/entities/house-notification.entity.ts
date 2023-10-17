@@ -14,6 +14,9 @@ export class HouseNotificationEntity implements IHouseNotification {
     houseId: number;
 
     @Column({ nullable: false })
+    title: string;
+
+    @Column({ nullable: false })
     text: string;
 
     @Column({
@@ -33,6 +36,7 @@ export class HouseNotificationEntity implements IHouseNotification {
         return {
             id: this.id,
             houseId: this.houseId,
+            title: this.title,
             text: this.text,
             type: this.type,
             createdAt: this.createdAt,

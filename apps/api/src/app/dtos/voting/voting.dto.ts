@@ -1,4 +1,3 @@
-import { IOption } from "@myhome/interfaces";
 import { IsArray, IsDate, IsNumber, IsString, MaxLength } from "class-validator";
 
 export class AddVotingDto {
@@ -16,7 +15,7 @@ export class AddVotingDto {
     expiredAt!: Date;
 
     @IsArray()
-    options!: Omit<IOption, 'votingId'>[];
+    options!: string[];
 }
 
 export class GetVotingDto {

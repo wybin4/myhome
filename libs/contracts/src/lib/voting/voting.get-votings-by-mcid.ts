@@ -16,4 +16,5 @@ export namespace GetVotingsByMCId {
 
 interface IGetVotingsByMCId extends IVoting {
     result?: string;
+    houseName: string;
 }

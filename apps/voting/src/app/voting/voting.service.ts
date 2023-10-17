@@ -23,7 +23,7 @@ export class VotingService {
 
         const options: OptionEntity[] = dto.options.map(option => {
             const entity = new OptionEntity({
-                ...option,
+                text: option,
                 votingId: newVoting.id // обогащаем каждый option votingId
             });
             return entity;
@@ -80,11 +80,13 @@ export class VotingService {
         return {
             votings: votings.map(voting => {
                 const currentOptions = options.filter(opt => opt.votingId === voting.id);
+                const currentHouse = houses.find(house => house.id === voting.houseId);
                 let result: OptionEntity | undefined;
                 if (voting.status === VotingStatus.Close) {
                     result = currentOptions.reduce((max, obj) => (obj.numberOfVotes > max.numberOfVotes ? obj : max), currentOptions[0]);
                 } else result = undefined;
                 return {
+                    houseName: `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}`,
                     result: result ? result.text : undefined,
                     ...voting
                 };

@@ -19,7 +19,12 @@ export class HouseNotificationRepository {
     }
 
     async findByHouseIds(houseIds: number[]) {
-        return this.houseNotificationRepository.find({ where: { houseId: In(houseIds) } });
+        return this.houseNotificationRepository.find({
+            where: { houseId: In(houseIds) },
+            order: {
+                createdAt: 'DESC',
+            },
+        });
     }
 
 }

@@ -65,7 +65,7 @@ export class SubscriberRepository {
     async findByHIds(houseIds: number[]) {
         return await this.subscriberRepository
             .createQueryBuilder('subscriber')
-            .innerJoin('subscriber.apartment', 'apartment')
+            .innerJoinAndSelect('subscriber.apartment', 'apartment')
             .innerJoin('apartment.house', 'house')
             .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
             .where('house.id IN (:...houseIds)', { houseIds })
@@ -95,7 +95,7 @@ export class SubscriberRepository {
     async findManyWithApartments(ids: number[]) {
         return await this.subscriberRepository
             .createQueryBuilder('subscriber')
-            .innerJoin('subscriber.apartment', 'apartment')
+            .innerJoinAndSelect('subscriber.apartment', 'apartment')
             .innerJoin('apartment.house', 'house')
             .whereInIds(ids)
             .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })

@@ -19,7 +19,7 @@ export class HouseRepository {
         return await this.houseRepository.findOne({ where: { id } });
     }
 
-    async findManyByMCId(managementCompanyId: number) {
+    async findByMCId(managementCompanyId: number) {
         return await this.houseRepository.find({ where: { managementCompanyId } });
     }
 

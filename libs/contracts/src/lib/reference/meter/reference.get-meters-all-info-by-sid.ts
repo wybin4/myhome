@@ -1,6 +1,6 @@
 import { IsArray } from 'class-validator';
 
-export namespace ReferenceGetMetersAllInfoBySID {
+export namespace ReferenceGetMetersBySID {
     export const topic = 'reference.get-meters-all-info-by-sid.query';
 
     export class Request {

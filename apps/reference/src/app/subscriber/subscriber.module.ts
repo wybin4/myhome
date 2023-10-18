@@ -24,7 +24,7 @@ import { SubscriberService } from "./services/subscriber.service";
     HouseRepository, ApartmentRepository, SubscriberRepository,
     HouseService, ApartmentService, SubscriberService
   ],
-  exports: [HouseRepository, ApartmentRepository, SubscriberRepository],
+  exports: [HouseService, SubscriberService, ApartmentService],
   controllers: [
     HouseQueries, HouseCommands,
     ApartmentQueries, ApartmentCommands,

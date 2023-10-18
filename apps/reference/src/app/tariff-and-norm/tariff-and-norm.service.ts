@@ -5,11 +5,10 @@ import { NormEntity, SeasonalityFactorEntity, MunicipalTariffEntity, SocialNormE
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
 import { IBaseTariffAndNorm, ICommonHouseNeedTariff, IHouse, IUnit, TariffAndNormType, UserRole } from "@myhome/interfaces";
 import { ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceUpdateTariffOrNorm } from "@myhome/contracts";
-import { HOUSE_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, checkUser, RMQException, HOUSES_NOT_EXIST, TYPES_OF_SERVICE_NOT_EXIST, UNITS_NOT_EXIST } from "@myhome/constants";
+import {  TYPE_OF_SERVICE_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, checkUser, RMQException, HOUSES_NOT_EXIST, TYPES_OF_SERVICE_NOT_EXIST, UNITS_NOT_EXIST } from "@myhome/constants";
 import { TypeOfServiceRepository } from "../common/repositories/type-of-service.repository";
 import { UnitRepository } from "../common/repositories/unit.repository";
-import { HouseRepository } from "../subscriber/repositories/house.repository";
-import { HouseEntity } from "../subscriber/entities/house.entity";
+import { HouseService } from "../subscriber/services/house.service";
 
 
 @Injectable()
@@ -23,7 +22,7 @@ export class TariffAndNormService {
         private readonly rmqService: RMQService,
         private readonly typeOfServiceRepository: TypeOfServiceRepository,
         private readonly unitRepository: UnitRepository,
-        private readonly houseRepository: HouseRepository,
+        private readonly houseService: HouseService,
     ) { }
 
     public async getTariffsAndNormsByMCId(managementCompanyId: number, type: TariffAndNormType) {
@@ -113,7 +112,7 @@ export class TariffAndNormService {
                     )
                 };
             case TariffAndNormType.CommonHouseNeedTariff:
-                houses = await this.houseRepository.findManyByMCId(managementCompanyId);
+                ({ houses } = await this.houseService.getHousesByMCId(managementCompanyId));
                 if (!houses && !houses.length) {
                     throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
                 }
@@ -231,7 +230,6 @@ export class TariffAndNormService {
         if (!typeOfService) {
             throw new RMQException(TYPE_OF_SERVICE_NOT_EXIST.message(dto.typeOfServiceId), TYPE_OF_SERVICE_NOT_EXIST.status);
         }
-        let house: HouseEntity;
         let newTEntity: CommonHouseNeedTariffEntity, newT: ICommonHouseNeedTariff;
         switch (dto.type) {
             case TariffAndNormType.Norm:
@@ -286,10 +284,6 @@ export class TariffAndNormService {
                     dto, SocialNormEntity
                 )
             case TariffAndNormType.CommonHouseNeedTariff:
-                house = await this.houseRepository.findById(dto.houseId);
-                if (!house) {
-                    throw new RMQException(HOUSE_NOT_EXIST.message(dto.houseId), HOUSE_NOT_EXIST.status);
-                }
                 await this.checkUnit(dto.unitId);
                 if (!dto.multiplier) {
                     throw new RMQException(INCORRECT_PARAM + 'multiplier', HttpStatus.BAD_REQUEST);
@@ -399,7 +393,6 @@ export class TariffAndNormService {
     }
 
     public async getAllTariffs(dto: ReferenceGetAllTariffs.Request) {
-        let house: IHouse;
         switch (dto.type) {
             case TariffAndNormType.MunicipalTariff:
                 await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
@@ -409,10 +402,6 @@ export class TariffAndNormService {
                     throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
                 }
             case TariffAndNormType.CommonHouseNeedTariff:
-                house = await this.houseRepository.findById(dto.houseId);
-                if (!house) {
-                    throw new RMQException(HOUSE_NOT_EXIST.message(dto.houseId), HOUSE_NOT_EXIST.status);
-                }
                 try {
                     return await this.commonHouseNeedTariffRepository.findByHouseId(dto.houseId);
                 } catch (e) {

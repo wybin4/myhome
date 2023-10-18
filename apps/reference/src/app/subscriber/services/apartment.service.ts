@@ -42,7 +42,7 @@ export class ApartmentService {
 
 	async getApartmentsAllInfo(subscriberIds: number[]): Promise<ReferenceGetApartmentsAllInfo.Response> {
 		const apartments = await this.apartmentRepository.findWithSubscribersAndHouse(subscriberIds);
-
+		
 		return {
 			apartments: apartments.map((apartment) => {
 				const currentHouse = apartment.house;

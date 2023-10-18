@@ -8,6 +8,12 @@ import { HouseRepository } from "../repositories/house.repository";
 import { SubscriberRepository } from "../repositories/subscriber.repository";
 import { RMQService } from "nestjs-rmq";
 
+export interface IApartmentAndSubscriber {
+	subscriberId: number;
+	apartmentId: number;
+	numberOfRegistered: number;
+}
+
 @Injectable()
 export class SubscriberService {
 	constructor(
@@ -110,6 +116,30 @@ export class SubscriberService {
 					SUBSCRIBERS_NOT_EXIST
 				)
 		};
+	}
+
+	public async getApartmentsBySIDs(subscriberIds: number[]): Promise<IApartmentAndSubscriber[]> {
+		const subscribers = await this.subscriberRepository.findManyWithApartments(subscriberIds);
+
+		return subscribers.map(subscriber => {
+			return {
+				subscriberId: subscriber.id,
+				apartmentId: subscriber.apartmentId,
+				numberOfRegistered: subscriber.apartment.numberOfRegistered,
+			};
+		});
+	}
+
+	public async getSubscribersByHId(houseId: number): Promise<IApartmentAndSubscriber[]> {
+		const subscribers = await this.subscriberRepository.findByHIds([houseId]);
+
+		return subscribers.map(subscriber => {
+			return {
+				subscriberId: subscriber.id,
+				apartmentId: subscriber.apartmentId,
+				numberOfRegistered: subscriber.apartment.numberOfRegistered,
+			};
+		});
 	}
 
 	async getSubscribersAllInfo(ids: number[]): Promise<ReferenceGetSubscribersAllInfo.Response> {

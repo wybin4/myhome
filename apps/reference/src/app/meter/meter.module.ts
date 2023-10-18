@@ -7,16 +7,21 @@ import { GeneralMeterReadingRepository } from "./repositories/general-meter-read
 import { IndividualMeterReadingRepository } from "./repositories/individual-meter-reading.repository";
 import { IndividualMeterRepository } from "./repositories/individual-meter.repository";
 import { Module } from "@nestjs/common";
-import { MeterService } from "./services/meter.service";
-import { MeterController } from "./controllers/meter.controller";
-import { MeterReadingController } from "./controllers/meter-reading.controller";
-import { MeterReadingService } from "./services/meter-reading.service";
 import { GeneralMeterRepository } from "./repositories/general-meter.repository";
 import { SubscriberModule } from "../subscriber/subscriber.module";
 import { MeterEventEmitter } from "./meter.event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { CommonModule } from "../common/common.module";
 import { TariffAndNormModule } from "../tariff-and-norm/tariff-and-norm.module";
+import { MeterReadingCommandsService } from "./commands/services/meter-reading.commands.service";
+import { MeterReadingCalculationsService } from "./queries/services/meter-reading.calculations.service";
+import { MeterReadingQueries } from "./queries/controllers/meter-reading.queries";
+import { MeterReadingCommands } from "./commands/controllers/meter-reading.commands";
+import { MeterCommandsService } from "./commands/services/meter.commands.service";
+import { MeterCommands } from "./commands/controllers/meter.commands";
+import { MeterQueries } from "./queries/controllers/meter.queries";
+import { MeterReadingQueriesService } from "./queries/services/meter-reading.queries.service";
+import { MeterQueriesService } from "./queries/services/meter.queries.service";
 
 @Module({
     imports: [
@@ -32,13 +37,17 @@ import { TariffAndNormModule } from "../tariff-and-norm/tariff-and-norm.module";
     providers: [
         IndividualMeterRepository, GeneralMeterRepository,
         IndividualMeterReadingRepository, GeneralMeterReadingRepository,
-        MeterService, MeterReadingService,
+        MeterQueriesService, MeterCommandsService,
+        MeterReadingQueriesService, MeterReadingCommandsService, MeterReadingCalculationsService,
         MeterEventEmitter
     ],
     exports: [
         IndividualMeterRepository, GeneralMeterRepository,
         IndividualMeterReadingRepository, GeneralMeterReadingRepository,
     ],
-    controllers: [MeterController, MeterReadingController],
+    controllers: [
+        MeterQueries, MeterCommands,
+        MeterReadingQueries, MeterReadingCommands
+    ],
 })
 export class MeterModule { }

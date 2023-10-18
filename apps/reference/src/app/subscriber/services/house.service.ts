@@ -2,7 +2,7 @@ import { HouseRepository } from '../repositories/house.repository';
 import { HouseEntity } from '../entities/house.entity';
 import { IHouse, UserRole } from '@myhome/interfaces';
 import { HOUSES_NOT_EXIST, HOUSE_NOT_EXIST, RMQException, addGenericObject, checkUser, getGenericObject, getGenericObjects } from '@myhome/constants';
-import { ReferenceAddHouse } from '@myhome/contracts';
+import { ReferenceAddHouse, ReferenceGetHouse } from '@myhome/contracts';
 import { Injectable } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
 
@@ -13,7 +13,7 @@ export class HouseService {
 		private readonly rmqService: RMQService
 	) { }
 
-	async getHouse(id: number) {
+	async getHouse(id: number): Promise<ReferenceGetHouse.Response> {
 		return {
 			house: await getGenericObject<HouseEntity>
 				(
@@ -21,7 +21,7 @@ export class HouseService {
 					(item) => new HouseEntity(item),
 					id,
 					HOUSE_NOT_EXIST
-				)
+				) as IHouse
 		};
 	}
 
@@ -39,7 +39,7 @@ export class HouseService {
 
 	async getHousesByMCId(managementCompanyId: number) {
 		await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
-		const houseItems = await this.houseRepository.findManyByMCId(managementCompanyId);
+		const houseItems = await this.houseRepository.findByMCId(managementCompanyId);
 		if (!houseItems.length) {
 			throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
 		}

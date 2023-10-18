@@ -18,6 +18,10 @@ export const METER_READING_NOT_EXIST = {
 };
 export const METER_ALREADY_EXIST = 'Такой счётчик уже существует';
 export const INCORRECT_METER_TYPE = 'Некорректный тип счётчика';
+export const UNPROCESSABLE_METER = {
+    message: "Не найдена ссылающаяся строка в базе данных",
+    status: HttpStatus.UNPROCESSABLE_ENTITY
+};
 export const MISSING_PREVIOUS_READING = {
     message: (meterId: number) =>
         `Для счётчика с id=${meterId} есть показания за текущий, но нет за предыдущий период`,

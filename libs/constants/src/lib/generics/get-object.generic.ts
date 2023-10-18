@@ -61,6 +61,5 @@ export async function addGenericObject<T extends GenericEntity>(
     dto: IEntity
 ): Promise<T> {
     const newTEntity = createInstance(dto);
-    const newTItem = await repository.create(newTEntity);
-    return newTItem;
+    return await repository.create(newTEntity);
 }

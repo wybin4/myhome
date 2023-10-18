@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThan, Not, Repository } from 'typeorm';
 import { GeneralMeterEntity } from '../entities/general-meter.entity';
 import { MeterStatus } from '@myhome/interfaces';
+import { RMQException, UNPROCESSABLE_METER } from '@myhome/constants';
 
 @Injectable()
 export class GeneralMeterRepository {
@@ -12,25 +13,32 @@ export class GeneralMeterRepository {
     ) { }
 
     async create(generalMeter: GeneralMeterEntity) {
-        return this.generalMeterRepository.save(generalMeter);
+        try {
+            return await this.generalMeterRepository.save(generalMeter);
+        } catch (error) {
+            if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+                throw new RMQException(UNPROCESSABLE_METER.message, UNPROCESSABLE_METER.status);
+            }
+            throw error;
+        }
     }
 
     async findById(id: number) {
-        return this.generalMeterRepository.findOne({ where: { id } });
+        return await this.generalMeterRepository.findOne({ where: { id } });
     }
 
     async findByFNumber(factoryNumber: string) {
-        return this.generalMeterRepository.findOne({ where: { factoryNumber } });
+        return await this.generalMeterRepository.findOne({ where: { factoryNumber } });
     }
 
     async update(meter: GeneralMeterEntity) {
         await this.generalMeterRepository.update(meter.id, meter);
-        return this.findById(meter.id);
+        return await this.findById(meter.id);
     }
 
     async findExpiredGeneralMeters(): Promise<GeneralMeterEntity[]> {
         const currentDate = new Date();
-        return this.generalMeterRepository.find({
+        return await this.generalMeterRepository.find({
             where: {
                 verifiedAt: LessThan(currentDate),
                 status: Not(MeterStatus.Archieve),
@@ -39,7 +47,7 @@ export class GeneralMeterRepository {
     }
 
     async findActiveGeneralMetersByHouse(houseId: number): Promise<GeneralMeterEntity[]> {
-        return this.generalMeterRepository.find({
+        return await this.generalMeterRepository.find({
             where: {
                 status: MeterStatus.Active,
                 houseId: houseId
@@ -48,20 +56,142 @@ export class GeneralMeterRepository {
     }
 
     async saveMany(meters: GeneralMeterEntity[]): Promise<GeneralMeterEntity[]> {
-        return this.generalMeterRepository.save(meters);
+        return await this.generalMeterRepository.save(meters);
     }
 
-    async findByHouseAndStatus(houseId: number, status: MeterStatus[]): Promise<GeneralMeterEntity[]> {
-        return this.generalMeterRepository.find({
-            where: {
-                houseId,
-                status: In(status),
-            },
+    async findActiveReadingsByHIdAndPeriod(
+        houseId: number,
+        startOfPreviousMonth: Date,
+        endOfPreviousMonth: Date,
+        startOfCurrentMonth: Date,
+        endOfCurrentMonth: Date
+    ) {
+        const generalMeters = await this.generalMeterRepository
+            .createQueryBuilder('generalMeter')
+            .innerJoinAndSelect('generalMeter.generalMeterReadings', 'generalMeterReadings')
+            .where('generalMeter.houseId = :houseId', { houseId })
+            .andWhere('generalMeter.status = :status', { status: MeterStatus.Active })
+            .getMany();
+
+        const currentMonthGeneralMeterReadings = generalMeters.map((meter) => {
+            return {
+                generalMeterId: meter.id,
+                reading: meter.generalMeterReadings.find((reading) => {
+                    return reading.readAt >= startOfCurrentMonth && reading.readAt <= endOfCurrentMonth;
+                }),
+            };
         });
+
+        const previousMonthGeneralMeterReadings = generalMeters.map((meter) => {
+            return {
+                generalMeterId: meter.id,
+                reading: meter.generalMeterReadings.find((reading) => {
+                    return reading.readAt >= startOfPreviousMonth && reading.readAt <= endOfPreviousMonth;
+                }),
+            };
+        });
+
+        const result = generalMeters.map((meter) => {
+            const current = currentMonthGeneralMeterReadings.find((currentReading) =>
+                currentReading.generalMeterId === meter.id
+            );
+            const previous = previousMonthGeneralMeterReadings.find((previousReading) =>
+                previousReading.generalMeterId === meter.id
+            );
+
+            return {
+                meterId: meter.id,
+                typeOfServiceId: meter.typeOfServiceId,
+                reading: {
+                    current: current ? current.reading : null,
+                    previous: previous ? previous.reading : null,
+                }
+            };
+        });
+
+        return result;
+    }
+
+    async findReadingsByHIdsAndPeriod(
+        houseIds: number[],
+        startOfPreviousMonth: Date,
+        endOfPreviousMonth: Date,
+        startOfCurrentMonth: Date,
+        endOfCurrentMonth: Date
+    ) {
+        const generalMeters = await this.generalMeterRepository
+            .createQueryBuilder('generalMeter')
+            .leftJoinAndSelect('generalMeter.generalMeterReadings', 'generalMeterReadings')
+            .where('generalMeter.houseId in (:...houseIds)', { houseIds })
+            .getMany();
+
+        const currentMonthGeneralMeterReadings = generalMeters.map((meter) => {
+            if (meter.generalMeterReadings && meter.generalMeterReadings.length > 0) {
+                return meter.generalMeterReadings.find((reading) => {
+                    return reading.readAt >= startOfCurrentMonth && reading.readAt <= endOfCurrentMonth;
+                });
+            } else {
+                return undefined;
+            }
+        });
+
+        const previousMonthGeneralMeterReadings = generalMeters.map((meter) => {
+            if (meter.generalMeterReadings && meter.generalMeterReadings.length > 0) {
+                return meter.generalMeterReadings.find((reading) => {
+                    return reading.readAt >= startOfPreviousMonth && reading.readAt <= endOfPreviousMonth;
+                });
+            } else {
+                return undefined;
+            }
+        });
+
+        const result = generalMeters.map((meter) => {
+            const current = currentMonthGeneralMeterReadings.find((currentReading) =>
+                currentReading ? currentReading.generalMeterId === meter.id : undefined
+            );
+            const previous = previousMonthGeneralMeterReadings.find((previousReading) =>
+                previousReading ? previousReading.generalMeterId === meter.id : undefined
+            );
+
+            return {
+                meter: meter.get(),
+                reading: {
+                    current: current ? current : undefined,
+                    previous: previous ? previous : undefined,
+                }
+            };
+        });
+
+        return result;
+    }
+
+    async findNIAndNPReadingsByHId(
+        houseId: number
+    ) {
+        const generalMeters = await this.generalMeterRepository
+            .createQueryBuilder('generalMeter')
+            .where('generalMeter.houseId = :houseId', { houseId })
+            .andWhere('generalMeter.status IN (:...status)', {
+                status: [MeterStatus.NoPossibility, MeterStatus.NotInstall]
+            })
+            .getMany();
+
+        const result = generalMeters.map((meter) => {
+            return {
+                meterId: meter.id,
+                typeOfServiceId: meter.typeOfServiceId,
+                reading: {
+                    current: null,
+                    previous: null,
+                },
+            };
+        });
+
+        return result;
     }
 
     async findManyByHouses(houseIds: number[]): Promise<GeneralMeterEntity[]> {
-        return this.generalMeterRepository.find({
+        return await this.generalMeterRepository.find({
             where: {
                 houseId: In(houseIds)
             },

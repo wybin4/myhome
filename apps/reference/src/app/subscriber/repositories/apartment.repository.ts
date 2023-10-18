@@ -74,4 +74,5 @@ export class ApartmentRepository {
             .where('house.managementCompanyId = :managementCompanyId', { managementCompanyId })
             .getMany();
     }
+
 }

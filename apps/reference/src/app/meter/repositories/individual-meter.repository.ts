@@ -65,10 +65,9 @@ export class IndividualMeterRepository {
         });
     }
 
-    // просто показания за последние 2
+    // просто показания за последние месяцы
     async findReadingsByAIdsAndPeriod(
         apartmentIds: number[],
-        startOfPreviousMonth: Date,
         endOfPreviousMonth: Date,
         startOfCurrentMonth: Date,
         endOfCurrentMonth: Date
@@ -89,10 +88,11 @@ export class IndividualMeterRepository {
             }
         });
 
+        // предыдущее показание могло быть за любой месяц
         const previousMonthReadings = individualMeters.map((meter) => {
             if (meter.individualMeterReadings && meter.individualMeterReadings.length > 0) {
                 return meter.individualMeterReadings.find((reading) =>
-                    reading.readAt >= startOfPreviousMonth && reading.readAt <= endOfPreviousMonth
+                    reading.readAt <= endOfPreviousMonth
                 );
             } else {
                 return undefined;

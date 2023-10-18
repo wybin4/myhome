@@ -40,3 +40,16 @@ services:
 Запуск всех сервисов - `nx run-many --target=serve --all --parallel=10`
 
 Отдельный запуск сервиса `nx run reference:serve:development`, `nx run account:serve:development` или `nx run api:serve:development`
+
+Создание mysql-схем:
+```
+CREATE SCHEMA `account`;
+CREATE SCHEMA `reference`;
+CREATE SCHEMA `document_detail`;
+CREATE SCHEMA `correction`;
+CREATE SCHEMA `single_payment_document`;
+CREATE SCHEMA `payment`;
+CREATE SCHEMA `voting`;
+CREATE SCHEMA `appeal`;
+CREATE SCHEMA `notification`;
+```

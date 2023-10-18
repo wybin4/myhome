@@ -147,7 +147,6 @@ export class MeterReadingQueriesService {
                 return await this.individualMeterRepository.
                     findReadingsByAIdsAndPeriod(
                         apartmentIds,
-                        startOfPreviousMonth,
                         endOfPreviousMonth,
                         startOfCurrentMonth,
                         endOfCurrentMonth

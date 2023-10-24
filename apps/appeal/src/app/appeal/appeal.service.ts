@@ -31,17 +31,26 @@ export class AppealService {
         const { subscribers } = await this.getSubscribers(subscriberIds);
 
         return {
-            appeals: appeals.map(appeal => {
-                const currentSubscriber = subscribers.find(s => s.id === appeal.subscriberId);
-                const currentTypeOfAppeal = typesOfAppeal.find(t => t.id === appeal.typeOfAppealId);
-                return {
-                    typeOfAppealName: currentTypeOfAppeal.name,
-                    apartmentName: currentSubscriber.address,
-                    personalAccount: currentSubscriber.personalAccount,
-                    ownerName: currentSubscriber.name,
-                    ...appeal
-                };
-            })
+            appeals: appeals
+                .map(appeal => {
+                    const currentSubscriber = subscribers.find(s => s.id === appeal.subscriberId);
+                    return {
+                        currentSubscriber,
+                        appeal
+                    };
+                })
+                .filter(({ currentSubscriber }) => currentSubscriber)
+                .map(({ currentSubscriber, appeal }) => {
+                    const currentTypeOfAppeal = typesOfAppeal.find(t => t.id === appeal.typeOfAppealId);
+                    return {
+                        typeOfAppealName: currentTypeOfAppeal.name,
+                        apartmentName: currentSubscriber.address,
+                        personalAccount: currentSubscriber.personalAccount,
+                        ownerName: currentSubscriber.name,
+                        ...appeal
+                    };
+                })
+
         };
     }
 

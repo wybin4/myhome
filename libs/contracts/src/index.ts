@@ -60,6 +60,11 @@ export * from './lib/notification/house-notification/notification.add-house-noti
 export * from './lib/notification/house-notification/notification.get-house-notification';
 export * from './lib/notification/house-notification/notification.get-house-notifications-by-mcid';
 
+export * from './lib/notification/service-notification/notification.add-service-notification';
+export * from './lib/notification/service-notification/notification.get-service-notification';
+export * from './lib/notification/service-notification/notification.get-service-notifications';
+export * from './lib/notification/service-notification/notification.update-service-notification';
+
 export * from './lib/document-detail/document-detail.get-public-utilities';
 export * from './lib/document-detail/document-detail.get-common-house-needs';
 export * from './lib/document-detail/document-detail.delete-document-details';

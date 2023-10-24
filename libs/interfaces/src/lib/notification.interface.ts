@@ -13,7 +13,10 @@ export interface IServiceNotification {
     id?: number;
     userId: number;
     userRole: UserRole;
-    message: string;
+    title: string;
+    description?: string;
+    text: string;
+    type: ServiceNotificationType;
     createdAt: Date;
     readAt?: Date;
     status: NotificationStatus;
@@ -28,4 +31,10 @@ export enum HouseNotificationType {
     Accident = 'Accident',
     EngineeringWorks = 'EngineeringWorks',
     Other = 'Other'
+}
+
+export enum ServiceNotificationType {
+    Appeal = 'Appeal',
+    HouseNotification = 'HouseNotification',
+    Meter = 'Meter'
 }

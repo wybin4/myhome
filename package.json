@@ -14,7 +14,7 @@
     "@nestjs/passport": "^10.0.0",
     "@nestjs/schedule": "^3.0.1",
     "@nestjs/typeorm": "^10.0.0",
-    "@qiwi/bill-payments-node-js-sdk": "^2.2.4",
+    "@nestjs/websockets": "^10.2.7",
     "bcryptjs": "^2.4.3",
     "bwip-js": "^4.0.1",
     "class-transformer": "^0.5.1",
@@ -32,8 +32,10 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
     "soap": "^1.0.0",
+    "socket.io": "^4.7.2",
     "tslib": "^2.3.0",
-    "typeorm": "^0.3.17"
+    "typeorm": "^0.3.17",
+    "websocket": "^1.0.34"
   },
   "devDependencies": {
     "@nestjs/schematics": "^10.0.1",

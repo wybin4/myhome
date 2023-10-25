@@ -52,9 +52,14 @@ export * from './lib/reference/common/reference.get-common';
 
 export * from './lib/email/email.register';
 
-export * from './lib/appeal/appeal.add-appeal';
-export * from './lib/appeal/appeal.get-appeal';
-export * from './lib/appeal/appeal.get-appeals-by-mcid';
+export * from './lib/appeal/appeal/appeal.add-appeal';
+export * from './lib/appeal/appeal/appeal.get-appeal';
+export * from './lib/appeal/appeal/appeal.get-appeals-by-mcid';
+
+export * from './lib/appeal/chat/appeal.add-chat';
+export * from './lib/appeal/chat/appeal.get-chats';
+export * from './lib/appeal/chat/appeal.add-message';
+
 
 export * from './lib/notification/house-notification/notification.add-house-notification';
 export * from './lib/notification/house-notification/notification.get-house-notification';

@@ -1,5 +1,5 @@
 import { Repository } from "typeorm";
-import { TypeOfAppealEntity } from "../entities/appeal.entity";
+import { TypeOfAppealEntity } from "./appeal.entity";
 import { AppealType } from "@myhome/interfaces";
 
 export async function seedTypeOfAppeal(typeOfAppealRepository: Repository<TypeOfAppealEntity>) {

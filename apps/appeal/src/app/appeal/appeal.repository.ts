@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AppealEntity, TypeOfAppealEntity } from '../entities/appeal.entity';
+import { AppealEntity, TypeOfAppealEntity } from './appeal.entity';
 import { AppealStatus } from '@myhome/interfaces';
 
 @Injectable()
@@ -21,6 +21,10 @@ export class AppealRepository {
 
     async findByMCId(managementCompanyId: number) {
         return this.appealRepository.find({ where: { managementCompanyId } });
+    }
+
+    async findBySId(subscriberId: number) {
+        return this.appealRepository.find({ where: { subscriberId } });
     }
 
     async close(id: number): Promise<AppealEntity | undefined> {

@@ -19,7 +19,8 @@ import { PenaltyController } from './controllers/correction/penalty.controller';
 import { VotingController } from './controllers/voting/voting.controller';
 import { CBRController } from './controllers/correction/cbr.controller';
 import { ServiceNotificationController } from './controllers/notification/service-notification.controller';
-import { ServiceNotificationGateway } from './service-notification.gateway';
+import { SocketGateway } from './socket.gateway';
+import { ChatController } from './controllers/appeal/chat.controller';
 
 @Module({
   imports: [
@@ -40,8 +41,9 @@ import { ServiceNotificationGateway } from './service-notification.gateway';
       SinglePaymentDocumentController,
       PenaltyController,
       VotingController,
-      CBRController
+      CBRController,
+      ChatController
     ],
-  providers: [ServiceNotificationGateway]
+  providers: [SocketGateway]
 })
 export class AppModule { }

@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { AppealEntity, TypeOfAppealEntity } from '../appeal/entities/appeal.entity';
+import { AppealEntity, TypeOfAppealEntity } from '../appeal/appeal.entity';
 
 export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
   type: 'mysql',

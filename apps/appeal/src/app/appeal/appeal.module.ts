@@ -1,10 +1,10 @@
 import { InjectRepository, TypeOrmModule } from "@nestjs/typeorm";
-import { AppealEntity, TypeOfAppealEntity } from "./entities/appeal.entity";
-import { AppealRepository, TypeOfAppealRepository } from "./repositories/appeal.repository";
+import { AppealEntity, TypeOfAppealEntity } from "./appeal.entity";
+import { AppealRepository, TypeOfAppealRepository } from "./appeal.repository";
 import { Logger, Module, OnModuleInit } from "@nestjs/common";
 import { AppealController } from "./appeal.controller";
 import { Repository, DataSource } from "typeorm";
-import { seedTypeOfAppeal } from "./seeds/type-of-appeal.seed";
+import { seedTypeOfAppeal } from "./type-of-appeal.seed";
 import { AppealService } from "./appeal.service";
 
 @Module({
@@ -16,7 +16,7 @@ import { AppealService } from "./appeal.service";
         AppealService,
     ],
     exports: [
-        AppealRepository, TypeOfAppealRepository
+        AppealService
     ],
     controllers: [AppealController],
 })

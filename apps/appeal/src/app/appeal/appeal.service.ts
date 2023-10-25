@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { AppealRepository, TypeOfAppealRepository } from "./repositories/appeal.repository";
-import { APPEAL_NOT_EXIST, TYPE_OF_APPEAL_NOT_EXIST, getSubscriber, checkUser, getGenericObject, RMQException, APPEALS_NOT_EXIST, TYPES_OF_APPEAL_NOT_EXIST } from "@myhome/constants";
-import { AppealAddAppeal, AppealGetAppealsByMCId, ReferenceGetSubscribersAllInfo } from "@myhome/contracts";
-import { AppealEntity } from "./entities/appeal.entity";
-import { UserRole } from "@myhome/interfaces";
+import { AppealRepository, TypeOfAppealRepository } from "./appeal.repository";
+import { APPEAL_NOT_EXIST, TYPE_OF_APPEAL_NOT_EXIST, getSubscriber, checkUser, getGenericObject, RMQException, APPEALS_NOT_EXIST, TYPES_OF_APPEAL_NOT_EXIST, SENDER_NOT_EXIST } from "@myhome/constants";
+import { AppealAddAppeal, AppealGetAppeal, AppealGetAppealsByMCId, ReferenceGetSubscribersAllInfo } from "@myhome/contracts";
+import { AppealEntity } from "./appeal.entity";
+import { IAppeal, SenderType, UserRole } from "@myhome/interfaces";
 
 
 @Injectable()
@@ -54,7 +54,18 @@ export class AppealService {
         };
     }
 
-    public async getAppeal(id: number) {
+    public async getAppeals(userId: number, userRole: SenderType): Promise<IAppeal[]> {
+        switch (userRole) {
+            case SenderType.ManagementCompany:
+                return await this.appealRepository.findByMCId(userId);
+            case SenderType.Subscriber:
+                return await this.appealRepository.findBySId(userId);
+            default:
+                throw new RMQException(SENDER_NOT_EXIST.message, SENDER_NOT_EXIST.status);
+        }
+    }
+
+    public async getAppeal(id: number): Promise<AppealGetAppeal.Response> {
         return {
             appeal: await getGenericObject<AppealEntity>
                 (
@@ -62,7 +73,7 @@ export class AppealService {
                     (item) => new AppealEntity(item),
                     id,
                     APPEAL_NOT_EXIST
-                )
+                ) as IAppeal
         };
     }
 

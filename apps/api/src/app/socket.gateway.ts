@@ -11,7 +11,7 @@ import { Server, Socket } from "socket.io";
         origin: '*',
     },
 })
-export class ServiceNotificationGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     constructor(
         private rmqService: RMQService,
     ) { }
@@ -48,9 +48,7 @@ export class ServiceNotificationGateway implements OnGatewayConnection, OnGatewa
         socket.emit('notifications', notifications);
     }
 
-    sendNotificationToClients(
-        notification: IServiceNotification
-    ) {
+    sendNotificationToClients(notification: IServiceNotification) {
         const key = `${notification.userId}_${notification.userRole}`;
         const socket = this.clients.get(key);
         if (socket) {

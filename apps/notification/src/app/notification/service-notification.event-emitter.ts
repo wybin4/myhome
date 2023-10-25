@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { RMQService } from "nestjs-rmq";
 import { ServiceNotificationEntity } from "./entities/service-notification.entity";
 import { GetServiceNotification } from "@myhome/contracts";
+import { RMQService } from "nestjs-rmq";
 
 @Injectable()
 export class ServiceNotificationEventEmitter {

@@ -18,8 +18,8 @@ import { SinglePaymentDocumentController } from './controllers/single-payment-do
 import { PenaltyController } from './controllers/correction/penalty.controller';
 import { VotingController } from './controllers/voting/voting.controller';
 import { CBRController } from './controllers/correction/cbr.controller';
-import { SSEService } from './sse.service';
 import { ServiceNotificationController } from './controllers/notification/service-notification.controller';
+import { ServiceNotificationGateway } from './service-notification.gateway';
 
 @Module({
   imports: [
@@ -42,6 +42,6 @@ import { ServiceNotificationController } from './controllers/notification/servic
       VotingController,
       CBRController
     ],
-  providers: [SSEService]
+  providers: [ServiceNotificationGateway]
 })
 export class AppModule { }

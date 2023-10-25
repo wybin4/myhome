@@ -1,5 +1,6 @@
 import { IServiceNotification, ServiceNotificationType, UserRole } from '@myhome/interfaces';
-import { IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsNumber, IsOptional, IsString, MaxLength, Validate } from 'class-validator';
+import { IsValidEnumValue } from '../../enum.validator';
 
 export namespace AddServiceNotification {
     export const topic = 'notification.add-service-notification.command';
@@ -8,7 +9,7 @@ export namespace AddServiceNotification {
         @IsNumber()
         userId!: number;
 
-        @IsString()
+        @Validate(IsValidEnumValue, [UserRole])
         userRole!: UserRole;
 
         @IsString()

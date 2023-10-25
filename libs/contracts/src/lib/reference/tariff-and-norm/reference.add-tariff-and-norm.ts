@@ -1,5 +1,6 @@
 import { RequireHomeOrManagementCompany, TariffAndNormType, TariffOrNormType, TypeOfNorm } from '@myhome/interfaces';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Validate } from 'class-validator';
+import { IsValidEnumValue } from '../../enum.validator';
 
 export namespace ReferenceAddTariffOrNorm {
     export const topic = 'reference.add-tariff-and-norm.command';
@@ -46,7 +47,7 @@ export namespace ReferenceAddTariffOrNorm {
         @IsNumber()
         multiplyingFactor?: number;
 
-        @IsString()
+        @Validate(IsValidEnumValue, [TariffAndNormType])
         type!: TariffAndNormType;
 
         @IsString()

@@ -1,5 +1,6 @@
 import { IHouseNotification, HouseNotificationType } from '@myhome/interfaces';
-import { IsNumber, IsString, MaxLength } from 'class-validator';
+import { IsNumber, IsString, MaxLength, Validate } from 'class-validator';
+import { IsValidEnumValue } from '../../enum.validator';
 
 export namespace AddHouseNotification {
     export const topic = 'notification.add-house-notification.command';
@@ -8,7 +9,7 @@ export namespace AddHouseNotification {
         @IsNumber()
         houseId!: number;
 
-        @IsString()
+        @Validate(IsValidEnumValue, [HouseNotificationType])
         type!: HouseNotificationType;
 
         @MaxLength(50)

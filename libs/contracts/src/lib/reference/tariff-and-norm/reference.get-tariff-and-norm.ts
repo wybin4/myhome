@@ -1,5 +1,6 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, Validate } from 'class-validator';
 import { TariffAndNormType, TariffOrNormType } from '@myhome/interfaces';
+import { IsValidEnumValue } from '../../enum.validator';
 
 export namespace ReferenceGetTariffOrNorm {
     export const topic = 'reference.get-tariff-and-norm.query';
@@ -8,7 +9,7 @@ export namespace ReferenceGetTariffOrNorm {
         @IsNumber()
         id!: number;
 
-        @IsString()
+        @Validate(IsValidEnumValue, [TariffAndNormType])
         type!: TariffAndNormType;
     }
 

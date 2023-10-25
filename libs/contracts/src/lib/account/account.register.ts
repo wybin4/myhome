@@ -1,11 +1,12 @@
 import { UserRole } from '@myhome/interfaces';
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Validate } from 'class-validator';
+import { IsValidEnumValue } from '../enum.validator';
 
 export namespace AccountRegister {
     export const topic = 'account.register.command';
 
     export class Request {
-        @IsString()
+        @Validate(IsValidEnumValue, [UserRole])
         role!: UserRole;
 
         @IsEmail()

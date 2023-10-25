@@ -1,5 +1,6 @@
 import { UserRole } from '@myhome/interfaces';
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsString, Validate } from 'class-validator';
+import { IsValidEnumValue } from '../enum.validator';
 
 export namespace AccountLogin {
   export const topic = 'account.login.command';
@@ -11,7 +12,7 @@ export namespace AccountLogin {
     @IsString()
     password!: string;
 
-    @IsString()
+    @Validate(IsValidEnumValue, [UserRole])
     role!: UserRole;
   }
 

@@ -1,5 +1,6 @@
-import { IsNumber, IsString } from 'class-validator';
-import {  IMeterReading, MeterType } from '@myhome/interfaces';
+import { IsNumber, Validate } from 'class-validator';
+import { IMeterReading, MeterType } from '@myhome/interfaces';
+import { IsValidEnumValue } from '../../enum.validator';
 
 export namespace ReferenceGetMeterReading {
     export const topic = 'reference.get-meter-reading.query';
@@ -8,7 +9,7 @@ export namespace ReferenceGetMeterReading {
         @IsNumber()
         id!: number;
 
-        @IsString()
+        @Validate(IsValidEnumValue, [MeterType])
         meterType!: MeterType;
     }
 

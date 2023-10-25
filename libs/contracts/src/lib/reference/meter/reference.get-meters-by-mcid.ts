@@ -1,5 +1,6 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, Validate } from 'class-validator';
 import { IMeter, MeterType } from '@myhome/interfaces';
+import { IsValidEnumValue } from '../../enum.validator';
 
 export namespace ReferenceGetMetersByMCId {
     export const topic = 'reference.get-meters-by-mcid.query';
@@ -8,7 +9,7 @@ export namespace ReferenceGetMetersByMCId {
         @IsNumber()
         managementCompanyId!: number;
 
-        @IsString()
+        @Validate(IsValidEnumValue, [MeterType])
         meterType!: MeterType;
     }
 

@@ -1,5 +1,6 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, Validate } from 'class-validator';
 import { IUser, UserRole } from '@myhome/interfaces';
+import { IsValidEnumValue } from '../enum.validator';
 
 export namespace AccountUserInfo {
   export const topic = 'account.user-info.query';
@@ -8,7 +9,7 @@ export namespace AccountUserInfo {
     @IsNumber()
     id!: number;
 
-    @IsString()
+    @Validate(IsValidEnumValue, [UserRole])
     role!: UserRole;
   }
 

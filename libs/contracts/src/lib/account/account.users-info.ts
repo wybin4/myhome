@@ -1,5 +1,6 @@
-import { IsArray, IsString } from 'class-validator';
+import { IsArray, Validate } from 'class-validator';
 import { IUser, UserRole } from '@myhome/interfaces';
+import { IsValidEnumValue } from '../enum.validator';
 
 export namespace AccountUsersInfo {
   export const topic = 'account.users-info.query';
@@ -8,7 +9,7 @@ export namespace AccountUsersInfo {
     @IsArray()
     ids!: number[];
 
-    @IsString()
+    @Validate(IsValidEnumValue, [UserRole])
     role!: UserRole;
   }
 

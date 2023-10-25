@@ -1,5 +1,6 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, IsString, Validate } from 'class-validator';
 import { IGeneralMeter, IIndividualMeter, MeterType } from '@myhome/interfaces';
+import { IsValidEnumValue } from '../../enum.validator';
 
 export namespace ReferenceUpdateMeter {
     export const topic = 'reference.update-meter.command';
@@ -11,7 +12,7 @@ export namespace ReferenceUpdateMeter {
         @IsString()
         verifiedAt!: string;
 
-        @IsString()
+        @Validate(IsValidEnumValue, [MeterType])
         meterType!: MeterType;
     }
 

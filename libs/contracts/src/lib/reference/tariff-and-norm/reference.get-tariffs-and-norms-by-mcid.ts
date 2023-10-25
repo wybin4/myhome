@@ -1,5 +1,6 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, Validate } from 'class-validator';
 import { ICommonHouseNeedTariff, IMunicipalTariff, INorm, ISeasonalityFactor, ISocialNorm, TariffAndNormType } from '@myhome/interfaces';
+import { IsValidEnumValue } from '../../enum.validator';
 
 export namespace ReferenceGetTariffsOrNormsByMCId {
     export const topic = 'reference.get-tariffs-and-norms-by-mcid.query';
@@ -8,7 +9,7 @@ export namespace ReferenceGetTariffsOrNormsByMCId {
         @IsNumber()
         managementCompanyId!: number;
 
-        @IsString()
+        @Validate(IsValidEnumValue, [TariffAndNormType])
         type!: TariffAndNormType;
     }
 

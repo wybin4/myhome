@@ -10,7 +10,7 @@ export namespace AppealAddMessage {
         chatId!: string;
 
         @IsString()
-        @MaxLength(1000)
+        @MaxLength(1000, { message: "Максимальная длина сообщения не должна превышать 1000 символов" })
         text!: string;
 
         @IsNumber()

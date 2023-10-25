@@ -5,7 +5,7 @@ export namespace ReferenceGetSubscribersByHouses {
     export const topic = 'reference.get-subscribers-by-houses.query';
 
     export class Request {
-        @IsArray()
+        @IsArray({ message: "Id домов должны быть массивом чисел" })
         houseIds!: number[];
     }
 

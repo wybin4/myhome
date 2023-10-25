@@ -5,7 +5,7 @@ export namespace AddDocumentDetails {
     export const topic = 'document-detail.add-document-details.command';
 
     export class Request {
-        @IsArray()
+        @IsArray({ message: "Детали ЕПД должны быть массивом" })
         details!: IDocumentDetail[];
     }
 

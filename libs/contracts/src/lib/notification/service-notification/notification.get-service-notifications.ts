@@ -6,7 +6,7 @@ export namespace GetServiceNotifications {
     export const topic = 'notification.get-service-notifications.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id пользователя должно быть числом" })
         userId!: number;
 
         @Validate(IsValidEnumValue, [UserRole])

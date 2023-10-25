@@ -1,13 +1,14 @@
 import { IGetCommonHouseNeed } from "@myhome/interfaces";
-import { IsNumber } from "class-validator";
+import { IsArray, IsNumber } from "class-validator";
 
 export namespace GetCommonHouseNeeds {
     export const topic = 'document-detail.get-common-house-needs.command';
 
     export class Request {
+        @IsArray({ message: "Id абонентов должны быть массивом чисел" })
         subscriberIds!: number[];
 
-        @IsNumber()
+        @IsNumber({}, { message: "Id дома должен быть числом" })
         houseId!: number;
     }
 

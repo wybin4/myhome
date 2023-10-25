@@ -5,19 +5,19 @@ export namespace ReferenceAddApartment {
     export const topic = 'reference.add-apartment.command';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id дома должен быть числом" })
         houseId!: number;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Номер квартиры должен быть числом" })
         apartmentNumber!: number;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Общая площадь квартиры должна быть числом" })
         totalArea!: number;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Жилая площадь квартиры быть числом" })
         livingArea!: number;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Количество зарегистрированных должно быть числом" })
         numberOfRegistered!: number;
     }
 

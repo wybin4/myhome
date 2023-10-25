@@ -5,7 +5,7 @@ export namespace CorrectionGetDebt {
     export const topic = 'correction.get-debt.query';
 
     export class Request {
-        @IsString()
+        @IsString({ message: "Id долга должен быть строкой" })
         id!: string;
     }
 

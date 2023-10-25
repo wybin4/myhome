@@ -5,7 +5,7 @@ export namespace UpdateVoting {
     export const topic = 'voting.update-voting.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id варианта ответа должно быть числом" })
         optionId!: number;
     }
 

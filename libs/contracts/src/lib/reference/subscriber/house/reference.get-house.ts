@@ -5,7 +5,7 @@ export namespace ReferenceGetHouse {
     export const topic = 'reference.get-house.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id дома должен быть числом" })
         id!: number;
     }
 

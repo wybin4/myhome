@@ -5,7 +5,7 @@ export namespace GetVotingsByMCId {
     export const topic = 'voting.get-votings-by-mcid.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
         managementCompanyId!: number;
     }
 

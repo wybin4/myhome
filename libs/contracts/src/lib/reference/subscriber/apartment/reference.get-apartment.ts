@@ -5,7 +5,7 @@ export namespace ReferenceGetApartment {
     export const topic = 'reference.get-apartment.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id квартиры должен быть числом" })
         id!: number;
     }
 

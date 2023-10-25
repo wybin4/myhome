@@ -6,6 +6,7 @@ export namespace AccountGetOwnersByMCId {
 
   export class Request {
     @IsNumber()
+    @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
     managementCompanyId!: number;
   }
 

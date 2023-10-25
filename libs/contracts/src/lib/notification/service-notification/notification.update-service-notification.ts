@@ -5,7 +5,7 @@ export namespace UpdateServiceNotification {
     export const topic = 'notification.update-service-notification.command';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id уведомления должно быть числом" })
         id!: number;
     }
 

@@ -1,20 +1,21 @@
 import { ISubscriber, SubscriberStatus } from '@myhome/interfaces';
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, IsString, Validate } from 'class-validator';
+import { IsValidEnumValue } from '../../../enum.validator';
 
 export namespace ReferenceAddSubscriber {
     export const topic = 'reference.add-subscriber.command';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id владельца должен быть числом" })
         ownerId!: number;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Id квартиры должно быть числом" })
         apartmentId!: number;
 
-        @IsString()
+        @IsString({ message: "Лицевой счёт должен быть строкой" })
         personalAccount!: string;
 
-        @IsString()
+        @Validate(IsValidEnumValue, [SubscriberStatus])
         status!: SubscriberStatus;
     }
 

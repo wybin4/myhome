@@ -5,7 +5,7 @@ export namespace ReferenceGetTypesOfService {
     export const topic = 'reference.get-types-of-service.query';
 
     export class Request {
-        @IsArray()
+        @IsArray({ message: "Id видов услуг должны быть массивом чисел" })
         typeOfServiceIds!: number[];
     }
 

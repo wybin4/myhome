@@ -5,7 +5,7 @@ export namespace GetHouseNotificationsByMCId {
     export const topic = 'notification.get-house-notifications-by-mcid.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
         managementCompanyId!: number;
     }
 

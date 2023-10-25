@@ -6,7 +6,7 @@ export namespace ReferenceGetTariffOrNorm {
     export const topic = 'reference.get-tariff-and-norm.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id тарифа или норматива должен быть числом" })
         id!: number;
 
         @Validate(IsValidEnumValue, [TariffAndNormType])

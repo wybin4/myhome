@@ -15,11 +15,11 @@ export namespace GetSinglePaymentDocument {
         @RequireSubscriberIdsOrHouseIds()
         houseIds?: number[];
 
-        @IsNumber()
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
         managementCompanyId!: number;
 
         @IsOptional()
-        @IsNumber()
+        @IsNumber({}, { message: "Ключевая ставка должна быть числом" })
         keyRate?: number;
     }
 

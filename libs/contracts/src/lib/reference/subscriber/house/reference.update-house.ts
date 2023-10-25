@@ -5,10 +5,10 @@ export namespace ReferenceUpdateHouse {
     export const topic = 'reference.update-house.command';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id дома должен быть числом" })
         id!: number;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
         managementCompanyId!: number;
     }
 

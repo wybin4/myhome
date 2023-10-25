@@ -5,11 +5,11 @@ export namespace AddVoting {
     export const topic = 'voting.add-voting.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id дома должно быть числом" })
         houseId!: number;
 
-        @IsString()
-        @MaxLength(255)
+        @IsString({ message: "Заголовок должен быть строкой" })
+        @MaxLength(255, { message: "Максимальная длина заголовка не должна превышать 255 символов" })
         title!: string;
 
         @IsDate()
@@ -18,7 +18,8 @@ export namespace AddVoting {
         @IsDate()
         expiredAt!: Date;
 
-        @IsArray()
+        @IsArray({ message: "Варианты ответа должны быть массивом строк" })
+        @MaxLength(255, { message: "Максимальная длина заголовка не должна превышать 255 символов" })
         options!: string[];
     }
 

@@ -8,8 +8,7 @@ export namespace ReferenceGetMeterReadingByHID {
         @IsNumber()
         houseId!: number;
 
-        @IsNumber()
-        managementCompanyId!: number;
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" }) managementCompanyId!: number;
     }
 
     export class Response {

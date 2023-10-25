@@ -5,7 +5,7 @@ export namespace ReferenceUpdateSubscriber {
     export const topic = 'reference.update-subscriber.command';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id абонента должен быть числом" })
         id!: number;
     }
 

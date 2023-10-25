@@ -11,6 +11,7 @@ export class GetSinglePaymentDocumentDto {
     houseIds?: number[];
 
     @IsNumber()
+    @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
     managementCompanyId!: number;
 
     @IsOptional()
@@ -20,6 +21,7 @@ export class GetSinglePaymentDocumentDto {
 
 export class GetSinglePaymentDocumentsByMCIdDto {
     @IsNumber()
+    @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
     managementCompanyId!: number;
 }
 

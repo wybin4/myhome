@@ -4,7 +4,7 @@ export namespace GetSinglePaymentDocumentsBySId {
     export const topic = 'single-payment-document.get-single-payment-documents-by-sid.query';
 
     export class Request {
-        @IsArray()
+        @IsArray({ message: "Id абонентов должны быть массивом чисел" })
         subscriberIds!: number[];
     }
 

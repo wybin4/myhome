@@ -5,17 +5,17 @@ export namespace CorrectionUpdateDebt {
     export const topic = 'correction.update-debt.command';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id ЕПД должен быть числом" })
         singlePaymentDocumentId!: number;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
         managementCompanyId!: number;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Сумма платежа должна быть числом" })
         amount!: number;
 
         @IsOptional()
-        @IsNumber()
+        @IsNumber({}, { message: "Ключевая ставка должна быть числом" })
         keyRate?: number;
     }
 

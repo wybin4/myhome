@@ -5,16 +5,16 @@ export namespace CorrectionAddPenaltyCalculationRule {
     export const topic = 'correction.add-penalty-calculation-rule.command';
 
     export class Request {
-        @IsArray()
+        @IsArray({message: "Id типов услуг должны быть массивом чисел"})
         typeOfServiceIds!: number[];
 
-        @IsNumber()
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
         managementCompanyId!: number;
 
-        @IsString()
+        @IsString({ message: "Id правила начисления пени должен быть строкой" })
         penaltyRuleId!: string;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Приоритет должен быть числом" })
         priority!: number;
     }
 

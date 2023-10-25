@@ -5,8 +5,7 @@ export namespace AppealAddAppeal {
     export const topic = 'appeal.add-appeal.command';
 
     export class Request {
-        @IsNumber()
-        managementCompanyId!: number;
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" }) managementCompanyId!: number;
 
         @IsNumber()
         typeOfAppealId!: number;

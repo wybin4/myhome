@@ -4,7 +4,7 @@ export namespace ReferenceGetManagementCompany {
     export const topic = 'reference.get-management-company.command';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id абонента должен быть числом" })
         subscriberId!: number;
     }
 

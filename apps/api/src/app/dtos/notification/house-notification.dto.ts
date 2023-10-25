@@ -3,6 +3,7 @@ import { IsNumber, IsString, MaxLength, } from "class-validator";
 
 export class GetHouseNotificationsByMCIdDto {
     @IsNumber()
+    @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
     managementCompanyId!: number;
 }
 

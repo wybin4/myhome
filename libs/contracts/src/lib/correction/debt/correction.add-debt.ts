@@ -5,16 +5,16 @@ export namespace CorrectionAddDebt {
     export const topic = 'correction.add-debt.command';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id ЕПД должен быть числом" })
         singlePaymentDocumentId!: number;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Сумма платежа должна быть числом" })
         paymentAmount!: number;
 
         @IsArray()
         spdAmount!: ICorrectionAddDebt[];
 
-        @IsNumber()
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
         managementCompanyId!: number;
     }
 

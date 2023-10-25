@@ -5,7 +5,7 @@ export namespace ReferenceGetSubscribersAllInfo {
     export const topic = 'reference.get-subscribers-all-info.query';
 
     export class Request {
-        @IsArray()
+        @IsArray({ message: "Id абонентов должны быть массивом чисел" })
         ids!: number[];
     }
 

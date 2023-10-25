@@ -5,7 +5,7 @@ export namespace ReferenceGetSubscriber {
     export const topic = 'reference.get-subscriber.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id абонента должен быть числом" })
         id!: number;
     }
 

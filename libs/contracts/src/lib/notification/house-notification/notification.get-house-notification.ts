@@ -5,7 +5,7 @@ export namespace GetHouseNotification {
     export const topic = 'notification.get-house-notification.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id уведомления должно быть числом" })
         id!: number;
     }
 

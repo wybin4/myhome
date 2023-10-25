@@ -12,45 +12,45 @@ export namespace ReferenceAddTariffOrNorm {
         @RequireHomeOrManagementCompany()
         houseId?: number;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Id вида услуг должен быть числом" })
         typeOfServiceId!: number;
 
         @IsOptional()
-        @IsNumber()
+        @IsNumber({}, { message: "Id единиц измерения должен быть числом" })
         unitId?: number;
 
         @IsOptional()
-        @IsNumber()
+        @IsNumber({}, { message: "Норматив должен быть числом" })
         norm?: number;
 
         @IsOptional()
-        @IsNumber()
+        @IsNumber({}, { message: "Количество должно быть числом" })
         amount?: number;
 
         @IsOptional()
-        @IsNumber()
+        @IsNumber({}, { message: "Тариф сверх нормы должен быть числом" })
         supernorm?: number;
 
         @IsOptional()
-        @IsString()
+        @IsString({ message: "Название месяца должно быть строкой" })
         monthName?: string;
 
         @IsOptional()
-        @IsNumber()
+        @IsNumber({}, { message: "Коэффициент должен быть числом" })
         coefficient?: number;
 
         @IsOptional()
-        @IsNumber()
+        @IsNumber({}, { message: "Множитель должен быть числом" })
         multiplier?: number;
 
         @IsOptional()
-        @IsNumber()
+        @IsNumber({}, { message: "Повышающий коэффициент должен быть числом" })
         multiplyingFactor?: number;
 
         @Validate(IsValidEnumValue, [TariffAndNormType])
         type!: TariffAndNormType;
 
-        @IsString()
+        @Validate(IsValidEnumValue, [TypeOfNorm])
         typeOfNorm!: TypeOfNorm;
     }
 

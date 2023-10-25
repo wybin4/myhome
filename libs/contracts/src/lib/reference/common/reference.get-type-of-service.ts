@@ -5,7 +5,7 @@ export namespace ReferenceGetTypeOfService {
     export const topic = 'reference.get-type-of-service.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id вида услуг должен быть числом" })
         id!: number;
     }
 

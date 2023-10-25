@@ -5,7 +5,7 @@ export namespace ReferenceGetHousesByMCId {
     export const topic = 'reference.get-houses-by-mcid.query';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
         managementCompanyId!: number;
     }
 

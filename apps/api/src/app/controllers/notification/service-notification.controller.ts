@@ -41,7 +41,7 @@ export class ServiceNotificationController {
     @RMQValidate()
     @RMQRoute(GetServiceNotification.topic)
     async getNotification(@Body() dto: GetServiceNotification.Request) {
-        this.notificationGateway.server.emit("newNotification", dto.notification);
+        this.notificationGateway.sendNotificationToClients(dto.notification);
     }
 
 }

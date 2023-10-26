@@ -1,8 +1,8 @@
 import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { RMQService } from "nestjs-rmq";
-import { IServiceNotification, UserRole } from "@myhome/interfaces";
+import { IGetChat, IGetMessage, IServiceNotification, UserRole } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
-import { GetServiceNotifications } from "@myhome/contracts";
+import { AppealGetChats, GetServiceNotifications } from "@myhome/contracts";
 import { Server, Socket } from "socket.io";
 
 @Injectable()
@@ -37,15 +37,32 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         socket.data.user = { userId, userRole };
         const key = `${userId}_${userRole}`;
         this.clients.set(key, socket);
-        await this.getNotifications(socket, userId, userRole);
+        this.getNotifications(socket, userId, userRole);
+        this.getChats(socket, userId, userRole);
     }
 
     async getNotifications(socket: Socket, userId: number, userRole: UserRole) {
-        const notifications = await this.rmqService.send<
-            GetServiceNotifications.Request,
-            GetServiceNotifications.Response
-        >(GetServiceNotifications.topic, { userId, userRole });
-        socket.emit('notifications', notifications);
+        try {
+            const notifications = await this.rmqService.send<
+                GetServiceNotifications.Request,
+                GetServiceNotifications.Response
+            >(GetServiceNotifications.topic, { userId, userRole });
+            socket.emit('notifications', notifications);
+        } catch (e) {
+            socket.emit('notifications', { message: "Ошибка при получении уведомлений" });
+        }
+    }
+
+    async getChats(socket: Socket, userId: number, userRole: UserRole) {
+        try {
+            const chats = await this.rmqService.send<
+                AppealGetChats.Request,
+                AppealGetChats.Response
+            >(AppealGetChats.topic, { userId, userRole });
+            socket.emit('chats', chats);
+        } catch (e) {
+            socket.emit('chats', { message: "Ошибка при получении чатов" });
+        }
     }
 
     sendNotificationToClients(notification: IServiceNotification) {
@@ -53,6 +70,22 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const socket = this.clients.get(key);
         if (socket) {
             socket.emit('newNotification', notification);
+        }
+    }
+
+    sendMessageToClients(message: IGetMessage) {
+        const key = `${message.userId}_${message.userRole}`;
+        const socket = this.clients.get(key);
+        if (socket) {
+            socket.emit('newMessage', message);
+        }
+    }
+
+    sendChatToClients(chat: IGetChat) {
+        const key = `${chat.userId}_${chat.userRole}`;
+        const socket = this.clients.get(key);
+        if (socket) {
+            socket.emit('newChat', chat);
         }
     }
 

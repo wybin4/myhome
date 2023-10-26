@@ -5,7 +5,7 @@ export namespace AppealAddChat {
     export const topic = 'appeal.add-chat.command';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id обращения должен быть числом" })
         appealId!: number;
     }
 

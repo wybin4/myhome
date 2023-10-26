@@ -20,6 +20,7 @@ export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-
 
 export * from './lib/reference/subscriber/subscriber/reference.add-subscriber';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscriber';
+export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-owner';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-all-info';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-houses';
@@ -58,8 +59,9 @@ export * from './lib/appeal/appeal/appeal.get-appeals-by-mcid';
 
 export * from './lib/appeal/chat/appeal.add-chat';
 export * from './lib/appeal/chat/appeal.get-chats';
+export * from './lib/appeal/chat/appeal.get-chat';
 export * from './lib/appeal/chat/appeal.add-message';
-
+export * from './lib/appeal/chat/appeal.get-message';
 
 export * from './lib/notification/house-notification/notification.add-house-notification';
 export * from './lib/notification/house-notification/notification.get-house-notification';

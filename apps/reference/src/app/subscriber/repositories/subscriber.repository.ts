@@ -27,6 +27,10 @@ export class SubscriberRepository {
         return await this.subscriberRepository.findOne({ where: { id } });
     }
 
+    async findByOwnerId(ownerId: number) {
+        return await this.subscriberRepository.find({ where: { ownerId } });
+    }
+
     async findByIdAllInfo(id: number) {
         return await this.subscriberRepository.createQueryBuilder('subscriber')
             .innerJoinAndSelect('subscriber.apartment', 'apartment')

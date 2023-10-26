@@ -1,12 +1,16 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { RMQService } from 'nestjs-rmq';
+import { RMQRoute, RMQService, RMQValidate } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
-import { AppealAddChat, AppealAddMessage, AppealGetChats } from '@myhome/contracts';
+import { AppealAddChat, AppealAddMessage, AppealGetChat, AppealGetChats, AppealGetMessage } from '@myhome/contracts';
 import { GetChatsDto, AddChatDto, AddMessageDto } from '../../dtos/appeal/chat.dto';
+import { SocketGateway } from '../../socket.gateway';
 
 @Controller('chat')
 export class ChatController {
-    constructor(private readonly rmqService: RMQService) { }
+    constructor(
+        private readonly rmqService: RMQService,
+        private readonly socketGateway: SocketGateway
+    ) { }
 
     @HttpCode(200)
     @Post('get-chats')
@@ -45,6 +49,18 @@ export class ChatController {
         } catch (e) {
             CatchError(e);
         }
+    }
+
+    @RMQValidate()
+    @RMQRoute(AppealGetMessage.topic)
+    async getMessage(@Body() dto: AppealGetMessage.Request) {
+        this.socketGateway.sendMessageToClients(dto.message);
+    }
+
+    @RMQValidate()
+    @RMQRoute(AppealGetChat.topic)
+    async getChat(@Body() dto: AppealGetChat.Request) {
+        this.socketGateway.sendChatToClients(dto.chat);
     }
 
 }

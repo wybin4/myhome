@@ -5,7 +5,6 @@ export namespace AccountGetOwnersByMCId {
   export const topic = 'account.get-owners-by-mcid.query';
 
   export class Request {
-    @IsNumber()
     @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
     managementCompanyId!: number;
   }

@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { AppealRepository, TypeOfAppealRepository } from "./appeal.repository";
 import { APPEAL_NOT_EXIST, TYPE_OF_APPEAL_NOT_EXIST, getSubscriber, checkUser, getGenericObject, RMQException, APPEALS_NOT_EXIST, TYPES_OF_APPEAL_NOT_EXIST, SENDER_NOT_EXIST } from "@myhome/constants";
-import { AppealAddAppeal, AppealGetAppeal, AppealGetAppealsByMCId, ReferenceGetSubscribersAllInfo } from "@myhome/contracts";
+import { AppealAddAppeal, AppealGetAppeal, AppealGetAppealsByMCId, ReferenceGetSubscriber, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByOwner } from "@myhome/contracts";
 import { AppealEntity } from "./appeal.entity";
-import { IAppeal, SenderType, UserRole } from "@myhome/interfaces";
+import { IAppeal, ISubscriber, SenderType, UserRole } from "@myhome/interfaces";
 
 
 @Injectable()
@@ -55,26 +55,65 @@ export class AppealService {
     }
 
     public async getAppeals(userId: number, userRole: SenderType): Promise<IAppeal[]> {
+        let subscribers: ISubscriber[], subscriberIds: number[];
         switch (userRole) {
             case SenderType.ManagementCompany:
+                await checkUser(this.rmqService, userId, UserRole.ManagementCompany);
                 return await this.appealRepository.findByMCId(userId);
             case SenderType.Subscriber:
-                return await this.appealRepository.findBySId(userId);
+                await checkUser(this.rmqService, userId, UserRole.Owner);
+                ({ subscribers } = await this.getSubscribersByOId(userId));
+                if (!subscribers) {
+                    return;
+                }
+                subscriberIds = subscribers.map(sid => sid.id);
+                return await this.appealRepository.findBySIds(subscriberIds);
             default:
                 throw new RMQException(SENDER_NOT_EXIST.message, SENDER_NOT_EXIST.status);
         }
     }
 
+    private async getSubscribersByOId(ownerId: number) {
+        try {
+            return await
+                this.rmqService.send<
+                    ReferenceGetSubscribersByOwner.Request,
+                    ReferenceGetSubscribersByOwner.Response
+                >
+                    (ReferenceGetSubscribersByOwner.topic, { ownerId });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
+    }
+
     public async getAppeal(id: number): Promise<AppealGetAppeal.Response> {
+        const appeal = await getGenericObject<AppealEntity>
+            (
+                this.appealRepository,
+                (item) => new AppealEntity(item),
+                id,
+                APPEAL_NOT_EXIST
+            ) as IAppeal;
+        const { subscriber } = await this.getSubscriber(appeal.subscriberId);
         return {
-            appeal: await getGenericObject<AppealEntity>
-                (
-                    this.appealRepository,
-                    (item) => new AppealEntity(item),
-                    id,
-                    APPEAL_NOT_EXIST
-                ) as IAppeal
+            appeal: {
+                ...appeal,
+                ownerId: subscriber.ownerId
+            }
         };
+    }
+
+    private async getSubscriber(subscriberId: number) {
+        try {
+            return await
+                this.rmqService.send<
+                    ReferenceGetSubscriber.Request,
+                    ReferenceGetSubscriber.Response
+                >
+                    (ReferenceGetSubscriber.topic, { id: subscriberId });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
     }
 
     public async addAppeal(dto: AppealAddAppeal.Request) {

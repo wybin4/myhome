@@ -6,14 +6,14 @@ export namespace AppealAddMessage {
     export const topic = 'appeal.add-message.command';
 
     export class Request {
-        @IsString()
+        @IsString({ message: "Id чата должен быть строкой" })
         chatId!: string;
 
-        @IsString()
+        @IsString({ message: "Текст быть строкой" })
         @MaxLength(1000, { message: "Максимальная длина сообщения не должна превышать 1000 символов" })
         text!: string;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Id отправителя должен быть числом" })
         senderId!: number;
 
         @Validate(IsValidEnumValue, [SenderType])
@@ -21,7 +21,11 @@ export namespace AppealAddMessage {
     }
 
     export class Response {
-        message!: IMessage;
+        message!: IAddMessage;
     }
+}
+
+export interface IAddMessage extends IMessage {
+    chatId: string;
 }
 

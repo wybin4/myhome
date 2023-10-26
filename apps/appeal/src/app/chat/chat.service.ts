@@ -1,24 +1,26 @@
 import { Injectable } from "@nestjs/common";
-import { RMQService } from "nestjs-rmq";
 import { ChatRepository } from "./chat.repository";
-import { AppealAddChat, AppealAddMessage, AppealGetAppeal, AppealGetChats } from "@myhome/contracts";
-import { APPEALS_NOT_EXIST, RMQException, SENDER_NOT_EXIST } from "@myhome/constants";
-import { IChat, SenderType } from "@myhome/interfaces";
+import { AppealAddChat, AppealAddMessage, AppealGetChats } from "@myhome/contracts";
+import { RMQException, SENDER_NOT_EXIST } from "@myhome/constants";
+import { IChat, SenderType, UserRole } from "@myhome/interfaces";
 import { ChatEntity, MessageEntity } from "./chat.entity";
 import { AppealService } from "../appeal/appeal.service";
+import { ChatEventEmitter } from "./chat.event-emitter";
 
 @Injectable()
 export class ChatService {
     constructor(
         private readonly chatRepository: ChatRepository,
-        private readonly rmqService: RMQService,
-        private readonly appealService: AppealService
+        private readonly appealService: AppealService,
+        private readonly eventEmitter: ChatEventEmitter
     ) { }
 
     async getChats(dto: AppealGetChats.Request): Promise<AppealGetChats.Response> {
-        const appeals = await this.appealService.getAppeals(dto.userId, dto.userType);
+        const userType = dto.userRole === UserRole.Owner ? SenderType.Subscriber : SenderType.ManagementCompany;
+
+        const appeals = await this.appealService.getAppeals(dto.userId, userType);
         if (!appeals) {
-            throw new RMQException(APPEALS_NOT_EXIST.message, APPEALS_NOT_EXIST.status);
+            return;
         }
         const appealIds = appeals.map(a => a.id);
         const chats = await this.chatRepository.findManyByAppealIds(appealIds);
@@ -26,7 +28,7 @@ export class ChatService {
     }
 
     async addChat(appealId: number): Promise<AppealAddChat.Response> {
-        await this.checkAppeal(appealId);
+        const { appeal } = await this.appealService.getAppeal(appealId);
 
         const chat: IChat = {
             appealId: appealId,
@@ -35,28 +37,30 @@ export class ChatService {
         const newChatEntity = new ChatEntity(chat);
         const newChat = await this.chatRepository.create(newChatEntity);
 
+        // уведомляем владельца
+        await this.eventEmitter.handleChat({
+            userId: appeal.ownerId,
+            userRole: UserRole.Owner,
+            ...chat
+        });
+
+        // уведомляем УК
+        await this.eventEmitter.handleChat({
+            userId: appeal.managementCompanyId,
+            userRole: UserRole.ManagementCompany,
+            ...chat
+        });
+
         return { chat: newChat }
     }
 
-    private async checkAppeal(appealId: number) {
-        try {
-            return await
-                this.rmqService.send<
-                    AppealGetAppeal.Request,
-                    AppealGetAppeal.Response
-                >
-                    (AppealGetAppeal.topic, { id: appealId });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
-    }
 
     async addMessage(dto: AppealAddMessage.Request): Promise<AppealAddMessage.Response> {
         const chat = await this.chatRepository.findById(dto.chatId);
         const { appeal } = await this.appealService.getAppeal(chat.appealId);
         if (
-            (appeal.subscriberId === dto.senderId && SenderType.Subscriber)
-            || (appeal.managementCompanyId === dto.senderId && SenderType.ManagementCompany)
+            (appeal.subscriberId === dto.senderId && dto.senderRole === SenderType.Subscriber)
+            || (appeal.managementCompanyId === dto.senderId && dto.senderRole === SenderType.ManagementCompany)
         ) {
             const message = new MessageEntity({
                 senderId: dto.senderId,
@@ -66,7 +70,27 @@ export class ChatService {
             });
             chat.messages.push(message);
             await chat.save();
-            return { message };
+
+            if (dto.senderRole === SenderType.Subscriber) {
+                await this.eventEmitter.handleMessage({
+                    userId: appeal.ownerId,
+                    userRole: UserRole.Owner,
+                    ...message
+                });
+            } else if (dto.senderRole === SenderType.ManagementCompany) {
+                await this.eventEmitter.handleMessage({
+                    userId: appeal.managementCompanyId,
+                    userRole: UserRole.ManagementCompany,
+                    ...message
+                });
+            }
+
+            return {
+                message: {
+                    chatId: chat.id,
+                    ...message
+                }
+            };
         } else {
             throw new RMQException(SENDER_NOT_EXIST.message, SENDER_NOT_EXIST.status);
         }

@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { UserRole } from "../account/user.interface";
 
 export interface IChat {
     _id?: Types.ObjectId;
@@ -15,6 +16,16 @@ export interface IMessage {
     createdAt: Date;
     readAt?: Date;
     status?: MessageStatus;
+}
+
+export interface IGetMessage extends IMessage {
+    userRole: UserRole;
+    userId: number;
+}
+
+export interface IGetChat extends IChat {
+    userRole: UserRole;
+    userId: number;
 }
 
 export enum MessageStatus {

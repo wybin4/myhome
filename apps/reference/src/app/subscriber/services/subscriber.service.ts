@@ -1,5 +1,5 @@
 import { getGenericObject, SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, addGenericObject, getGenericObjects, checkUser } from "@myhome/constants";
-import { ReferenceAddSubscriber, AccountUsersInfo, ReferenceGetSubscribersByMCId, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersAllInfo, ReferenceGetManagementCompany, ReferenceGetOwnersByMCId } from "@myhome/contracts";
+import { ReferenceAddSubscriber, AccountUsersInfo, ReferenceGetSubscribersByMCId, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersAllInfo, ReferenceGetManagementCompany, ReferenceGetOwnersByMCId, ReferenceGetSubscribersByOwner } from "@myhome/contracts";
 import { SubscriberStatus, UserRole, ISubscriber } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { SubscriberEntity } from "../entities/subscriber.entity";
@@ -140,6 +140,12 @@ export class SubscriberService {
 				numberOfRegistered: subscriber.apartment.numberOfRegistered,
 			};
 		});
+	}
+
+	public async getSubscribersByOwner(ownerId: number):
+		Promise<ReferenceGetSubscribersByOwner.Response> {
+		const subscribers = await this.subscriberRepository.findByOwnerId(ownerId);
+		return { subscribers };
 	}
 
 	async getSubscribersAllInfo(ids: number[]): Promise<ReferenceGetSubscribersAllInfo.Response> {

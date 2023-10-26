@@ -1,4 +1,4 @@
-import { SenderType } from "@myhome/interfaces";
+import { SenderType, UserRole } from "@myhome/interfaces";
 import { IsEnum, IsNumber, IsString, MaxLength } from "class-validator";
 
 export class AddChatDto {
@@ -25,6 +25,6 @@ export class GetChatsDto {
     @IsNumber()
     userId: number;
 
-    @IsString()
-    userType: SenderType;
+    @IsEnum(UserRole)
+    userRole: UserRole;
 }

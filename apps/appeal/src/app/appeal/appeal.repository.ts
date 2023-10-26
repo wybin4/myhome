@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { AppealEntity, TypeOfAppealEntity } from './appeal.entity';
+import { AppealEntity } from './appeal.entity';
 import { AppealStatus } from '@myhome/interfaces';
 
 @Injectable()
@@ -43,26 +43,5 @@ export class AppealRepository {
             return this.appealRepository.save(appeal);
         }
         return undefined;
-    }
-}
-
-
-@Injectable()
-export class TypeOfAppealRepository {
-    constructor(
-        @InjectRepository(TypeOfAppealEntity)
-        private readonly typeOfAppealRepository: Repository<TypeOfAppealEntity>,
-    ) { }
-
-    async create(typeOfAppeal: TypeOfAppealEntity) {
-        return this.typeOfAppealRepository.save(typeOfAppeal);
-    }
-
-    async findById(id: number) {
-        return this.typeOfAppealRepository.findOne({ where: { id } });
-    }
-
-    async findMany() {
-        return this.typeOfAppealRepository.find();
     }
 }

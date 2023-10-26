@@ -2,7 +2,7 @@ import { GetServiceNotifications, AddServiceNotification, UpdateServiceNotificat
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { ServiceNotificationRepository } from "../repositories/service-notification.repository";
-import { NOTIFICATIONS_NOT_EXIST, NOTIFICATION_NOT_EXIST, RMQException, checkUser } from "@myhome/constants";
+import { NOTIFICATION_NOT_EXIST, RMQException, checkUser } from "@myhome/constants";
 import { ServiceNotificationEntity } from "../entities/service-notification.entity";
 import { NotificationStatus } from "@myhome/interfaces";
 import { ServiceNotificationEventEmitter } from "../service-notification.event-emitter";
@@ -23,7 +23,7 @@ export class ServiceNotificationService {
             dto.userRole
         );
         if (!notifications.length) {
-            throw new RMQException(NOTIFICATIONS_NOT_EXIST.message, NOTIFICATIONS_NOT_EXIST.status);
+            return;
         }
         return { notifications };
     }

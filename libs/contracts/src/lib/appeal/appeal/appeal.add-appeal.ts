@@ -1,5 +1,6 @@
-import { IAppeal } from '@myhome/interfaces';
-import { IsNumber, IsString } from 'class-validator';
+import { AppealType, IAppeal } from '@myhome/interfaces';
+import { IsNumber, IsString, Validate } from 'class-validator';
+import { IsValidEnumValue } from '../../enum.validator';
 
 export namespace AppealAddAppeal {
     export const topic = 'appeal.add-appeal.command';
@@ -8,8 +9,8 @@ export namespace AppealAddAppeal {
         @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
         managementCompanyId!: number;
 
-        @IsNumber({}, { message: "Id типа обращения должен быть числом" })
-        typeOfAppealId!: number;
+        @Validate(IsValidEnumValue, [AppealType])
+        typeOfAppeal!: AppealType;
 
         @IsNumber({}, { message: "Id абонента должен быть числом" })
         subscriberId!: number;

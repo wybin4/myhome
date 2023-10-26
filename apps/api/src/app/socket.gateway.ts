@@ -33,7 +33,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         //     }
         // });
         const userId = 1;
-        const userRole = UserRole.Owner;
+        const userRole = UserRole.ManagementCompany;
         socket.data.user = { userId, userRole };
         const key = `${userId}_${userRole}`;
         this.clients.set(key, socket);

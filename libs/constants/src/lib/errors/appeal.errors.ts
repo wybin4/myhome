@@ -8,10 +8,6 @@ export const APPEALS_NOT_EXIST = {
     message: 'Такие обращения не существуют',
     status: HttpStatus.NOT_FOUND
 };
-export const TYPE_OF_APPEAL_NOT_EXIST = {
-    message: 'Такой тип обращения не существует',
-    status: HttpStatus.CONFLICT
-};
 export const TYPES_OF_APPEAL_NOT_EXIST = {
     message: 'Такие типы обращений не существует',
     status: HttpStatus.CONFLICT

@@ -24,4 +24,6 @@ export * from './lib/rmq-requests/reference/get-common.request';
 
 export * from './lib/rmq-requests/single-payment-document/check-single-payment-document.request';
 
+export * from './lib/rmq-requests/notification.request';
+
 export * from './lib/generics/get-object.generic';

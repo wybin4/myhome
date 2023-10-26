@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { AppealEntity, TypeOfAppealEntity } from '../appeal/appeal.entity';
+import { AppealEntity } from '../appeal/appeal.entity';
 
 export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
   type: 'mysql',
@@ -10,6 +10,6 @@ export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptio
   password: configService.get('MYSQL_PASSWORD'),
   database: configService.get('MYSQL_DATABASE'),
   synchronize: true,
-  entities: [AppealEntity, TypeOfAppealEntity],
+  entities: [AppealEntity],
   autoLoadEntities: true
 });

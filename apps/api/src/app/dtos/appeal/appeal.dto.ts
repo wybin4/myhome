@@ -1,5 +1,5 @@
-import { AppealStatus } from "@myhome/interfaces";
-import { IsNumber, IsOptional, IsString } from "class-validator";
+import { AppealStatus, AppealType } from "@myhome/interfaces";
+import { IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class AddAppealDto {
     @IsNumber()
@@ -8,8 +8,8 @@ export class AddAppealDto {
     @IsNumber()
     managementCompanyId: number;
 
-    @IsNumber()
-    typeOfAppealId: number;
+    @IsEnum(AppealType)
+    typeOfAppeal: AppealType;
 
     @IsNumber()
     subscriberId: number;

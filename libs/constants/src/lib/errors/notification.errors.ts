@@ -11,4 +11,8 @@ export const NOTIFICATIONS_NOT_EXIST = {
 export const INCORRECT_HOUSE_NOTIF_TYPE = {
     message: 'Некорректный тип уведомления',
     status: HttpStatus.CONFLICT
-}
+};
+export const CANT_SEND_NOTIFICATION = {
+    message: "Невозможно отправить уведомление",
+    status: HttpStatus.INTERNAL_SERVER_ERROR
+};

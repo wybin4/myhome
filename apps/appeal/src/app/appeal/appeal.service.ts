@@ -1,17 +1,15 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { AppealRepository, TypeOfAppealRepository } from "./appeal.repository";
-import { APPEAL_NOT_EXIST, TYPE_OF_APPEAL_NOT_EXIST, getSubscriber, checkUser, getGenericObject, RMQException, APPEALS_NOT_EXIST, TYPES_OF_APPEAL_NOT_EXIST, SENDER_NOT_EXIST } from "@myhome/constants";
+import { AppealRepository } from "./appeal.repository";
+import { APPEAL_NOT_EXIST, getSubscriber, checkUser, getGenericObject, RMQException, APPEALS_NOT_EXIST, SENDER_NOT_EXIST, addNotification } from "@myhome/constants";
 import { AppealAddAppeal, AppealGetAppeal, AppealGetAppealsByMCId, ReferenceGetSubscriber, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByOwner } from "@myhome/contracts";
 import { AppealEntity } from "./appeal.entity";
-import { IAppeal, ISubscriber, SenderType, UserRole } from "@myhome/interfaces";
-
+import { AppealType, IAppeal, ISubscriber, NotificationStatus, SenderType, ServiceNotificationType, UserRole } from "@myhome/interfaces";
 
 @Injectable()
 export class AppealService {
     constructor(
         private readonly appealRepository: AppealRepository,
-        private readonly typeOfAppealRepository: TypeOfAppealRepository,
         private readonly rmqService: RMQService,
     ) { }
 
@@ -20,10 +18,6 @@ export class AppealService {
         const appeals = await this.appealRepository.findByMCId(managementCompanyId);
         if (!appeals) {
             throw new RMQException(APPEALS_NOT_EXIST.message, APPEALS_NOT_EXIST.status);
-        }
-        const typesOfAppeal = await this.typeOfAppealRepository.findMany();
-        if (!typesOfAppeal) {
-            throw new RMQException(TYPES_OF_APPEAL_NOT_EXIST.message, TYPES_OF_APPEAL_NOT_EXIST.status);
         }
 
         const subscriberIds = appeals.map(appeal => appeal.subscriberId);
@@ -41,9 +35,7 @@ export class AppealService {
                 })
                 .filter(({ currentSubscriber }) => currentSubscriber)
                 .map(({ currentSubscriber, appeal }) => {
-                    const currentTypeOfAppeal = typesOfAppeal.find(t => t.id === appeal.typeOfAppealId);
                     return {
-                        typeOfAppealName: currentTypeOfAppeal.name,
                         apartmentName: currentSubscriber.address,
                         personalAccount: currentSubscriber.personalAccount,
                         ownerName: currentSubscriber.name,
@@ -117,65 +109,60 @@ export class AppealService {
     }
 
     public async addAppeal(dto: AppealAddAppeal.Request) {
-        const typeOfAppeal = await this.typeOfAppealRepository.findById(dto.typeOfAppealId);
-        if (!typeOfAppeal) {
-            throw new RMQException(TYPE_OF_APPEAL_NOT_EXIST.message, TYPE_OF_APPEAL_NOT_EXIST.status);
-        }
-
         await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
         await getSubscriber(this.rmqService, dto.subscriberId);
 
         const newAppealEntity = new AppealEntity({
             managementCompanyId: dto.managementCompanyId,
-            typeOfAppealId: dto.typeOfAppealId,
+            typeOfAppeal: dto.typeOfAppeal,
             subscriberId: dto.subscriberId,
             createdAt: new Date(dto.createdAt),
             data: String(dto.data),
         });
         const newAppeal = await this.appealRepository.create(newAppealEntity);
 
-        // const typeOfAppealName = (await this.typeOfAppealRepository.findById(dto.typeOfAppealId)).name;
-        // switch (typeOfAppealName) {
-        //     case AppealType.AddIndividualMeter:
-        //         this.sendNotification(
-        //             dto,
-        //             'Было добавлено обращение по поводу замены счётчика'
-        //         )
-        //         break;
-        //     case AppealType.VerifyIndividualMeter:
-        //         this.sendNotification(
-        //             dto,
-        //             'Было добавлено обращение по поводу поверки счётчика'
-        //         )
-        //         break;
-        //     case AppealType.Claim:
-        //     case AppealType.ProblemOrQuestion:
-        //         this.sendNotification(
-        //             dto,
-        //             'Было добавлено обращение'
-        //         )
-        //         break;
-        // }
+        await this.sendNotification(newAppeal);
 
         return { appeal: newAppeal };
     }
 
-    // ИСПРАВИТЬ!!!
-    // private async sendNotification(dto: AppealAddAppeal.Request, message: string) {
-    //     const managementCompanyId = await this.rmqService.send
-    //         <ReferenceGetManagementCompany.Request, ReferenceGetManagementCompany.Response>
-    //         (ReferenceGetManagementCompany.topic, { subscriberId: dto.subscriberId });
+    // ИСПРАВИТЬ!!!!!
+    private getText(appeal: IAppeal) {
+        switch (appeal.typeOfAppeal) {
+            case AppealType.AddIndividualMeter:
+                return {
+                    title: `Отправлено обращение №${appeal.id}`,
+                    description: "Добавление счётчика",
+                    text: ""
+                };
+            case AppealType.VerifyIndividualMeter:
+                return {
+                    title: `Отправлено обращение №${appeal.id}`,
+                    description: "Поверка счётчика",
+                    text: ""
+                };
+            case AppealType.ProblemOrQuestion:
+                return {
+                    title: `Отправлено обращение №${appeal.id}`,
+                    description: "Проблема или вопрос",
+                    text: ""
+                };
+        }
+    }
 
-    //     await this.rmqService.notify(AddNotification.topic,
-    //         {
-    //             userId: managementCompanyId,
-    //             userRole: UserRole.ManagementCompany,
-    //             notificationType: NotificationType.SentAppeal,
-    //             message: message,
-    //             createdAt: new Date(),
-    //         }
-    //     );
-    // }
+    private async sendNotification(appeal: IAppeal) {
+        const { title, description, text } = this.getText(appeal);
+        await addNotification(this.rmqService, {
+            userId: appeal.managementCompanyId,
+            userRole: UserRole.ManagementCompany,
+            title: title,
+            description: description,
+            text: text,
+            type: ServiceNotificationType.Appeal,
+            createdAt: new Date(),
+            status: NotificationStatus.Unread
+        });
+    }
 
     private async getSubscribers(subscriberIds: number[]): Promise<ReferenceGetSubscribersAllInfo.Response> {
         try {

@@ -15,7 +15,6 @@ export namespace AppealGetAppealsByMCId {
 }
 
 interface IGetAppealsByMCId extends IAppeal {
-    typeOfAppealName: string;
     apartmentName: string;
     personalAccount: string;
     ownerName: string;

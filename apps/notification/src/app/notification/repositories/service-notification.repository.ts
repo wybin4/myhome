@@ -11,8 +11,12 @@ export class ServiceNotificationRepository {
         private readonly serviceNotificationRepository: Repository<ServiceNotificationEntity>,
     ) { }
 
-    async create(Notification: ServiceNotificationEntity) {
-        return this.serviceNotificationRepository.save(Notification);
+    async create(notification: ServiceNotificationEntity) {
+        return this.serviceNotificationRepository.save(notification);
+    }
+
+    async createMany(notifications: ServiceNotificationEntity[]) {
+        return this.serviceNotificationRepository.save(notifications);
     }
 
     async findById(id: number) {

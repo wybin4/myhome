@@ -21,9 +21,6 @@ export class AddHouseNotificationDto {
     @MaxLength(500)
     @IsString()
     text: string;
-
-    @IsString()
-    createdAt!: string;
 }
 
 export class GetHouseNotificationDto {

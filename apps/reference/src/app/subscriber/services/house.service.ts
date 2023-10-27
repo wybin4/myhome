@@ -2,7 +2,7 @@ import { HouseRepository } from '../repositories/house.repository';
 import { HouseEntity } from '../entities/house.entity';
 import { IHouse, UserRole } from '@myhome/interfaces';
 import { HOUSES_NOT_EXIST, HOUSE_NOT_EXIST, RMQException, addGenericObject, checkUser, getGenericObject, getGenericObjects } from '@myhome/constants';
-import { ReferenceAddHouse, ReferenceGetHouse } from '@myhome/contracts';
+import { ReferenceAddHouse, ReferenceGetHouse, ReferenceGetHouseAllInfo } from '@myhome/contracts';
 import { Injectable } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
 
@@ -23,6 +23,19 @@ export class HouseService {
 					HOUSE_NOT_EXIST
 				) as IHouse
 		};
+	}
+
+	async getHouseAllInfo(id: number): Promise<ReferenceGetHouseAllInfo.Response> {
+		const house = await this.houseRepository.findWithSubscribers(id);
+		if (!house) { return; }
+		const { profile } = await checkUser(this.rmqService, house.managementCompanyId, UserRole.ManagementCompany);
+		return {
+			house: {
+				managementCompanyName: profile.name,
+				ownerIds: house.apartments.map(a => a.subscriber.ownerId),
+				...house.get()
+			}
+		}
 	}
 
 	async getHouses(houseIds: number[]) {

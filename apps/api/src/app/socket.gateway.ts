@@ -33,7 +33,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         //     }
         // });
         const userId = 1;
-        const userRole = UserRole.ManagementCompany;
+        const userRole = UserRole.Owner;
         socket.data.user = { userId, userRole };
         const key = `${userId}_${userRole}`;
         this.clients.set(key, socket);
@@ -71,6 +71,16 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         if (socket) {
             socket.emit('newNotification', notification);
         }
+    }
+
+    sendNotificationsToClients(notifications: IServiceNotification[]) {
+        notifications.map(notification => {
+            const key = `${notification.userId}_${notification.userRole}`;
+            const socket = this.clients.get(key);
+            if (socket) {
+                socket.emit('newNotification', notification);
+            }
+        })
     }
 
     sendMessageToClients(message: IGetMessage) {

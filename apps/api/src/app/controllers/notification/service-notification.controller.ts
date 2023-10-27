@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { UpdateServiceNotification, GetServiceNotifications, GetServiceNotification } from '@myhome/contracts';
+import { UpdateServiceNotification, GetServiceNotifications, EmitServiceNotification, EmitServiceNotifications } from '@myhome/contracts';
 import { RMQRoute, RMQService, RMQValidate } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
 import { UpdateServiceNotificationDto, GetServiceNotificationsDto } from '../../dtos/notification/service-notification.dto';
@@ -39,9 +39,15 @@ export class ServiceNotificationController {
     }
 
     @RMQValidate()
-    @RMQRoute(GetServiceNotification.topic)
-    async getNotification(@Body() dto: GetServiceNotification.Request) {
+    @RMQRoute(EmitServiceNotification.topic)
+    async emitNotification(@Body() dto: EmitServiceNotification.Request) {
         this.socketGateway.sendNotificationToClients(dto.notification);
+    }
+
+    @RMQValidate()
+    @RMQRoute(EmitServiceNotifications.topic)
+    async emitNotifications(@Body() dto: EmitServiceNotifications.Request) {
+        this.socketGateway.sendNotificationsToClients(dto.notifications);
     }
 
 }

@@ -1,15 +1,17 @@
-import { HOUSES_NOT_EXIST, INCORRECT_HOUSE_NOTIF_TYPE, NOTIFICATIONS_NOT_EXIST, NOTIFICATION_NOT_EXIST, RMQException, getGenericObject } from "@myhome/constants";
-import { AddHouseNotification, GetHouseNotificationsByMCId, ReferenceGetHouse, ReferenceGetHousesByMCId } from "@myhome/contracts";
+import { HOUSES_NOT_EXIST, NOTIFICATIONS_NOT_EXIST, NOTIFICATION_NOT_EXIST, RMQException, getGenericObject } from "@myhome/constants";
+import { AddHouseNotification, GetHouseNotificationsByMCId, ReferenceGetHouseAllInfo, ReferenceGetHousesByMCId } from "@myhome/contracts";
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { HouseNotificationEntity } from "../entities/house-notification.entity";
 import { HouseNotificationRepository } from "../repositories/house-notification.repository";
-import { HouseNotificationType } from "@myhome/interfaces";
+import { IHouseNotification, ServiceNotificationType, UserRole } from "@myhome/interfaces";
+import { ServiceNotificationService } from "./service-notification.service";
 
 @Injectable()
 export class HouseNotificationService {
     constructor(
         private readonly houseNotificationRepository: HouseNotificationRepository,
+        private readonly serviceNotificationService: ServiceNotificationService,
         private readonly rmqService: RMQService,
     ) { }
 
@@ -50,21 +52,41 @@ export class HouseNotificationService {
 
     public async addHouseNotification(dto: AddHouseNotification.Request):
         Promise<AddHouseNotification.Response> {
-        await this.getHouse(dto.houseId);
-
-        if (!Object.values(HouseNotificationType).includes(dto.type)) {
-            throw new RMQException(INCORRECT_HOUSE_NOTIF_TYPE.message, INCORRECT_HOUSE_NOTIF_TYPE.status);
-        }
+        const { house } = await this.getHouse(dto.houseId);
 
         const newHouseNotificationEntity = new HouseNotificationEntity({
             houseId: dto.houseId,
             title: dto.title,
             text: dto.text,
             type: dto.type,
-            createdAt: new Date(dto.createdAt),
+            createdAt: new Date(),
         });
         const newHouseNotification = await this.houseNotificationRepository.create(newHouseNotificationEntity);
+
+        await this.sendNotifications(
+            newHouseNotification,
+            house.managementCompanyName,
+            house.ownerIds
+        );
+
         return { notification: newHouseNotification };
+    }
+
+    private async sendNotifications(
+        notification: IHouseNotification,
+        managementCompanyName: string,
+        ownerIds: number[]
+    ) {
+        await this.serviceNotificationService.addServiceNotifications(
+            {
+                userIds: ownerIds,
+                userRole: UserRole.Owner,
+                title: notification.title,
+                description: managementCompanyName,
+                text: notification.text,
+                type: ServiceNotificationType.HouseNotification,
+            }
+        );
     }
 
     private async getHouseByMCId(managementCompanyId: number) {
@@ -81,9 +103,9 @@ export class HouseNotificationService {
     private async getHouse(id: number) {
         try {
             return await this.rmqService.send<
-                ReferenceGetHouse.Request,
-                ReferenceGetHouse.Response>
-                (ReferenceGetHouse.topic, { id });
+                ReferenceGetHouseAllInfo.Request,
+                ReferenceGetHouseAllInfo.Response>
+                (ReferenceGetHouseAllInfo.topic, { id });
         } catch (e) {
             throw new RMQException(e.message, e.status);
         }

@@ -1,8 +1,8 @@
-import { GetServiceNotifications, AddServiceNotification, UpdateServiceNotification } from "@myhome/contracts";
+import { GetServiceNotifications, AddServiceNotification, UpdateServiceNotification, AddServiceNotifications } from "@myhome/contracts";
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { ServiceNotificationRepository } from "../repositories/service-notification.repository";
-import { NOTIFICATION_NOT_EXIST, RMQException, checkUser } from "@myhome/constants";
+import { NOTIFICATION_NOT_EXIST, RMQException, checkUser, checkUsers } from "@myhome/constants";
 import { ServiceNotificationEntity } from "../entities/service-notification.entity";
 import { NotificationStatus } from "@myhome/interfaces";
 import { ServiceNotificationEventEmitter } from "../service-notification.event-emitter";
@@ -41,6 +41,24 @@ export class ServiceNotificationService {
 
         await this.eventEmitter.handle(notification);
         return { notification };
+    }
+
+    public async addServiceNotifications(dto: AddServiceNotifications.Request):
+        Promise<AddServiceNotifications.Response> {
+        await checkUsers(this.rmqService, dto.userIds, dto.userRole);
+
+        const notificationEntities = dto.userIds.map(userId =>
+            new ServiceNotificationEntity({
+                status: NotificationStatus.Unread,
+                createdAt: new Date(),
+                userId: userId,
+                ...dto
+            })
+        )
+        const notifications = await this.serviceNotificationRepository.createMany(notificationEntities);
+
+        await this.eventEmitter.handleMany(notifications);
+        return { notifications };
     }
 
     public async updateServiceNotification(dto: UpdateServiceNotification.Request):

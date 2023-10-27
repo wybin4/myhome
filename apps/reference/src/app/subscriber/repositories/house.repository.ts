@@ -33,6 +33,16 @@ export class HouseRepository {
             .getMany();
     }
 
+    async findWithSubscribers(houseId: number) {
+        return await this.houseRepository
+            .createQueryBuilder('house')
+            .innerJoinAndSelect('house.apartments', 'apartment')
+            .innerJoinAndSelect('apartment.subscriber', 'subscriber')
+            .where('house.id = :houseId', { houseId })
+            .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
+            .getOne();
+    }
+
     async delete(id: number): Promise<void> {
         await this.houseRepository.delete({ id });
     }

@@ -16,3 +16,7 @@ export const CANT_SEND_NOTIFICATION = {
     message: "Невозможно отправить уведомление",
     status: HttpStatus.INTERNAL_SERVER_ERROR
 };
+export const CANT_SEND_NOTIFICATIONS = {
+    message: "Невозможно отправить уведомления",
+    status: HttpStatus.INTERNAL_SERVER_ERROR
+};

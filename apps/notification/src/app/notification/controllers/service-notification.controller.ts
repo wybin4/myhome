@@ -1,8 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ServiceNotificationService } from '../services/service-notification.service';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
-import { AddServiceNotification, GetServiceNotifications, UpdateServiceNotification } from '@myhome/contracts';
+import { AddServiceNotification, AddServiceNotifications, GetServiceNotifications, UpdateServiceNotification } from '@myhome/contracts';
 
 @Controller("service-notification")
 export class ServiceNotificationController {
@@ -20,12 +20,21 @@ export class ServiceNotificationController {
         }
     }
 
-    @Post("add")
     @RMQValidate()
     @RMQRoute(AddServiceNotification.topic)
     async addServiceNotification(@Body() dto: AddServiceNotification.Request) {
         try {
             return this.serviceNotificationService.addServiceNotification(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+        }
+    }
+
+    @RMQValidate()
+    @RMQRoute(AddServiceNotifications.topic)
+    async addServiceNotifications(@Body() dto: AddServiceNotifications.Request) {
+        try {
+            return this.serviceNotificationService.addServiceNotifications(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
         }

@@ -8,6 +8,7 @@ export * from './lib/account/account.change-profile';
 export * from './lib/reference/subscriber/house/reference.add-house';
 export * from './lib/reference/subscriber/house/reference.update-house';
 export * from './lib/reference/subscriber/house/reference.get-house';
+export * from './lib/reference/subscriber/house/reference.get-house-all-info';
 export * from './lib/reference/subscriber/house/reference.get-houses';
 export * from './lib/reference/subscriber/house/reference.get-houses-by-mcid';
 
@@ -68,7 +69,9 @@ export * from './lib/notification/house-notification/notification.get-house-noti
 export * from './lib/notification/house-notification/notification.get-house-notifications-by-mcid';
 
 export * from './lib/notification/service-notification/notification.add-service-notification';
-export * from './lib/notification/service-notification/notification.get-service-notification';
+export * from './lib/notification/service-notification/notification.add-service-notifications';
+export * from './lib/notification/service-notification/notification.emit-service-notification';
+export * from './lib/notification/service-notification/notification.emit-service-notifications';
 export * from './lib/notification/service-notification/notification.get-service-notifications';
 export * from './lib/notification/service-notification/notification.update-service-notification';
 

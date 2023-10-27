@@ -21,7 +21,7 @@ export class ChatRepository {
     }
 
     async findManyByUser(user: IChatUser): Promise<Chat[]> {
-        return this.chatModel.find({ users: { user } }).exec();
+        return this.chatModel.find({ 'users.userId': user.userId, 'users.userRole': user.userRole }).exec();
     }
 
 }

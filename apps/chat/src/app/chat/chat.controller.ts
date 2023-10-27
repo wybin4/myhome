@@ -22,9 +22,9 @@ export class ChatController {
 
     @RMQValidate()
     @RMQRoute(AddChat.topic)
-    async addChat(@Body() { appealId }: AddChat.Request) {
+    async addChat(@Body() dto: AddChat.Request) {
         try {
-            return this.chatService.addChat(appealId);
+            return this.chatService.addChat(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
         }

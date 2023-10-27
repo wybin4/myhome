@@ -4,7 +4,6 @@ import { ChatController } from "./chat.controller";
 import { ChatService } from "./chat.service";
 import { Chat, ChatSchema } from "./chat.model";
 import { MongooseModule } from "@nestjs/mongoose";
-import { AppealModule } from "../appeal/appeal.module";
 import { ChatEventEmitter } from "./chat.event-emitter";
 
 @Module({
@@ -12,7 +11,6 @@ import { ChatEventEmitter } from "./chat.event-emitter";
         MongooseModule.forFeature([
             { name: Chat.name, schema: ChatSchema },
         ]),
-        AppealModule
     ],
     providers: [
         ChatRepository,

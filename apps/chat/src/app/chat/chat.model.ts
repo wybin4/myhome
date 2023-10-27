@@ -4,7 +4,7 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class Message extends Document implements IMessage {
-    @Prop({ required: true })
+    @Prop({ type: Object, required: true })
     sender: IChatUser;
 
     @Prop({ required: true })
@@ -28,7 +28,7 @@ export const MessageSchema = SchemaFactory.createForClass(Message);
 
 @Schema()
 export class Chat extends Document implements IChat {
-    @Prop({ required: true })
+    @Prop({ type: [Object], required: true })
     users: IChatUser[];
 
     @Prop({ type: [MessageSchema] })

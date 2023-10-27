@@ -1,5 +1,5 @@
-import { IChatUser } from "@myhome/interfaces";
-import { IsArray, IsString } from "class-validator";
+import { IChatUser, UserRole } from "@myhome/interfaces";
+import { IsArray, IsEnum, IsNumber, IsString } from "class-validator";
 
 export class AddChatDto {
     @IsArray()
@@ -13,9 +13,17 @@ export class AddMessageDto {
     @IsString()
     text!: string;
 
-    sender!: IChatUser;
+    @IsNumber()
+    senderId!: number;
+
+    @IsEnum(UserRole)
+    senderRole!: UserRole;
 }
 
 export class GetChatsDto {
-    user!: IChatUser;
+    @IsNumber()
+    userId!: number;
+
+    @IsEnum(UserRole)
+    userRole!: UserRole;
 }

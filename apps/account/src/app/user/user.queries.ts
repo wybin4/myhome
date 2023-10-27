@@ -4,7 +4,7 @@ import { RMQValidate, RMQRoute, RMQError } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 import { UserService } from "./user.service";
 
-@Controller()
+@Controller("user")
 export class UserQueries {
 	constructor(
 		private readonly userService: UserService,
@@ -29,7 +29,6 @@ export class UserQueries {
 			throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
 		}
 	}
-
 
 	@RMQValidate()
 	@RMQRoute(AccountGetOwnersByMCId.topic)

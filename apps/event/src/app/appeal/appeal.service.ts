@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { AppealRepository } from "./appeal.repository";
-import { APPEAL_NOT_EXIST, getSubscriber, checkUser, getGenericObject, RMQException, APPEALS_NOT_EXIST, SENDER_NOT_EXIST, addNotification } from "@myhome/constants";
+import { APPEAL_NOT_EXIST, getSubscriber, checkUser, getGenericObject, RMQException, APPEALS_NOT_EXIST, addNotification } from "@myhome/constants";
 import { EventAddAppeal, EventGetAppeal, EventGetAppealsByMCId, ReferenceGetSubscriber, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByOwner } from "@myhome/contracts";
 import { AppealEntity } from "./appeal.entity";
-import { AppealType, IAppeal, ISubscriber, NotificationStatus, SenderType, ServiceNotificationType, UserRole } from "@myhome/interfaces";
+import { AppealType, IAppeal, NotificationStatus, ServiceNotificationType, UserRole } from "@myhome/interfaces";
 
 @Injectable()
 export class AppealService {
@@ -44,25 +44,6 @@ export class AppealService {
                 })
 
         };
-    }
-
-    public async getAppeals(userId: number, userRole: SenderType): Promise<IAppeal[]> {
-        let subscribers: ISubscriber[], subscriberIds: number[];
-        switch (userRole) {
-            case SenderType.ManagementCompany:
-                await checkUser(this.rmqService, userId, UserRole.ManagementCompany);
-                return await this.appealRepository.findByMCId(userId);
-            case SenderType.Subscriber:
-                await checkUser(this.rmqService, userId, UserRole.Owner);
-                ({ subscribers } = await this.getSubscribersByOId(userId));
-                if (!subscribers) {
-                    return;
-                }
-                subscriberIds = subscribers.map(sid => sid.id);
-                return await this.appealRepository.findBySIds(subscriberIds);
-            default:
-                throw new RMQException(SENDER_NOT_EXIST.message, SENDER_NOT_EXIST.status);
-        }
     }
 
     private async getSubscribersByOId(ownerId: number) {

@@ -1,98 +1,115 @@
-import { Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { ChatRepository } from "./chat.repository";
 import { AddChat, AddMessage, GetChats } from "@myhome/contracts";
-import { RMQException, SENDER_NOT_EXIST } from "@myhome/constants";
-import { IChat, SenderType, UserRole } from "@myhome/interfaces";
+import { RMQException, checkUser, checkUsers } from "@myhome/constants";
+import { IChatUser, UserRole } from "@myhome/interfaces";
 import { ChatEntity, MessageEntity } from "./chat.entity";
-import { AppealService } from "../appeal/appeal.service";
 import { ChatEventEmitter } from "./chat.event-emitter";
+import { RMQService } from "nestjs-rmq";
 
 @Injectable()
 export class ChatService {
     constructor(
+        private readonly rmqService: RMQService,
         private readonly chatRepository: ChatRepository,
-        private readonly appealService: AppealService,
         private readonly eventEmitter: ChatEventEmitter
     ) { }
 
     async getChats(dto: GetChats.Request): Promise<GetChats.Response> {
-        const userType = dto.userRole === UserRole.Owner ? SenderType.Subscriber : SenderType.ManagementCompany;
-
-        const appeals = await this.appealService.getAppeals(dto.userId, userType);
-        if (!appeals) {
-            return;
-        }
-        const appealIds = appeals.map(a => a.id);
-        const chats = await this.chatRepository.findManyByAppealIds(appealIds);
+        await checkUser(this.rmqService, dto.userId, dto.userRole);
+        const chats = await this.chatRepository.findManyByUser(dto);
         return { chats };
     }
 
-    async addChat(appealId: number): Promise<AddChat.Response> {
-        const { appeal } = await this.appealService.getAppeal(appealId);
+    async addChat(dto: AddChat.Request): Promise<AddChat.Response> {
+        if (!dto.users.length) {
+            return;
+        }
+        const { users } = await this.checkMultiUsers(dto.users);
 
-        const chat: IChat = {
-            appealId: appealId,
+        const newChat = await this.chatRepository.create(new ChatEntity({
+            users: users,
             createdAt: new Date()
-        };
-        const newChatEntity = new ChatEntity(chat);
-        const newChat = await this.chatRepository.create(newChatEntity);
+        }));
 
-        // уведомляем владельца
-        await this.eventEmitter.handleChat({
-            userId: appeal.ownerId,
-            userRole: UserRole.Owner,
-            ...chat
-        });
-
-        // уведомляем УК
-        await this.eventEmitter.handleChat({
-            userId: appeal.managementCompanyId,
-            userRole: UserRole.ManagementCompany,
-            ...chat
-        });
+        // уведомляем
+        users.map(async user => {
+            await this.eventEmitter.handleChat({
+                userId: user.userId,
+                userRole: user.userRole,
+                ...newChat
+            });
+        })
 
         return { chat: newChat }
     }
 
+    private async checkMultiUsers(users: IChatUser[]) {
+        const managementCs = users.filter(u => u.userRole === UserRole.ManagementCompany);
+        const owners = users.filter(u => u.userRole === UserRole.Owner);
+
+        if (!owners.length && !managementCs.length) {
+            throw new RMQException("Для добавления чата нужны пользователи", HttpStatus.BAD_REQUEST)
+        }
+
+        if ((owners.length <= 1 && managementCs.length === 0) || (owners.length === 0 && managementCs.length <= 1)) {
+            throw new RMQException("Для добавления чата нужно хотя бы два пользователя", HttpStatus.BAD_REQUEST)
+        }
+
+        const realUsers: IChatUser[] = [];
+        if (owners && owners.length) {
+            const { profiles } = await checkUsers(this.rmqService, owners.map(o => o.userId), UserRole.Owner);
+            realUsers.push(...profiles.map(profile => {
+                return {
+                    userId: profile.id,
+                    userRole: UserRole.Owner
+                };
+            }));
+        }
+        if (managementCs && managementCs.length) {
+            const { profiles } = await checkUsers(this.rmqService, managementCs.map(mc => mc.userId), UserRole.ManagementCompany);
+            realUsers.push(...profiles.map(profile => {
+                return {
+                    userId: profile.id,
+                    userRole: UserRole.ManagementCompany
+                };
+            }));
+        }
+        return { users: realUsers };
+    }
 
     async addMessage(dto: AddMessage.Request): Promise<AddMessage.Response> {
         const chat = await this.chatRepository.findById(dto.chatId);
-        const { appeal } = await this.appealService.getAppeal(chat.appealId);
         if (
-            (appeal.subscriberId === dto.senderId && dto.senderRole === SenderType.Subscriber)
-            || (appeal.managementCompanyId === dto.senderId && dto.senderRole === SenderType.ManagementCompany)
+            !chat.users.includes({
+                userId: dto.senderId,
+                userRole: dto.senderRole
+            })
         ) {
-            const message = new MessageEntity({
-                senderId: dto.senderId,
-                senderRole: dto.senderRole,
-                text: dto.text,
-                createdAt: new Date(),
-            });
-            chat.messages.push(message);
-            await chat.save();
-
-            if (dto.senderRole === SenderType.Subscriber) {
-                await this.eventEmitter.handleMessage({
-                    userId: appeal.ownerId,
-                    userRole: UserRole.Owner,
-                    ...message
-                });
-            } else if (dto.senderRole === SenderType.ManagementCompany) {
-                await this.eventEmitter.handleMessage({
-                    userId: appeal.managementCompanyId,
-                    userRole: UserRole.ManagementCompany,
-                    ...message
-                });
-            }
-
-            return {
-                message: {
-                    chatId: chat.id,
-                    ...message
-                }
-            };
-        } else {
-            throw new RMQException(SENDER_NOT_EXIST.message, SENDER_NOT_EXIST.status);
+            throw new RMQException("Вы не можете писать в этот чат", HttpStatus.BAD_REQUEST);
         }
+        const message = new MessageEntity({
+            sender: {
+                userId: dto.senderId,
+                userRole: dto.senderRole
+            },
+            text: dto.text,
+            createdAt: new Date(),
+        });
+        chat.messages.push(message);
+        await chat.save();
+
+        await this.eventEmitter.handleMessage({
+            userId: dto.senderId,
+            userRole: dto.senderRole,
+            ...message
+        });
+
+        return {
+            message: {
+                chatId: chat.id,
+                ...message
+            }
+        };
     }
 }

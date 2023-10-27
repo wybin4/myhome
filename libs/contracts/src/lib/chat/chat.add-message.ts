@@ -1,5 +1,6 @@
-import { IChatUser, IMessage } from '@myhome/interfaces';
-import { IsString, MaxLength } from 'class-validator';
+import { IMessage, UserRole } from '@myhome/interfaces';
+import { IsNumber, IsString, MaxLength, Validate } from 'class-validator';
+import { IsValidEnumValue } from '../enum.validator';
 
 export namespace AddMessage {
     export const topic = 'chat.add-message.command';
@@ -12,7 +13,11 @@ export namespace AddMessage {
         @MaxLength(1000, { message: "Максимальная длина сообщения не должна превышать 1000 символов" })
         text!: string;
 
-        sender!: IChatUser;
+        @IsNumber({}, { message: "Id отправителя должен быть числом" })
+        senderId!: number;
+
+        @Validate(IsValidEnumValue, [UserRole])
+        senderRole!: UserRole;
     }
 
     export class Response {

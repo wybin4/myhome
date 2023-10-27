@@ -1,5 +1,5 @@
 import { RMQService } from 'nestjs-rmq';
-import { AddServiceNotification, AddServiceNotifications, IAddServiceNotifications } from '@myhome/contracts';
+import { EventAddServiceNotification, EventAddServiceNotifications, IAddServiceNotifications } from '@myhome/contracts';
 import { IServiceNotification } from "@myhome/interfaces";
 import { CANT_SEND_NOTIFICATION, CANT_SEND_NOTIFICATIONS } from '../errors/notification.errors';
 import { RMQException } from '../exception';
@@ -7,10 +7,10 @@ import { RMQException } from '../exception';
 export async function addNotification(rmqService: RMQService, notification: IServiceNotification) {
     try {
         return await rmqService.send<
-            AddServiceNotification.Request,
-            AddServiceNotification.Response
+            EventAddServiceNotification.Request,
+            EventAddServiceNotification.Response
         >
-            (AddServiceNotification.topic, { ...notification });
+            (EventAddServiceNotification.topic, { ...notification });
     } catch (e) {
         throw new RMQException(CANT_SEND_NOTIFICATION.message, CANT_SEND_NOTIFICATION.status);
     }
@@ -22,10 +22,10 @@ export async function addNotifications(
 ) {
     try {
         return await rmqService.send<
-            AddServiceNotifications.Request,
-            AddServiceNotifications.Response
+            EventAddServiceNotifications.Request,
+            EventAddServiceNotifications.Response
         >
-            (AddServiceNotifications.topic, { ...notifications });
+            (EventAddServiceNotifications.topic, { ...notifications });
     } catch (e) {
         throw new RMQException(CANT_SEND_NOTIFICATIONS.message, CANT_SEND_NOTIFICATIONS.status);
     }

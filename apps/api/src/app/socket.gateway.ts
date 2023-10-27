@@ -2,7 +2,7 @@ import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketSe
 import { RMQService } from "nestjs-rmq";
 import { IGetChat, IGetMessage, IServiceNotification, UserRole } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
-import { AppealGetChats, GetServiceNotifications } from "@myhome/contracts";
+import { GetChats, EventGetServiceNotifications } from "@myhome/contracts";
 import { Server, Socket } from "socket.io";
 
 @Injectable()
@@ -44,9 +44,9 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     async getNotifications(socket: Socket, userId: number, userRole: UserRole) {
         try {
             const notifications = await this.rmqService.send<
-                GetServiceNotifications.Request,
-                GetServiceNotifications.Response
-            >(GetServiceNotifications.topic, { userId, userRole });
+                EventGetServiceNotifications.Request,
+                EventGetServiceNotifications.Response
+            >(EventGetServiceNotifications.topic, { userId, userRole });
             socket.emit('notifications', notifications);
         } catch (e) {
             socket.emit('notifications', { message: "Ошибка при получении уведомлений" });
@@ -56,9 +56,9 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     async getChats(socket: Socket, userId: number, userRole: UserRole) {
         try {
             const chats = await this.rmqService.send<
-                AppealGetChats.Request,
-                AppealGetChats.Response
-            >(AppealGetChats.topic, { userId, userRole });
+                GetChats.Request,
+                GetChats.Response
+            >(GetChats.topic, { userId, userRole });
             socket.emit('chats', chats);
         } catch (e) {
             socket.emit('chats', { message: "Ошибка при получении чатов" });

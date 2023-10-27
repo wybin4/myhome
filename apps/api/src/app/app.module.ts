@@ -12,15 +12,15 @@ import { MeterController } from './controllers/reference/meter.controller';
 import { SubscriberController } from './controllers/reference/subscriber.controller';
 import { AuthController } from './controllers/account/auth.controller';
 import { TariffAndNormController } from './controllers/reference/tariff-and-norm.controller';
-import { AppealController } from './controllers/appeal/appeal.controller';
-import { HouseNotificationController } from './controllers/notification/house-notification.controller';
+import { AppealController } from './controllers/event/appeal.controller';
+import { HouseNotificationController } from './controllers/event/notification/house-notification.controller';
 import { SinglePaymentDocumentController } from './controllers/single-payment-document/single-payment-document.controller';
 import { PenaltyController } from './controllers/correction/penalty.controller';
-import { VotingController } from './controllers/voting/voting.controller';
+import { VotingController } from './controllers/event/voting.controller';
 import { CBRController } from './controllers/correction/cbr.controller';
-import { ServiceNotificationController } from './controllers/notification/service-notification.controller';
+import { ServiceNotificationController } from './controllers/event/notification/service-notification.controller';
 import { SocketGateway } from './socket.gateway';
-import { ChatController } from './controllers/appeal/chat.controller';
+import { ChatController } from './controllers/chat/chat.controller';
 
 @Module({
   imports: [

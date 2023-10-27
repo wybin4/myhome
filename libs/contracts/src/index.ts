@@ -54,26 +54,26 @@ export * from './lib/reference/common/reference.get-common';
 
 export * from './lib/email/email.register';
 
-export * from './lib/appeal/appeal/appeal.add-appeal';
-export * from './lib/appeal/appeal/appeal.get-appeal';
-export * from './lib/appeal/appeal/appeal.get-appeals-by-mcid';
+export * from './lib/event/appeal/event.add-appeal';
+export * from './lib/event/appeal/event.get-appeal';
+export * from './lib/event/appeal/event.get-appeals-by-mcid';
 
-export * from './lib/appeal/chat/appeal.add-chat';
-export * from './lib/appeal/chat/appeal.get-chats';
-export * from './lib/appeal/chat/appeal.get-chat';
-export * from './lib/appeal/chat/appeal.add-message';
-export * from './lib/appeal/chat/appeal.get-message';
+export * from './lib/chat/chat.add-chat';
+export * from './lib/chat/chat.get-chats';
+export * from './lib/chat/chat.get-chat';
+export * from './lib/chat/chat.add-message';
+export * from './lib/chat/chat.get-message';
 
-export * from './lib/notification/house-notification/notification.add-house-notification';
-export * from './lib/notification/house-notification/notification.get-house-notification';
-export * from './lib/notification/house-notification/notification.get-house-notifications-by-mcid';
+export * from './lib/event/notification/house-notification/event.add-house-notification';
+export * from './lib/event/notification/house-notification/event.get-house-notification';
+export * from './lib/event/notification/house-notification/event.get-house-notifications-by-mcid';
 
-export * from './lib/notification/service-notification/notification.add-service-notification';
-export * from './lib/notification/service-notification/notification.add-service-notifications';
-export * from './lib/notification/service-notification/notification.emit-service-notification';
-export * from './lib/notification/service-notification/notification.emit-service-notifications';
-export * from './lib/notification/service-notification/notification.get-service-notifications';
-export * from './lib/notification/service-notification/notification.update-service-notification';
+export * from './lib/event/notification/service-notification/event.add-service-notification';
+export * from './lib/event/notification/service-notification/event.add-service-notifications';
+export * from './lib/event/notification/service-notification/event.emit-service-notification';
+export * from './lib/event/notification/service-notification/event.emit-service-notifications';
+export * from './lib/event/notification/service-notification/event.get-service-notifications';
+export * from './lib/event/notification/service-notification/event.update-service-notification';
 
 export * from './lib/document-detail/document-detail.get-public-utilities';
 export * from './lib/document-detail/document-detail.get-common-house-needs';
@@ -100,7 +100,7 @@ export * from './lib/correction/cbr/correction.get-key-rate';
 
 export * from './lib/payment/payment.get-payment-link';
 
-export * from './lib/voting/voting.get-voting';
-export * from './lib/voting/voting.get-votings-by-mcid';
-export * from './lib/voting/voting.add-voting';
-export * from './lib/voting/voting.update-voting';
+export * from './lib/event/voting/event.get-voting';
+export * from './lib/event/voting/event.get-votings-by-mcid';
+export * from './lib/event/voting/event.add-voting';
+export * from './lib/event/voting/event.update-voting';

@@ -22,14 +22,24 @@ export interface IChatUser {
     userRole: UserRole;
 }
 
-export interface IGetMessage extends IMessage {
-    userRole: UserRole;
-    userId: number;
+export interface IGetChat extends IChat {
+    receiver: IChatUser;
 }
 
-export interface IGetChat extends IChat {
-    userRole: UserRole;
-    userId: number;
+export interface IGetChats {
+    _id?: Types.ObjectId;
+    createdAt: Date;
+    messages?: IMessage[];
+    users: IGetChatUser[];
+}
+
+export interface IGetChatUser extends IChatUser {
+    name: string;
+}
+
+export interface IGetMessage extends IMessage {
+    receiver: IChatUser;
+    chatId: string;
 }
 
 export enum MessageStatus {

@@ -1,3 +1,8 @@
+export * from './lib/api/api.emit-chat';
+export * from './lib/api/api.emit-message';
+export * from './lib/api/api.emit-service-notification';
+export * from './lib/api/api.emit-service-notifications';
+
 export * from './lib/account/account.login';
 export * from './lib/account/account.register';
 export * from './lib/account/account.user-info';
@@ -60,9 +65,7 @@ export * from './lib/event/appeal/event.get-appeals-by-mcid';
 
 export * from './lib/chat/chat.add-chat';
 export * from './lib/chat/chat.get-chats';
-export * from './lib/chat/chat.get-chat';
 export * from './lib/chat/chat.add-message';
-export * from './lib/chat/chat.get-message';
 
 export * from './lib/event/notification/house-notification/event.add-house-notification';
 export * from './lib/event/notification/house-notification/event.get-house-notification';
@@ -70,8 +73,6 @@ export * from './lib/event/notification/house-notification/event.get-house-notif
 
 export * from './lib/event/notification/service-notification/event.add-service-notification';
 export * from './lib/event/notification/service-notification/event.add-service-notifications';
-export * from './lib/event/notification/service-notification/event.emit-service-notification';
-export * from './lib/event/notification/service-notification/event.emit-service-notifications';
 export * from './lib/event/notification/service-notification/event.get-service-notifications';
 export * from './lib/event/notification/service-notification/event.update-service-notification';
 

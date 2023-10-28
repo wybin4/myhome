@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { GetChat, GetMessage } from "@myhome/contracts";
+import { ApiEmitChat, ApiEmitMessage } from "@myhome/contracts";
 import { RMQService } from "nestjs-rmq";
 import { IGetChat, IGetMessage } from "@myhome/interfaces";
 
@@ -8,10 +8,11 @@ export class ChatEventEmitter {
     constructor(private readonly rmqService: RMQService) { }
 
     async handleMessage(message: IGetMessage) {
-        await this.rmqService.notify<GetMessage.Request>(GetMessage.topic, { message });
+        await this.rmqService.notify<ApiEmitMessage.Request>(ApiEmitMessage.topic, { message });
     }
 
     async handleChat(chat: IGetChat) {
-        await this.rmqService.notify<GetChat.Request>(GetChat.topic, { chat });
+        console.log(chat.users)
+        await this.rmqService.notify<ApiEmitChat.Request>(ApiEmitChat.topic, { chat });
     }
 }

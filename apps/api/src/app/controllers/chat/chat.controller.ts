@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { RMQRoute, RMQService, RMQValidate } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
-import { AddChat, AddMessage, GetChat, GetChats, GetMessage } from '@myhome/contracts';
+import { AddChat, AddMessage, ApiEmitChat, GetChats, ApiEmitMessage } from '@myhome/contracts';
 import { GetChatsDto, AddChatDto, AddMessageDto } from '../../dtos/chat/chat.dto';
 import { SocketGateway } from '../../socket.gateway';
 
@@ -52,14 +52,14 @@ export class ChatController {
     }
 
     @RMQValidate()
-    @RMQRoute(GetMessage.topic)
-    async getMessage(@Body() dto: GetMessage.Request) {
+    @RMQRoute(ApiEmitMessage.topic)
+    async emitMessage(@Body() dto: ApiEmitMessage.Request) {
         this.socketGateway.sendMessageToClients(dto.message);
     }
 
     @RMQValidate()
-    @RMQRoute(GetChat.topic)
-    async getChat(@Body() dto: GetChat.Request) {
+    @RMQRoute(ApiEmitChat.topic)
+    async emitChat(@Body() dto: ApiEmitChat.Request) {
         this.socketGateway.sendChatToClients(dto.chat);
     }
 

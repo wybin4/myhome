@@ -1,4 +1,4 @@
-import { Controller, Body, Post } from "@nestjs/common";
+import { Controller, Body} from "@nestjs/common";
 import { RMQValidate, RMQRoute } from "nestjs-rmq";
 import { PaymentService } from "./payment.service";
 import { GetPaymentLink } from '@myhome/contracts';
@@ -9,7 +9,6 @@ export class PaymentController {
         private readonly paymentService: PaymentService,
     ) { }
 
-    @Post('get-payment-link')
     @RMQValidate()
     @RMQRoute(GetPaymentLink.topic)
     // eslint-disable-next-line no-empty-pattern

@@ -15,6 +15,6 @@ export const getRMQConfig = (): IRMQServiceAsyncOptions => ({
     ],
     queueName: configService.get('AMQP_QUEUE'),
     prefetchCount: 32,
-    serviceName: 'myhome-notification',
+    serviceName: 'myhome-event',
   }),
 });

@@ -1,16 +1,18 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { AppealRepository } from "./appeal.repository";
-import { APPEAL_NOT_EXIST, getSubscriber, checkUser, getGenericObject, RMQException, APPEALS_NOT_EXIST, addNotification } from "@myhome/constants";
-import { EventAddAppeal, EventGetAppeal, EventGetAppealsByMCId, ReferenceGetSubscriber, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByOwner } from "@myhome/contracts";
+import { APPEAL_NOT_EXIST, getSubscriber, checkUser, getGenericObject, RMQException, APPEALS_NOT_EXIST } from "@myhome/constants";
+import { EventAddAppeal, EventGetAppeal, EventGetAppealsByMCId, ReferenceGetSubscriber, ReferenceGetSubscribersAllInfo } from "@myhome/contracts";
 import { AppealEntity } from "./appeal.entity";
-import { AppealType, IAppeal, NotificationStatus, ServiceNotificationType, UserRole } from "@myhome/interfaces";
+import { AppealType, IAppeal, ServiceNotificationType, UserRole } from "@myhome/interfaces";
+import { ServiceNotificationService } from "../notification/services/service-notification.service";
 
 @Injectable()
 export class AppealService {
     constructor(
         private readonly appealRepository: AppealRepository,
         private readonly rmqService: RMQService,
+        private readonly notificationService: ServiceNotificationService
     ) { }
 
     public async getAppealsByMCId(managementCompanyId: number):
@@ -44,19 +46,6 @@ export class AppealService {
                 })
 
         };
-    }
-
-    private async getSubscribersByOId(ownerId: number) {
-        try {
-            return await
-                this.rmqService.send<
-                    ReferenceGetSubscribersByOwner.Request,
-                    ReferenceGetSubscribersByOwner.Response
-                >
-                    (ReferenceGetSubscribersByOwner.topic, { ownerId });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
     }
 
     public async getAppeal(id: number): Promise<EventGetAppeal.Response> {
@@ -108,6 +97,7 @@ export class AppealService {
     }
 
     // ИСПРАВИТЬ!!!!!
+    // добавить текст
     private getText(appeal: IAppeal) {
         switch (appeal.typeOfAppeal) {
             case AppealType.AddIndividualMeter:
@@ -133,15 +123,13 @@ export class AppealService {
 
     private async sendNotification(appeal: IAppeal) {
         const { title, description, text } = this.getText(appeal);
-        await addNotification(this.rmqService, {
+        await this.notificationService.addServiceNotification({
             userId: appeal.managementCompanyId,
             userRole: UserRole.ManagementCompany,
             title: title,
             description: description,
             text: text,
             type: ServiceNotificationType.Appeal,
-            createdAt: new Date(),
-            status: NotificationStatus.Unread
         });
     }
 

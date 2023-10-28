@@ -1,7 +1,7 @@
 import { IServiceNotification } from '@myhome/interfaces';
 
-export namespace EventEmitServiceNotification {
-    export const topic = 'event.emit-service-notification.event';
+export namespace ApiEmitServiceNotification {
+    export const topic = 'api.emit-service-notification.event';
 
     export class Request {
         notification!: IServiceNotification;

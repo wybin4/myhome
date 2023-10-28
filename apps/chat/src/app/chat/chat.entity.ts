@@ -16,6 +16,7 @@ export class ChatEntity implements IChat {
 
     public get(): IChat {
         return {
+            _id: this._id,
             users: this.users,
             createdAt: this.createdAt,
             messages: this.messages
@@ -42,6 +43,7 @@ export class MessageEntity implements IMessage {
 
     public get(): IMessage {
         return {
+            _id: this._id,
             sender: this.sender,
             text: this.text,
             readAt: this.readAt,

@@ -38,7 +38,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         const key = `${userId}_${userRole}`;
         this.clients.set(key, socket);
         this.getNotifications(socket, userId, userRole);
-        // this.getChats(socket, userId, userRole);
+        this.getChats(socket, userId, userRole);
     }
 
     async getNotifications(socket: Socket, userId: number, userRole: UserRole) {
@@ -53,17 +53,17 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
 
-    // async getChats(socket: Socket, userId: number, userRole: UserRole) {
-    //     try {
-    //         const chats = await this.rmqService.send<
-    //             GetChats.Request,
-    //             GetChats.Response
-    //         >(GetChats.topic, { userId, userRole });
-    //         socket.emit('chats', chats);
-    //     } catch (e) {
-    //         socket.emit('chats', { message: "Ошибка при получении чатов" });
-    //     }
-    // }
+    async getChats(socket: Socket, userId: number, userRole: UserRole) {
+        try {
+            const chats = await this.rmqService.send<
+                GetChats.Request,
+                GetChats.Response
+            >(GetChats.topic, { userId, userRole });
+            socket.emit('chats', chats);
+        } catch (e) {
+            socket.emit('chats', { message: "Ошибка при получении чатов" });
+        }
+    }
 
     sendNotificationToClients(notification: IServiceNotification) {
         const key = `${notification.userId}_${notification.userRole}`;
@@ -84,7 +84,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     sendMessageToClients(message: IGetMessage) {
-        const key = `${message.userId}_${message.userRole}`;
+        const key = `${message.receiver.userId}_${message.receiver.userRole}`;
         const socket = this.clients.get(key);
         if (socket) {
             socket.emit('newMessage', message);
@@ -92,7 +92,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     sendChatToClients(chat: IGetChat) {
-        const key = `${chat.userId}_${chat.userRole}`;
+        const key = `${chat.receiver.userId}_${chat.receiver.userRole}`;
         const socket = this.clients.get(key);
         if (socket) {
             socket.emit('newChat', chat);

@@ -39,7 +39,6 @@ export class ServiceNotificationService {
         });
         const notification = await this.serviceNotificationRepository.create(notificationEntity);
 
-        await this.eventEmitter.handle(notification);
         return { notification };
     }
 
@@ -56,8 +55,8 @@ export class ServiceNotificationService {
             })
         )
         const notifications = await this.serviceNotificationRepository.createMany(notificationEntities);
-
         await this.eventEmitter.handleMany(notifications);
+
         return { notifications };
     }
 
@@ -69,21 +68,26 @@ export class ServiceNotificationService {
         }
         const notification = new ServiceNotificationEntity(existedNotification).
             update(NotificationStatus.Read);
-        await this.serviceNotificationRepository.save
+        await this.serviceNotificationRepository.update(notification);
         return { notification };
     }
 
-    public async updateAllServiceNotifications(dto: EventUpdateAllServiceNotifications.Request):
-        Promise<EventUpdateServiceNotification.Response> {
+    public async updateAllServiceNotifications(dto: EventUpdateAllServiceNotifications.Request)
+        : Promise<EventUpdateAllServiceNotifications.Response> {
+        await checkUser(this.rmqService, dto.userId, dto.userRole);
         const existedNotifications = await this.serviceNotificationRepository.findByUserIdAndRole(dto.userId, dto.userRole);
         if (!existedNotifications.length) {
             throw new RMQException(NOTIFICATIONS_NOT_EXIST.message, NOTIFICATIONS_NOT_EXIST.status);
         }
-        const notifications = existedNotifications.map(notification => {
-            new ServiceNotificationEntity(notification).update(NotificationStatus.Read);
-        });
+        const notifications = existedNotifications.map(notification =>
+            new ServiceNotificationEntity(notification).update(NotificationStatus.Read)
+        );
         await this.serviceNotificationRepository.updateMany(notifications);
-        return { notification };
+        return {
+            notifications: notifications,
+            userId: dto.userId,
+            userRole: dto.userRole
+        };
     }
 
 }

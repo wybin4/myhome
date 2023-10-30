@@ -6,9 +6,7 @@ import { RMQService } from "nestjs-rmq";
 export class ChatEventEmitter {
     constructor(private readonly rmqService: RMQService) { }
 
-    async handleMessage(dto: ApiEmitMessage.Request) {
-        await this.rmqService.notify<ApiEmitMessage.Request>(ApiEmitMessage.topic, dto);
-    }
+  
 
     async handleMessages(dto: ApiEmitMessages.Request) {
         await this.rmqService.notify<ApiEmitMessages.Request>(ApiEmitMessages.topic, dto);

@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { EventUpdateServiceNotification, EventGetServiceNotifications, ApiEmitServiceNotification, ApiEmitServiceNotifications } from '@myhome/contracts';
+import { EventUpdateServiceNotification, EventGetServiceNotifications, ApiEmitServiceNotifications, EventUpdateAllServiceNotifications } from '@myhome/contracts';
 import { RMQRoute, RMQService, RMQValidate } from 'nestjs-rmq';
 import { CatchError } from '../../../error.filter';
-import { UpdateServiceNotificationDto, GetServiceNotificationsDto } from '../../../dtos/event/notification/service-notification.dto';
+import { UpdateServiceNotificationDto, GetServiceNotificationsDto, UpdateAllServiceNotificationsDto } from '../../../dtos/event/notification/service-notification.dto';
 import { SocketGateway } from '../../../socket.gateway';
 
 @Controller('service-notification')
@@ -29,25 +29,34 @@ export class ServiceNotificationController {
     @Post('update-service-notification')
     async updateNotification(@Body() dto: UpdateServiceNotificationDto) {
         try {
-            return await this.rmqService.send<
+            const newDto = await this.rmqService.send<
                 EventUpdateServiceNotification.Request,
                 EventUpdateServiceNotification.Response
             >(EventUpdateServiceNotification.topic, dto);
+            this.socketGateway.sendNotificationToClient(newDto);
+        } catch (e) {
+            CatchError(e);
+        }
+    }
+
+    @HttpCode(200)
+    @Post('update-all-service-notifications')
+    async updateAllNotifications(@Body() dto: UpdateAllServiceNotificationsDto) {
+        try {
+            const newDto = await this.rmqService.send<
+                EventUpdateAllServiceNotifications.Request,
+                EventUpdateAllServiceNotifications.Response
+            >(EventUpdateAllServiceNotifications.topic, dto);
+            this.socketGateway.sendNotificationsToClient(newDto);
         } catch (e) {
             CatchError(e);
         }
     }
 
     @RMQValidate()
-    @RMQRoute(ApiEmitServiceNotification.topic)
-    async emitNotification(@Body() dto: ApiEmitServiceNotification.Request) {
-        this.socketGateway.sendNotificationToClients(dto.notification);
-    }
-
-    @RMQValidate()
     @RMQRoute(ApiEmitServiceNotifications.topic)
     async emitNotifications(@Body() dto: ApiEmitServiceNotifications.Request) {
-        this.socketGateway.sendNotificationsToClients(dto.notifications);
+        this.socketGateway.sendNotificationsToClients(dto);
     }
 
 }

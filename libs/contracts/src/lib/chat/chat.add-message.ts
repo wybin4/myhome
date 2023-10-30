@@ -1,4 +1,4 @@
-import { IMessage, UserRole } from '@myhome/interfaces';
+import { IChatUser, IGetMessage, IMessage, UserRole } from '@myhome/interfaces';
 import { IsNumber, IsString, MaxLength, Validate } from 'class-validator';
 import { IsValidEnumValue } from '../enum.validator';
 
@@ -21,11 +21,8 @@ export namespace AddMessage {
     }
 
     export class Response {
-        message!: IAddMessage;
+        users!: IChatUser[];
+        createdMessage!: IGetMessage;
+        updatedMessages!: IMessage[];
     }
 }
-
-export interface IAddMessage extends IMessage {
-    chatId: string;
-}
-

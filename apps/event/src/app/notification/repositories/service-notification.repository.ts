@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ServiceNotificationEntity } from '../entities/service-notification.entity';
-import { NotificationStatus, UserRole } from '@myhome/interfaces';
+import { UserRole } from '@myhome/interfaces';
 
 @Injectable()
 export class ServiceNotificationRepository {
@@ -24,7 +24,7 @@ export class ServiceNotificationRepository {
     }
 
     async findByUserIdAndRole(userId: number, userRole: UserRole) {
-        return await this.serviceNotificationRepository.find({ where: { userId, userRole, status: NotificationStatus.Unread } });
+        return await this.serviceNotificationRepository.find({ where: { userId, userRole } });
     }
 
     async update(notification: ServiceNotificationEntity) {

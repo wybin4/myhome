@@ -7,4 +7,3 @@ export namespace ApiEmitServiceNotifications {
         notifications!: IServiceNotification[];
     }
 }
-

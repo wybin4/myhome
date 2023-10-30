@@ -1,8 +1,8 @@
 import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { RMQService } from "nestjs-rmq";
-import { IServiceNotification, UserRole } from "@myhome/interfaces";
+import { UserRole } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
-import { GetChats, EventGetServiceNotifications, ApiEmitMessage, ApiEmitChat, ApiEmitMessages } from "@myhome/contracts";
+import { GetChats, EventGetServiceNotifications, AddMessage, ReadMessages, AddChat, EventAddServiceNotifications, EventUpdateServiceNotification, EventUpdateAllServiceNotifications } from "@myhome/contracts";
 import { Server, Socket } from "socket.io";
 
 @Injectable()
@@ -65,16 +65,24 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
 
-    sendNotificationToClients(notification: IServiceNotification) {
-        const key = `${notification.userId}_${notification.userRole}`;
+    sendNotificationToClient(dto: EventUpdateServiceNotification.Response) {
+        const key = `${dto.notification.userId}_${dto.notification.userRole}`;
         const socket = this.clients.get(key);
         if (socket) {
-            socket.emit('newNotification', notification);
+            socket.emit('readNotifications', [dto.notification]);
         }
     }
 
-    sendNotificationsToClients(notifications: IServiceNotification[]) {
-        notifications.map(notification => {
+    sendNotificationsToClient(dto: EventUpdateAllServiceNotifications.Response) {
+        const key = `${dto.userId}_${dto.userRole}`;
+        const socket = this.clients.get(key);
+        if (socket) {
+            socket.emit('readNotifications', dto.notifications);
+        }
+    }
+
+    sendNotificationsToClients(dto: EventAddServiceNotifications.Response) {
+        dto.notifications.map(notification => {
             const key = `${notification.userId}_${notification.userRole}`;
             const socket = this.clients.get(key);
             if (socket) {
@@ -83,7 +91,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         })
     }
 
-    sendMessageToClients(dto: ApiEmitMessage.Request) {
+    sendMessageToClients(dto: AddMessage.Response) {
         dto.users.map(user => {
             const key = `${user.userId}_${user.userRole}`;
             const socket = this.clients.get(key);
@@ -96,7 +104,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         })
     }
 
-    sendMessagesToClients(dto: ApiEmitMessages.Request) {
+    sendMessagesToClients(dto: ReadMessages.Response) {
         dto.users.map(user => {
             const key = `${user.userId}_${user.userRole}`;
             const socket = this.clients.get(key);
@@ -109,7 +117,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         })
     }
 
-    sendChatToClients(dto: ApiEmitChat.Request) {
+    sendChatToClients(dto: AddChat.Response) {
         dto.chat.users.map(user => {
             const key = `${user.userId}_${user.userRole}`;
             const socket = this.clients.get(key);

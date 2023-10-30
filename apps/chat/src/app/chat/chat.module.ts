@@ -4,7 +4,6 @@ import { ChatController } from "./chat.controller";
 import { ChatService } from "./chat.service";
 import { Chat, ChatSchema } from "./chat.model";
 import { MongooseModule } from "@nestjs/mongoose";
-import { ChatEventEmitter } from "./chat.event-emitter";
 
 @Module({
     imports: [
@@ -14,8 +13,7 @@ import { ChatEventEmitter } from "./chat.event-emitter";
     ],
     providers: [
         ChatRepository,
-        ChatService,
-        ChatEventEmitter
+        ChatService
     ],
     exports: [
         ChatRepository

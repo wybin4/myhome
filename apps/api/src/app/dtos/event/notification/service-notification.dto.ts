@@ -13,3 +13,11 @@ export class UpdateServiceNotificationDto {
     @IsNumber()
     id!: number;
 }
+
+export class UpdateAllServiceNotificationsDto {
+    @IsNumber()
+    userId!: number;
+
+    @IsString()
+    userRole!: UserRole;
+}

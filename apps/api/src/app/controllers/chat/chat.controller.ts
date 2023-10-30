@@ -1,9 +1,9 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { RMQRoute, RMQService, RMQValidate } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
-import { AddChat, AddMessage, ApiEmitChat, GetChats, ApiEmitMessage, ReadMessages, ApiEmitMessages } from '@myhome/contracts';
 import { GetChatsDto, AddChatDto, AddMessageDto, ReadMessagesDto } from '../../dtos/chat/chat.dto';
 import { SocketGateway } from '../../socket.gateway';
+import { GetChats, AddChat, AddMessage, ReadMessages } from '@myhome/contracts';
+import { RMQService } from 'nestjs-rmq';
 
 @Controller('chat')
 export class ChatController {
@@ -29,10 +29,11 @@ export class ChatController {
     @Post('add-chat')
     async addChat(@Body() dto: AddChatDto) {
         try {
-            return await this.rmqService.send<
+            const newDto = await this.rmqService.send<
                 AddChat.Request,
                 AddChat.Response
             >(AddChat.topic, dto);
+            this.socketGateway.sendChatToClients(newDto);
         } catch (e) {
             CatchError(e);
         }
@@ -42,10 +43,11 @@ export class ChatController {
     @Post('add-message')
     async addMessage(@Body() dto: AddMessageDto) {
         try {
-            return await this.rmqService.send<
+            const newDto = await this.rmqService.send<
                 AddMessage.Request,
                 AddMessage.Response
             >(AddMessage.topic, dto);
+            this.socketGateway.sendMessageToClients(newDto);
         } catch (e) {
             CatchError(e);
         }
@@ -55,31 +57,14 @@ export class ChatController {
     @Post('read-messages')
     async readMessages(@Body() dto: ReadMessagesDto) {
         try {
-            return await this.rmqService.send<
+            const newDto = await this.rmqService.send<
                 ReadMessages.Request,
                 ReadMessages.Response
             >(ReadMessages.topic, dto);
+            this.socketGateway.sendMessagesToClients(newDto);
         } catch (e) {
             CatchError(e);
         }
-    }
-
-    @RMQValidate()
-    @RMQRoute(ApiEmitMessage.topic)
-    async emitMessage(@Body() dto: ApiEmitMessage.Request) {
-        this.socketGateway.sendMessageToClients(dto);
-    }
-
-    @RMQValidate()
-    @RMQRoute(ApiEmitMessages.topic)
-    async emitMessages(@Body() dto: ApiEmitMessages.Request) {
-        this.socketGateway.sendMessagesToClients(dto);
-    }
-
-    @RMQValidate()
-    @RMQRoute(ApiEmitChat.topic)
-    async emitChat(@Body() dto: ApiEmitChat.Request) {
-        this.socketGateway.sendChatToClients(dto);
     }
 
 }

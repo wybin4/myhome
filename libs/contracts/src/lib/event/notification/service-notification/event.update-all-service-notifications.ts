@@ -15,6 +15,8 @@ export namespace EventUpdateAllServiceNotifications {
 
     export class Response {
         notifications!: IServiceNotification[];
+        userId!: number;
+        userRole!: UserRole;
     }
 }
 

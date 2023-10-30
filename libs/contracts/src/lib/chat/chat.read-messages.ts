@@ -1,4 +1,4 @@
-import { IMessage, UserRole } from '@myhome/interfaces';
+import { IChatUser, IMessage, UserRole } from '@myhome/interfaces';
 import { IsNumber, IsString, Validate } from 'class-validator';
 import { IsValidEnumValue } from '../enum.validator';
 
@@ -18,6 +18,7 @@ export namespace ReadMessages {
 
     export class Response {
         chatId!: string;
+        users!: IChatUser[];
         messages!: IMessage[];
     }
 }

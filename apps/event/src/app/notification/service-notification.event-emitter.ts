@@ -1,15 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { ServiceNotificationEntity } from "./entities/service-notification.entity";
-import { ApiEmitServiceNotification, ApiEmitServiceNotifications } from "@myhome/contracts";
+import { ApiEmitServiceNotifications } from "@myhome/contracts";
 import { RMQService } from "nestjs-rmq";
 
 @Injectable()
 export class ServiceNotificationEventEmitter {
     constructor(private readonly rmqService: RMQService) { }
-
-    async handle(notification: ServiceNotificationEntity) {
-        await this.rmqService.notify<ApiEmitServiceNotification.Request>(ApiEmitServiceNotification.topic, { notification });
-    }
 
     async handleMany(notifications: ServiceNotificationEntity[]) {
         await this.rmqService.notify<ApiEmitServiceNotifications.Request>(ApiEmitServiceNotifications.topic, { notifications });

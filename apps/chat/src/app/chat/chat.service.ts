@@ -4,15 +4,13 @@ import { AddChat, AddMessage, GetChats, ReadMessages } from "@myhome/contracts";
 import { CHAT_NOT_EXIST, RMQException, checkUsers } from "@myhome/constants";
 import { IChatUser, IGetChatUser, IMessage, MessageStatus, UserRole } from "@myhome/interfaces";
 import { ChatEntity, MessageEntity } from "./chat.entity";
-import { ChatEventEmitter } from "./chat.event-emitter";
 import { RMQService } from "nestjs-rmq";
 
 @Injectable()
 export class ChatService {
     constructor(
         private readonly rmqService: RMQService,
-        private readonly chatRepository: ChatRepository,
-        private readonly eventEmitter: ChatEventEmitter
+        private readonly chatRepository: ChatRepository
     ) { }
 
     async getChats(dto: GetChats.Request): Promise<GetChats.Response> {
@@ -64,8 +62,7 @@ export class ChatService {
         }));
         const chat = new ChatEntity(newChat);
 
-        // уведомляем
-        await this.eventEmitter.handleChat({
+        return {
             chat: {
                 ...chat,
                 users: chat.users.map(u => {
@@ -77,9 +74,7 @@ export class ChatService {
                     };
                 })
             }
-        });
-
-        return { chat: chat }
+        }
     }
 
     private async checkMultiUsers(users: IChatUser[]): Promise<{ users: IGetChatUser[] }> {
@@ -163,23 +158,14 @@ export class ChatService {
         const newChat = await chat.save();
 
         const lastMessage = new MessageEntity(newChat.messages[newChat.messages.length - 1]);
-        // уведомляем всех
-        await this.eventEmitter.handleMessage(
-            {
-                users: chat.users,
-                createdMessage: {
-                    chatId: chat.id,
-                    ...lastMessage.get()
-                },
-                updatedMessages: updatedMessages
-            }
-        );
 
         return {
-            message: {
+            users: chat.users,
+            createdMessage: {
                 chatId: chat.id,
-                ...message
-            }
+                ...lastMessage.get()
+            },
+            updatedMessages: updatedMessages
         };
     }
 
@@ -217,18 +203,9 @@ export class ChatService {
         });
         await chat.save();
 
-        // уведомляем всех
-        await this.eventEmitter.handleMessages(
-            {
-                chatId: chat._id,
-                users: chat.users,
-                messages: updatedMessages
-            }
-        );
-
-
         return {
-            chatId: chat.id,
+            chatId: chat._id,
+            users: chat.users,
             messages: updatedMessages
         };
     }

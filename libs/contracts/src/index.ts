@@ -1,7 +1,3 @@
-export * from './lib/api/api.emit-chat';
-export * from './lib/api/api.emit-message';
-export * from './lib/api/api.emit-messages';
-export * from './lib/api/api.emit-service-notification';
 export * from './lib/api/api.emit-service-notifications';
 
 export * from './lib/account/account.login';

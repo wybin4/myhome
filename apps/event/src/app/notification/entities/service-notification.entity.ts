@@ -67,7 +67,7 @@ export class ServiceNotificationEntity implements IServiceNotification {
         }
     }
 
-    public async update(status: NotificationStatus) {
+    public update(status: NotificationStatus) {
         this.status = status;
         this.readAt = new Date();
         return this;

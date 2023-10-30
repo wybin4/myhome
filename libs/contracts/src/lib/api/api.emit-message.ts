@@ -1,10 +1,12 @@
-import { IGetMessage } from '@myhome/interfaces';
+import { IChatUser, IGetMessage, IMessage } from '@myhome/interfaces';
 
 export namespace ApiEmitMessage {
     export const topic = 'api.emit-message.query';
 
     export class Request {
-        message!: IGetMessage;
+        users!: IChatUser[];
+        createdMessage!: IGetMessage;
+        updatedMessages!: IMessage[];
     }
 }
 

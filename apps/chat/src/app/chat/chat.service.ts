@@ -1,8 +1,8 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { ChatRepository } from "./chat.repository";
-import { AddChat, AddMessage, GetChats } from "@myhome/contracts";
+import { AddChat, AddMessage, GetChats, ReadMessages } from "@myhome/contracts";
 import { CHAT_NOT_EXIST, RMQException, checkUsers } from "@myhome/constants";
-import { IChatUser, IGetChatUser, MessageStatus, UserRole } from "@myhome/interfaces";
+import { IChatUser, IGetChatUser, IMessage, MessageStatus, UserRole } from "@myhome/interfaces";
 import { ChatEntity, MessageEntity } from "./chat.entity";
 import { ChatEventEmitter } from "./chat.event-emitter";
 import { RMQService } from "nestjs-rmq";
@@ -65,12 +65,8 @@ export class ChatService {
         const chat = new ChatEntity(newChat);
 
         // уведомляем
-        users.map(async user => {
-            await this.eventEmitter.handleChat({
-                receiver: {
-                    userId: user.userId,
-                    userRole: user.userRole,
-                },
+        await this.eventEmitter.handleChat({
+            chat: {
                 ...chat,
                 users: chat.users.map(u => {
                     const currentUser = users.find(us => us.userId === u.userId && us.userRole === u.userRole);
@@ -80,8 +76,8 @@ export class ChatService {
                         name: currentUser.name
                     };
                 })
-            });
-        })
+            }
+        });
 
         return { chat: chat }
     }
@@ -143,26 +139,97 @@ export class ChatService {
             createdAt: new Date(),
             status: MessageStatus.Unread
         });
-        chat.messages.push(message);
-        await chat.save();
-
-        // уведомляем всех
-        chat.users.map(async user => {
-            await this.eventEmitter.handleMessage({
-                receiver: {
-                    userId: user.userId,
-                    userRole: user.userRole,
-                },
-                chatId: chat.id,
-                ...message.get()
-            });
+        const updatedMessages: IMessage[] = [];
+        // Обновляем сообщения в массиве chat.messages
+        chat.messages = chat.messages.map(message => {
+            if (
+                message.status !== MessageStatus.Read &&
+                (message.sender.userId !== dto.senderId || message.sender.userRole !== dto.senderRole)
+            ) {
+                const newMessage = {
+                    ...new MessageEntity(message).get(),
+                    status: MessageStatus.Read,
+                    readAt: new Date()
+                };
+                updatedMessages.push(newMessage);
+                return {
+                    ...newMessage
+                };
+            } else {
+                return message;
+            }
         });
+        chat.messages.push(message);
+        const newChat = await chat.save();
+
+        const lastMessage = new MessageEntity(newChat.messages[newChat.messages.length - 1]);
+        // уведомляем всех
+        await this.eventEmitter.handleMessage(
+            {
+                users: chat.users,
+                createdMessage: {
+                    chatId: chat.id,
+                    ...lastMessage.get()
+                },
+                updatedMessages: updatedMessages
+            }
+        );
 
         return {
             message: {
                 chatId: chat.id,
                 ...message
             }
+        };
+    }
+
+    async readMessages(dto: ReadMessages.Request): Promise<ReadMessages.Response> {
+        const chat = await this.chatRepository.findById(dto.chatId);
+        if (!chat) {
+            throw new RMQException(CHAT_NOT_EXIST.message(dto.chatId), CHAT_NOT_EXIST.status);
+        }
+        const exists = chat.users.some(user => {
+            return user.userId === dto.userId && user.userRole === dto.userRole;
+        });
+        if (!exists) {
+            throw new RMQException("Вы не можете читать этот чат", HttpStatus.BAD_REQUEST);
+        }
+
+        const updatedMessages: IMessage[] = [];
+        // Обновляем сообщения в массиве chat.messages
+        chat.messages = chat.messages.map(message => {
+            if (
+                message.status !== MessageStatus.Read &&
+                (message.sender.userId !== dto.userId || message.sender.userRole !== dto.userRole)
+            ) {
+                const newMessage = {
+                    ...new MessageEntity(message).get(),
+                    status: MessageStatus.Read,
+                    readAt: new Date()
+                };
+                updatedMessages.push(newMessage);
+                return {
+                    ...newMessage
+                };
+            } else {
+                return message;
+            }
+        });
+        await chat.save();
+
+        // уведомляем всех
+        await this.eventEmitter.handleMessages(
+            {
+                chatId: chat._id,
+                users: chat.users,
+                messages: updatedMessages
+            }
+        );
+
+
+        return {
+            chatId: chat.id,
+            messages: updatedMessages
         };
     }
 }

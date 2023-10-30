@@ -1,5 +1,6 @@
 export * from './lib/api/api.emit-chat';
 export * from './lib/api/api.emit-message';
+export * from './lib/api/api.emit-messages';
 export * from './lib/api/api.emit-service-notification';
 export * from './lib/api/api.emit-service-notifications';
 
@@ -66,6 +67,7 @@ export * from './lib/event/appeal/event.get-appeals-by-mcid';
 export * from './lib/chat/chat.add-chat';
 export * from './lib/chat/chat.get-chats';
 export * from './lib/chat/chat.add-message';
+export * from './lib/chat/chat.read-messages';
 
 export * from './lib/event/notification/house-notification/event.add-house-notification';
 export * from './lib/event/notification/house-notification/event.get-house-notification';

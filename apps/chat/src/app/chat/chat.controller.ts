@@ -1,6 +1,6 @@
 import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
-import { AddChat, AddMessage, GetChats } from '@myhome/contracts';
+import { AddChat, AddMessage, GetChats, ReadMessages } from '@myhome/contracts';
 import { ChatService } from './chat.service';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
@@ -35,6 +35,16 @@ export class ChatController {
     async addMessage(@Body() dto: AddMessage.Request) {
         try {
             return this.chatService.addMessage(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+        }
+    }
+
+    @RMQValidate()
+    @RMQRoute(ReadMessages.topic)
+    async readMessages(@Body() dto: ReadMessages.Request) {
+        try {
+            return this.chatService.readMessages(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
         }

@@ -22,10 +22,6 @@ export interface IChatUser {
     userRole: UserRole;
 }
 
-export interface IGetChat extends IChat {
-    receiver: IChatUser;
-}
-
 export interface IGetChats {
     _id?: Types.ObjectId;
     createdAt: Date;
@@ -38,7 +34,6 @@ export interface IGetChatUser extends IChatUser {
 }
 
 export interface IGetMessage extends IMessage {
-    receiver: IChatUser;
     chatId: string;
 }
 

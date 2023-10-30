@@ -20,6 +20,17 @@ export class AddMessageDto {
     senderRole!: UserRole;
 }
 
+export class ReadMessagesDto {
+    @IsString()
+    chatId!: string;
+
+    @IsNumber()
+    userId!: number;
+
+    @IsEnum(UserRole)
+    userRole!: UserRole;
+}
+
 export class GetChatsDto {
     @IsNumber()
     userId!: number;

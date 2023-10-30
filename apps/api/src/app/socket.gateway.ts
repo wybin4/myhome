@@ -1,8 +1,8 @@
 import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { RMQService } from "nestjs-rmq";
-import { IGetChat, IGetMessage, IServiceNotification, UserRole } from "@myhome/interfaces";
+import { IServiceNotification, UserRole } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
-import { GetChats, EventGetServiceNotifications } from "@myhome/contracts";
+import { GetChats, EventGetServiceNotifications, ApiEmitMessage, ApiEmitChat, ApiEmitMessages } from "@myhome/contracts";
 import { Server, Socket } from "socket.io";
 
 @Injectable()
@@ -83,20 +83,40 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         })
     }
 
-    sendMessageToClients(message: IGetMessage) {
-        const key = `${message.receiver.userId}_${message.receiver.userRole}`;
-        const socket = this.clients.get(key);
-        if (socket) {
-            socket.emit('newMessage', message);
-        }
+    sendMessageToClients(dto: ApiEmitMessage.Request) {
+        dto.users.map(user => {
+            const key = `${user.userId}_${user.userRole}`;
+            const socket = this.clients.get(key);
+            if (socket) {
+                socket.emit('newMessage', {
+                    createdMessage: dto.createdMessage,
+                    updatedMessages: dto.updatedMessages
+                });
+            }
+        })
     }
 
-    sendChatToClients(chat: IGetChat) {
-        const key = `${chat.receiver.userId}_${chat.receiver.userRole}`;
-        const socket = this.clients.get(key);
-        if (socket) {
-            socket.emit('newChat', chat);
-        }
+    sendMessagesToClients(dto: ApiEmitMessages.Request) {
+        dto.users.map(user => {
+            const key = `${user.userId}_${user.userRole}`;
+            const socket = this.clients.get(key);
+            if (socket) {
+                socket.emit('readMessages', {
+                    chatId: dto.chatId,
+                    messages: dto.messages
+                });
+            }
+        })
+    }
+
+    sendChatToClients(dto: ApiEmitChat.Request) {
+        dto.chat.users.map(user => {
+            const key = `${user.userId}_${user.userRole}`;
+            const socket = this.clients.get(key);
+            if (socket) {
+                socket.emit('newChat', dto.chat);
+            }
+        })
     }
 
     handleDisconnect(socket: Socket) {

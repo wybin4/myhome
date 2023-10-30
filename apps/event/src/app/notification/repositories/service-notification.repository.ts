@@ -12,23 +12,27 @@ export class ServiceNotificationRepository {
     ) { }
 
     async create(notification: ServiceNotificationEntity) {
-        return this.serviceNotificationRepository.save(notification);
+        return await this.serviceNotificationRepository.save(notification);
     }
 
     async createMany(notifications: ServiceNotificationEntity[]) {
-        return this.serviceNotificationRepository.save(notifications);
+        return await this.serviceNotificationRepository.save(notifications);
     }
 
     async findById(id: number) {
-        return this.serviceNotificationRepository.findOne({ where: { id } });
+        return await this.serviceNotificationRepository.findOne({ where: { id } });
     }
 
     async findByUserIdAndRole(userId: number, userRole: UserRole) {
-        return this.serviceNotificationRepository.find({ where: { userId, userRole, status: NotificationStatus.Unread } });
+        return await this.serviceNotificationRepository.find({ where: { userId, userRole, status: NotificationStatus.Unread } });
     }
 
     async update(notification: ServiceNotificationEntity) {
         await this.serviceNotificationRepository.update(notification.id, notification);
         return await this.findById(notification.id);
+    }
+
+    async updateMany(notifications: ServiceNotificationEntity[]) {
+        return await this.serviceNotificationRepository.save(notifications);
     }
 }

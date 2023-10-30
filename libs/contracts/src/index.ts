@@ -77,6 +77,7 @@ export * from './lib/event/notification/service-notification/event.add-service-n
 export * from './lib/event/notification/service-notification/event.add-service-notifications';
 export * from './lib/event/notification/service-notification/event.get-service-notifications';
 export * from './lib/event/notification/service-notification/event.update-service-notification';
+export * from './lib/event/notification/service-notification/event.update-all-service-notifications';
 
 export * from './lib/document-detail/document-detail.get-public-utilities';
 export * from './lib/document-detail/document-detail.get-common-house-needs';

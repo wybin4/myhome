@@ -23,21 +23,21 @@ export class GenericTariffAndNormRepository<T extends BaseTariffAndNorm> impleme
     ) { }
 
     async create(item: T) {
-        return this.repository.save(item);
+        return await this.repository.save(item);
     }
 
     async findById(id: number): Promise<T> {
         const findOptions: FindOneOptions<T> = {
             where: { id } as unknown as FindOptionsWhere<T>,
         };
-        return this.repository.findOne(findOptions);
+        return await this.repository.findOne(findOptions);
     }
 
     async findByMCId(managementCompanyId: number): Promise<T[]> {
         const findOptions: FindOneOptions<T> = {
             where: { managementCompanyId } as unknown as FindOptionsWhere<T>,
         };
-        return this.repository.find(findOptions);
+        return await this.repository.find(findOptions);
     }
 
     async delete(id: number): Promise<void> {
@@ -46,7 +46,7 @@ export class GenericTariffAndNormRepository<T extends BaseTariffAndNorm> impleme
 
     async update(item: T): Promise<T> {
         await this.repository.update(item.id, item);
-        return this.findById(item.id);
+        return await this.findById(item.id);
     }
 }
 
@@ -110,7 +110,7 @@ export class CommonHouseNeedTariffRepository extends GenericTariffAndNormReposit
     }
 
     async findByHouseId(houseId: number): Promise<CommonHouseNeedTariffEntity[]> {
-        return this.сommonHouseNeedTariffRepository.find({
+        return await this.сommonHouseNeedTariffRepository.find({
             where: {
                 houseId: houseId
             },
@@ -118,7 +118,7 @@ export class CommonHouseNeedTariffRepository extends GenericTariffAndNormReposit
     }
 
     async findByHouseIds(houseIds: number[]): Promise<CommonHouseNeedTariffEntity[]> {
-        return this.сommonHouseNeedTariffRepository.find({
+        return await this.сommonHouseNeedTariffRepository.find({
             where: {
                 houseId: In(houseIds)
             },

@@ -11,15 +11,15 @@ export class VotingRepository {
     ) { }
 
     async create(Voting: VotingEntity) {
-        return this.votingRepository.save(Voting);
+        return await this.votingRepository.save(Voting);
     }
 
     async findById(id: number) {
-        return this.votingRepository.findOne({ where: { id } });
+        return await this.votingRepository.findOne({ where: { id } });
     }
 
     async findVotingsByHouseIds(houseIds: number[]) {
-        return this.votingRepository.find({
+        return await this.votingRepository.find({
             where: {
                 houseId: In(houseIds),
             }

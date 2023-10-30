@@ -11,19 +11,19 @@ export class SinglePaymentDocumentTotalRepository {
     ) { }
 
     async create(SinglePaymentDocument: SinglePaymentDocumentTotalEntity) {
-        return this.singlePaymentDocumentTotalRepository.save(SinglePaymentDocument);
+        return await this.singlePaymentDocumentTotalRepository.save(SinglePaymentDocument);
     }
 
     async createMany(entities: SinglePaymentDocumentTotalEntity[]): Promise<SinglePaymentDocumentTotalEntity[]> {
-        return this.singlePaymentDocumentTotalRepository.save(entities);
+        return await this.singlePaymentDocumentTotalRepository.save(entities);
     }
 
     async findById(id: number) {
-        return this.singlePaymentDocumentTotalRepository.findOne({ where: { id } });
+        return await this.singlePaymentDocumentTotalRepository.findOne({ where: { id } });
     }
 
     async findByMCId(managementCompanyId: number) {
-        return this.singlePaymentDocumentTotalRepository.find({ where: { managementCompanyId } });
+        return await this.singlePaymentDocumentTotalRepository.find({ where: { managementCompanyId } });
     }
 
 }

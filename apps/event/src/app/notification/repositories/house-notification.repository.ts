@@ -11,15 +11,15 @@ export class HouseNotificationRepository {
     ) { }
 
     async create(Notification: HouseNotificationEntity) {
-        return this.houseNotificationRepository.save(Notification);
+        return await this.houseNotificationRepository.save(Notification);
     }
 
     async findById(id: number) {
-        return this.houseNotificationRepository.findOne({ where: { id } });
+        return await this.houseNotificationRepository.findOne({ where: { id } });
     }
 
     async findByHouseIds(houseIds: number[]) {
-        return this.houseNotificationRepository.find({
+        return await this.houseNotificationRepository.find({
             where: { houseId: In(houseIds) },
             order: {
                 createdAt: 'DESC',

@@ -13,26 +13,26 @@ export class DebtRepository {
     ) { }
     async create(debt: DebtEntity) {
         const newDebt = new this.debtModel(debt);
-        return newDebt.save();
+        return await newDebt.save();
     }
     async findById(_id: string) {
-        return this.debtModel.findById(_id).exec();
+        return await this.debtModel.findById(_id).exec();
     }
     async findBySPDId(singlePaymentDocumentId: number): Promise<Debt> {
-        return this.debtModel.findOne({ singlePaymentDocumentId }).exec();
+        return await this.debtModel.findOne({ singlePaymentDocumentId }).exec();
     }
     async findMany(ids: string[]): Promise<Debt[]> {
         const objectIds = ids.map(id => new Types.ObjectId(id));
-        return this.debtModel.find({ _id: { $in: objectIds } }).exec();
+        return await this.debtModel.find({ _id: { $in: objectIds } }).exec();
     }
     async delete(_id: string) {
-        this.debtModel.deleteOne({ _id }).exec();
+        await this.debtModel.deleteOne({ _id }).exec();
     }
     async update({ _id, ...rest }: DebtEntity) {
-        return this.debtModel.updateOne({ _id }, { $set: { ...rest } }).exec();
+        return await this.debtModel.updateOne({ _id }, { $set: { ...rest } }).exec();
     }
     async findSPDsWithOutstandingDebt(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, outstandingDebt: IDebtDetail[] }[]> {
-        return this.debtModel.aggregate([
+        return await this.debtModel.aggregate([
             {
                 $match: {
                     singlePaymentDocumentId: { $in: spdIds },
@@ -56,7 +56,7 @@ export class DebtRepository {
     }
 
     async findSPDsWithDebtHistory(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, debtHistory: IDebtHistory[] }[]> {
-        return this.debtModel.aggregate([
+        return await this.debtModel.aggregate([
             {
                 $match: {
                     singlePaymentDocumentId: { $in: spdIds },
@@ -78,7 +78,7 @@ export class DebtRepository {
     }
 
     async findSPDsWithNonZeroPenalty(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, outstandingPenalty: number }[]> {
-        return this.debtModel.aggregate([
+        return await this.debtModel.aggregate([
             {
                 $match: {
                     singlePaymentDocumentId: { $in: spdIds },

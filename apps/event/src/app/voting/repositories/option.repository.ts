@@ -11,19 +11,19 @@ export class OptionRepository {
     ) { }
 
     async create(Option: OptionEntity) {
-        return this.optionRepository.save(Option);
+        return await this.optionRepository.save(Option);
     }
 
     async findById(id: number) {
-        return this.optionRepository.findOne({ where: { id } });
+        return await this.optionRepository.findOne({ where: { id } });
     }
 
     async findByVotingId(votingId: number) {
-        return this.optionRepository.find({ where: { votingId } });
+        return await this.optionRepository.find({ where: { votingId } });
     }
 
     async findByVotingIds(votingIds: number[]) {
-        return this.optionRepository.find({
+        return await this.optionRepository.find({
             where: {
                 votingId: In(votingIds),
             }
@@ -31,7 +31,7 @@ export class OptionRepository {
     }
 
     async createMany(entities: OptionEntity[]): Promise<OptionEntity[]> {
-        return this.optionRepository.save(entities);
+        return await this.optionRepository.save(entities);
     }
 
     async update(option: OptionEntity) {

@@ -12,19 +12,19 @@ export class SinglePaymentDocumentRepository {
     ) { }
 
     async create(SinglePaymentDocument: SinglePaymentDocumentEntity) {
-        return this.singlePaymentDocumentRepository.save(SinglePaymentDocument);
+        return await this.singlePaymentDocumentRepository.save(SinglePaymentDocument);
     }
 
     async createMany(entities: SinglePaymentDocumentEntity[]): Promise<SinglePaymentDocumentEntity[]> {
-        return this.singlePaymentDocumentRepository.save(entities);
+        return await this.singlePaymentDocumentRepository.save(entities);
     }
 
     async findById(id: number) {
-        return this.singlePaymentDocumentRepository.findOne({ where: { id } });
+        return await this.singlePaymentDocumentRepository.findOne({ where: { id } });
     }
 
     async findBySIds(subscriberIds: number[]) {
-        return this.singlePaymentDocumentRepository.find({ where: { subscriberId: In(subscriberIds) } });
+        return await this.singlePaymentDocumentRepository.find({ where: { subscriberId: In(subscriberIds) } });
     }
 
     async update(singlePaymentDocument: SinglePaymentDocumentEntity) {
@@ -35,7 +35,7 @@ export class SinglePaymentDocumentRepository {
     async updateMany(singlePaymentDocuments: SinglePaymentDocumentEntity[]) {
         const updatePromises = singlePaymentDocuments.map(async (doc) => {
             const { id, ...rest } = doc;
-            return this.singlePaymentDocumentRepository
+            return await this.singlePaymentDocumentRepository
                 .createQueryBuilder()
                 .update(SinglePaymentDocumentEntity)
                 .set(rest)

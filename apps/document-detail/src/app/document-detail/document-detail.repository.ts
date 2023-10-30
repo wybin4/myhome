@@ -11,19 +11,19 @@ export class DocumentDetailRepository {
     ) { }
 
     async create(DocumentDetail: DocumentDetailEntity) {
-        return this.detailRepository.save(DocumentDetail);
+        return await this.detailRepository.save(DocumentDetail);
     }
 
     async findById(id: number) {
-        return this.detailRepository.findOne({ where: { id } });
+        return await this.detailRepository.findOne({ where: { id } });
     }
 
     async deleteMany(ids: number[]) {
-        return this.detailRepository.delete(ids);
+        return await this.detailRepository.delete(ids);
     }
 
     async createMany(entities: DocumentDetailEntity[]): Promise<DocumentDetailEntity[]> {
-        return this.detailRepository.save(entities);
+        return await this.detailRepository.save(entities);
     }
 
 }

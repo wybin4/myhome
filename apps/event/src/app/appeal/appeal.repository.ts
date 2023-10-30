@@ -12,26 +12,26 @@ export class AppealRepository {
     ) { }
 
     async create(Appeal: AppealEntity) {
-        return this.appealRepository.save(Appeal);
+        return await this.appealRepository.save(Appeal);
     }
 
     async findById(id: number) {
-        return this.appealRepository.findOne({ where: { id } });
+        return await this.appealRepository.findOne({ where: { id } });
     }
 
     async findByMCId(managementCompanyId: number) {
-        return this.appealRepository.find({ where: { managementCompanyId } });
+        return await this.appealRepository.find({ where: { managementCompanyId } });
     }
 
     async findBySIds(subscriberIds: number[]) {
-        return this.appealRepository.find({ where: { subscriberId: In(subscriberIds) } });
+        return await this.appealRepository.find({ where: { subscriberId: In(subscriberIds) } });
     }
 
     async close(id: number): Promise<AppealEntity | undefined> {
         const appeal = await this.findById(id);
         if (appeal) {
             appeal.status = AppealStatus.Closed;
-            return this.appealRepository.save(appeal);
+            return await this.appealRepository.save(appeal);
         }
         return undefined;
     }
@@ -40,7 +40,7 @@ export class AppealRepository {
         const appeal = await this.findById(id);
         if (appeal) {
             appeal.status = AppealStatus.Rejected;
-            return this.appealRepository.save(appeal);
+            return await this.appealRepository.save(appeal);
         }
         return undefined;
     }

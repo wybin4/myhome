@@ -11,15 +11,15 @@ export class UnitRepository {
     ) { }
 
     async createUnit(unit: UnitEntity) {
-        return this.unitRepository.save(unit);
+        return await this.unitRepository.save(unit);
     }
 
     async findUnitById(id: number) {
-        return this.unitRepository.findOne({ where: { id } });
+        return await this.unitRepository.findOne({ where: { id } });
     }
 
     async findAll() {
-        return this.unitRepository.find();
+        return await this.unitRepository.find();
     }
 
 }

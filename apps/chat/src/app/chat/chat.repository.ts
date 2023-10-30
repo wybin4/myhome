@@ -13,15 +13,15 @@ export class ChatRepository {
 
     async create(chat: ChatEntity) {
         const newChat = new this.chatModel(chat);
-        return newChat.save();
+        return await newChat.save();
     }
 
     async findById(_id: string) {
-        return this.chatModel.findById(_id).exec();
+        return await this.chatModel.findById(_id).exec();
     }
 
     async findManyByUser(user: IChatUser): Promise<Chat[]> {
-        return this.chatModel.find({ 'users.userId': user.userId, 'users.userRole': user.userRole }).exec();
+        return await this.chatModel.find({ 'users.userId': user.userId, 'users.userRole': user.userRole }).exec();
     }
 
 }

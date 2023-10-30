@@ -11,15 +11,15 @@ export class OwnerRepository {
     ) { }
 
     async createUser(user: OwnerEntity) {
-        return this.ownerRepository.save(user);
+        return await this.ownerRepository.save(user);
     }
 
     async findUser(email: string) {
-        return this.ownerRepository.findOne({ where: { email } });
+        return await this.ownerRepository.findOne({ where: { email } });
     }
 
     async findUserById(id: number) {
-        return this.ownerRepository.findOne({ where: { id } });
+        return await this.ownerRepository.findOne({ where: { id } });
     }
 
     async deleteUser(email: string) {
@@ -28,11 +28,11 @@ export class OwnerRepository {
 
     async updateUser(user: OwnerEntity) {
         await this.ownerRepository.update(user.id, user);
-        return this.findUserById(user.id);
+        return await this.findUserById(user.id);
     }
 
     async findUsers(ids: number[]) {
-        return this.ownerRepository.find({
+        return await this.ownerRepository.find({
             where: {
                 id: In(ids),
             }

@@ -1,8 +1,8 @@
-import { EventGetServiceNotifications, EventAddServiceNotification, EventUpdateServiceNotification, EventAddServiceNotifications } from "@myhome/contracts";
+import { EventGetServiceNotifications, EventAddServiceNotification, EventUpdateServiceNotification, EventAddServiceNotifications, EventUpdateAllServiceNotifications } from "@myhome/contracts";
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { ServiceNotificationRepository } from "../repositories/service-notification.repository";
-import { NOTIFICATION_NOT_EXIST, RMQException, checkUser, checkUsers } from "@myhome/constants";
+import { NOTIFICATIONS_NOT_EXIST, NOTIFICATION_NOT_EXIST, RMQException, checkUser, checkUsers } from "@myhome/constants";
 import { ServiceNotificationEntity } from "../entities/service-notification.entity";
 import { NotificationStatus } from "@myhome/interfaces";
 import { ServiceNotificationEventEmitter } from "../service-notification.event-emitter";
@@ -67,8 +67,22 @@ export class ServiceNotificationService {
         if (!existedNotification) {
             throw new RMQException(NOTIFICATION_NOT_EXIST.message(dto.id), NOTIFICATION_NOT_EXIST.status);
         }
-        const notification = await new ServiceNotificationEntity(existedNotification).
+        const notification = new ServiceNotificationEntity(existedNotification).
             update(NotificationStatus.Read);
+        await this.serviceNotificationRepository.save
+        return { notification };
+    }
+
+    public async updateAllServiceNotifications(dto: EventUpdateAllServiceNotifications.Request):
+        Promise<EventUpdateServiceNotification.Response> {
+        const existedNotifications = await this.serviceNotificationRepository.findByUserIdAndRole(dto.userId, dto.userRole);
+        if (!existedNotifications.length) {
+            throw new RMQException(NOTIFICATIONS_NOT_EXIST.message, NOTIFICATIONS_NOT_EXIST.status);
+        }
+        const notifications = existedNotifications.map(notification => {
+            new ServiceNotificationEntity(notification).update(NotificationStatus.Read);
+        });
+        await this.serviceNotificationRepository.updateMany(notifications);
         return { notification };
     }
 

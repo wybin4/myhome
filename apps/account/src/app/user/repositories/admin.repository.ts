@@ -11,15 +11,15 @@ export class AdminRepository {
     ) { }
 
     async createUser(user: AdminEntity) {
-        return this.adminRepository.save(user);
+        return await this.adminRepository.save(user);
     }
 
     async findUser(email: string) {
-        return this.adminRepository.findOne({ where: { email } });
+        return await this.adminRepository.findOne({ where: { email } });
     }
 
     async findUserById(id: number) {
-        return this.adminRepository.findOne({ where: { id } });
+        return await this.adminRepository.findOne({ where: { id } });
     }
 
     async deleteUser(email: string) {
@@ -27,7 +27,7 @@ export class AdminRepository {
     }
 
     async findUsers(ids: number[]) {
-        return this.adminRepository.find({
+        return await this.adminRepository.find({
             where: {
                 id: In(ids),
             }

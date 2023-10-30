@@ -11,19 +11,19 @@ export class TypeOfServiceRepository {
     ) { }
 
     async create(typeOfService: TypeOfServiceEntity) {
-        return this.typeOfServiceRepository.save(typeOfService);
+        return await this.typeOfServiceRepository.save(typeOfService);
     }
 
     async findById(id: number) {
-        return this.typeOfServiceRepository.findOne({ where: { id } });
+        return await this.typeOfServiceRepository.findOne({ where: { id } });
     }
 
     async findAll() {
-        return this.typeOfServiceRepository.find();
+        return await this.typeOfServiceRepository.find();
     }
 
     async findMany(typeOfServiceIds: number[]) {
-        return this.typeOfServiceRepository.find({
+        return await this.typeOfServiceRepository.find({
             where: {
                 id: In(typeOfServiceIds),
             },

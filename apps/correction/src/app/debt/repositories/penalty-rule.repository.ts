@@ -12,25 +12,25 @@ export class PenaltyRuleRepository {
     ) { }
     async create(penaltyRule: PenaltyRuleEntity) {
         const newPenaltyRule = new this.penaltyRuleModel(penaltyRule);
-        return newPenaltyRule.save();
+        return await newPenaltyRule.save();
     }
     async findById(_id: string) {
-        return this.penaltyRuleModel.findById(_id).exec();
+        return await this.penaltyRuleModel.findById(_id).exec();
     }
     async delete(_id: string) {
-        this.penaltyRuleModel.deleteOne({ _id }).exec();
+        await this.penaltyRuleModel.deleteOne({ _id }).exec();
     }
     async update({ _id, ...rest }: PenaltyRuleEntity) {
-        return this.penaltyRuleModel.updateOne({ _id }, { $set: { ...rest } }).exec();
+        return await this.penaltyRuleModel.updateOne({ _id }, { $set: { ...rest } }).exec();
     }
     async findAll(): Promise<IPenaltyRule[]> {
-        return this.penaltyRuleModel.find().exec();
+        return await this.penaltyRuleModel.find().exec();
     }
     async findByManagementCIDAndPriority(
         managementCompanyId: number,
         priority: number,
     ): Promise<PenaltyRule | null> {
-        return this.penaltyRuleModel.findOne({
+        return await this.penaltyRuleModel.findOne({
             'penaltyCalculationRules': {
                 $elemMatch: {
                     managementCompanyId,
@@ -42,7 +42,7 @@ export class PenaltyRuleRepository {
     async findByMCId(
         managementCompanyId: number,
     ): Promise<PenaltyRule[]> {
-        return this.penaltyRuleModel.aggregate([
+        return await this.penaltyRuleModel.aggregate([
             {
                 $match: {
                     'penaltyCalculationRules.managementCompanyId': managementCompanyId,

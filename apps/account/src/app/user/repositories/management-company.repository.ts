@@ -12,15 +12,15 @@ export class ManagementCompanyRepository {
     ) { }
 
     async createUser(user: ManagementCompanyEntity) {
-        return this.managementCompanyRepository.save(user);
+        return await this.managementCompanyRepository.save(user);
     }
 
     async findUser(email: string) {
-        return this.managementCompanyRepository.findOne({ where: { email } });
+        return await this.managementCompanyRepository.findOne({ where: { email } });
     }
 
     async findUserById(id: number) {
-        return this.managementCompanyRepository.findOne({ where: { id } });
+        return await this.managementCompanyRepository.findOne({ where: { id } });
     }
 
     async deleteUser(email: string) {
@@ -29,11 +29,11 @@ export class ManagementCompanyRepository {
 
     async updateUser(user: ManagementCompanyEntity) {
         await this.managementCompanyRepository.update(user.id, user);
-        return this.findUserById(user.id);
+        return await this.findUserById(user.id);
     }
 
     async findUsers(ids: number[]) {
-        return this.managementCompanyRepository.find({
+        return await this.managementCompanyRepository.find({
             where: {
                 id: In(ids),
             }

@@ -11,15 +11,15 @@ export class DepositRepository {
     ) { }
 
     async createDeposit(Deposit: DepositEntity) {
-        return this.depositRepository.save(Deposit);
+        return await this.depositRepository.save(Deposit);
     }
 
     async findDepositById(id: number) {
-        return this.depositRepository.findOne({ where: { id } });
+        return await this.depositRepository.findOne({ where: { id } });
     }
 
     async findWithSpdIdsAndOutstandingDeposit(spdIds: number[]): Promise<DepositEntity[]> {
-        return this.depositRepository.createQueryBuilder('entity')
+        return await this.depositRepository.createQueryBuilder('entity')
             .where('entity.singlePaymentDocumentId IN (:...spdIds)', { spdIds })
             .andWhere('entity.outstandingDeposit != 0')
             .getMany();

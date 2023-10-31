@@ -39,6 +39,14 @@ export class SubscriberRepository {
             .getOne();
     }
 
+    async findByOwnerIdAllInfo(ownerId: number) {
+        return await this.subscriberRepository.createQueryBuilder('subscriber')
+            .innerJoinAndSelect('subscriber.apartment', 'apartment')
+            .innerJoinAndSelect('apartment.house', 'house')
+            .where('subscriber.ownerId = :ownerId', { ownerId })
+            .getMany();
+    }
+
     async findByIdsAllInfo(ids: number[]) {
         return await this.subscriberRepository.createQueryBuilder('subscriber')
             .innerJoinAndSelect('subscriber.apartment', 'apartment')
@@ -53,6 +61,15 @@ export class SubscriberRepository {
             .innerJoinAndSelect('subscriber.apartment', 'apartment')
             .innerJoinAndSelect('apartment.house', 'house')
             .where('house.managementCompanyId = :managementCompanyId', { managementCompanyId })
+            .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
+            .getMany();
+    }
+
+    async findByMCIds(managementCompanyIds: number[]) {
+        return await this.subscriberRepository.createQueryBuilder('subscriber')
+            .innerJoinAndSelect('subscriber.apartment', 'apartment')
+            .innerJoinAndSelect('apartment.house', 'house')
+            .where('house.managementCompanyId in (:...managementCompanyIds)', { managementCompanyIds })
             .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
             .getMany();
     }
@@ -115,4 +132,6 @@ export class SubscriberRepository {
             }
         });
     }
+
+
 }

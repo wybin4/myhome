@@ -38,6 +38,7 @@ export class UserEntity implements IUser {
 
   public getPublicProfile() {
     return {
+      id: this.id,
       email: this.email,
       name: this.name
     }
@@ -57,6 +58,7 @@ export class ManagementCompanyEntity extends UserEntity {
 
   public getPublicProfile() {
     return {
+      id: this.id,
       email: this.email,
       name: this.name,
       checkingAccount: this.checkingAccount

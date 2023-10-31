@@ -1,4 +1,4 @@
-import { ReferenceGetManagementCompany, ReferenceGetSubscribersByMCId, ReferenceGetSubscribers, ReferenceGetSubscribersAllInfo, ReferenceGetSubscriber, ReferenceGetOwnersByMCId, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersByOwner } from '@myhome/contracts';
+import { ReferenceGetManagementCompany, ReferenceGetSubscribersByMCId, ReferenceGetSubscribers, ReferenceGetSubscribersAllInfo, ReferenceGetSubscriber, ReferenceGetOwnersByMCId, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersByOwner, ReferenceGetReceiversByOwner } from '@myhome/contracts';
 import { Body, Controller } from '@nestjs/common';
 import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
@@ -85,6 +85,16 @@ export class SubscriberQueries {
     async getOwnersByMCId(@Body() { managementCompanyId }: ReferenceGetOwnersByMCId.Request) {
         try {
             return await this.subscriberService.getOwnersByMCId(managementCompanyId);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
+    }
+
+    @RMQValidate()
+    @RMQRoute(ReferenceGetReceiversByOwner.topic)
+    async getReceiversByOwner(@Body() { ownerId }: ReferenceGetReceiversByOwner.Request) {
+        try {
+            return await this.subscriberService.getReceiversByOwner(ownerId);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

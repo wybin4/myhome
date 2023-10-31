@@ -1,5 +1,5 @@
-import { getGenericObject, SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, addGenericObject, getGenericObjects, checkUser } from "@myhome/constants";
-import { ReferenceAddSubscriber, AccountUsersInfo, ReferenceGetSubscribersByMCId, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersAllInfo, ReferenceGetManagementCompany, ReferenceGetOwnersByMCId, ReferenceGetSubscribersByOwner } from "@myhome/contracts";
+import { getGenericObject, SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, addGenericObject, getGenericObjects, checkUser, checkUsers } from "@myhome/constants";
+import { ReferenceAddSubscriber, AccountUsersInfo, ReferenceGetSubscribersByMCId, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersAllInfo, ReferenceGetManagementCompany, ReferenceGetOwnersByMCId, ReferenceGetSubscribersByOwner, ReferenceGetReceiversByOwner } from "@myhome/contracts";
 import { SubscriberStatus, UserRole, ISubscriber } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { SubscriberEntity } from "../entities/subscriber.entity";
@@ -201,6 +201,46 @@ export class SubscriberService {
 				};
 			})
 		};
+	}
+
+	async getReceiversByOwner(ownerId: number): Promise<ReferenceGetReceiversByOwner.Response> {
+		const ownerSubscribers = await this.subscriberRepository.findByOwnerIdAllInfo(ownerId);
+		if (!ownerSubscribers) {
+			throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
+		}
+		const managementCompanyIds = Array.from(new Set(
+			ownerSubscribers.map(
+				s => s.apartment.house.managementCompanyId
+			)
+		));
+		let subscribers = await this.subscriberRepository.findByMCIds(
+			managementCompanyIds
+		);
+		subscribers = subscribers.filter(s => s.ownerId !== ownerId);
+		const ownerIds = subscribers.map(s => s.ownerId);
+		const { profiles: ownerProfiles } = await this.getOwners(ownerIds);
+
+		const { profiles: MCProfiles } = await checkUsers(
+			this.rmqService,
+			managementCompanyIds,
+			UserRole.ManagementCompany
+		);
+
+		const receivers = [...ownerProfiles.map(o => {
+			return {
+				userRole: UserRole.Owner,
+				userId: o.id,
+				name: o.name
+			};
+		}), ...MCProfiles.map(mc => {
+			return {
+				userRole: UserRole.ManagementCompany,
+				userId: mc.id,
+				name: mc.name
+			};
+		})];
+
+		return { receivers };
 	}
 
 	private async getOwners(ownerIds: number[]) {

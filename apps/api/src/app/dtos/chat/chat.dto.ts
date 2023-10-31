@@ -31,6 +31,15 @@ export class ReadMessagesDto {
     userRole!: UserRole;
 }
 
+export class GetReceiversDto {
+    @IsNumber()
+    userId!: number;
+
+    @IsEnum(UserRole)
+    userRole!: UserRole;
+}
+
+
 export class GetChatsDto {
     @IsNumber()
     userId!: number;

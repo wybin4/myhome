@@ -31,6 +31,7 @@ export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-b
 export * from './lib/reference/subscriber/subscriber/reference.get-owners-by-mcid';
 export * from './lib/reference/subscriber/subscriber/reference.get-management-company';
 export * from './lib/reference/subscriber/subscriber/reference.update-subscriber';
+export * from './lib/reference/subscriber/subscriber/reference.get-receivers-by-owner';
 
 export * from './lib/reference/meter/reference.expire-meter';
 export * from './lib/reference/meter/reference.add-meter';
@@ -62,6 +63,7 @@ export * from './lib/event/appeal/event.get-appeals-by-mcid';
 
 export * from './lib/chat/chat.add-chat';
 export * from './lib/chat/chat.get-chats';
+export * from './lib/chat/chat.get-receivers';
 export * from './lib/chat/chat.add-message';
 export * from './lib/chat/chat.read-messages';
 

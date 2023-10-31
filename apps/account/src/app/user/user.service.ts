@@ -60,7 +60,7 @@ export class UserService {
                     throw new RMQException(ADMINS_NOT_EXIST.message, ADMINS_NOT_EXIST.status);
                 }
                 for (const user of users) {
-                    profiles.push(new UserEntity(user));
+                    profiles.push(new UserEntity(user).getPublicProfile());
                 }
                 break;
             case UserRole.Owner:
@@ -69,7 +69,7 @@ export class UserService {
                     throw new RMQException(OWNERS_NOT_EXIST.message, OWNERS_NOT_EXIST.status);
                 }
                 for (const user of users) {
-                    profiles.push(new UserEntity(user));
+                    profiles.push(new UserEntity(user).getPublicProfile());
                 }
                 break;
             case UserRole.ManagementCompany:
@@ -78,7 +78,7 @@ export class UserService {
                     throw new RMQException(MANAG_COMPS_NOT_EXIST.message, MANAG_COMPS_NOT_EXIST.status);
                 }
                 for (const user of users) {
-                    profiles.push(new UserEntity(user));
+                    profiles.push(new UserEntity(user).getPublicProfile());
                 }
                 break;
             default:

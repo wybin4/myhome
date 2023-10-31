@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { CatchError } from '../../error.filter';
-import { GetChatsDto, AddChatDto, AddMessageDto, ReadMessagesDto } from '../../dtos/chat/chat.dto';
+import { GetChatsDto, AddChatDto, AddMessageDto, ReadMessagesDto, GetReceiversDto } from '../../dtos/chat/chat.dto';
 import { SocketGateway } from '../../socket.gateway';
-import { GetChats, AddChat, AddMessage, ReadMessages } from '@myhome/contracts';
+import { GetChats, AddChat, AddMessage, ReadMessages, GetReceivers } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 
 @Controller('chat')
@@ -25,6 +25,19 @@ export class ChatController {
         }
     }
 
+    @HttpCode(200)
+    @Post('get-receivers')
+    async getReceivers(@Body() dto: GetReceiversDto) {
+        try {
+            return await this.rmqService.send<
+                GetReceivers.Request,
+                GetReceivers.Response
+            >(GetReceivers.topic, dto);
+        } catch (e) {
+            CatchError(e);
+        }
+    }
+
     @HttpCode(201)
     @Post('add-chat')
     async addChat(@Body() dto: AddChatDto) {
@@ -34,6 +47,7 @@ export class ChatController {
                 AddChat.Response
             >(AddChat.topic, dto);
             this.socketGateway.sendChatToClients(newDto);
+            return newDto;
         } catch (e) {
             CatchError(e);
         }

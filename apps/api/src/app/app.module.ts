@@ -21,6 +21,7 @@ import { CBRController } from './controllers/correction/cbr.controller';
 import { ServiceNotificationController } from './controllers/event/notification/service-notification.controller';
 import { SocketGateway } from './socket.gateway';
 import { ChatController } from './controllers/chat/chat.controller';
+import { EventController } from './controllers/event/event.controller';
 
 @Module({
   imports: [
@@ -42,7 +43,8 @@ import { ChatController } from './controllers/chat/chat.controller';
       PenaltyController,
       VotingController,
       CBRController,
-      ChatController
+      ChatController,
+      EventController
     ],
   providers: [SocketGateway]
 })

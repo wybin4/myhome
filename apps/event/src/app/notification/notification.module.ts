@@ -23,6 +23,6 @@ import { ServiceNotificationEventEmitter } from "./service-notification.event-em
         ServiceNotificationEventEmitter
     ],
     controllers: [HouseNotificationController, ServiceNotificationController],
-    exports: [ServiceNotificationService]
+    exports: [ServiceNotificationService, HouseNotificationService]
 })
 export class NotificationModule { }

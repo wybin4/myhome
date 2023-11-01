@@ -12,7 +12,7 @@ export const OPTION_NOT_EXIST = {
     message: 'Что-то пошло не так при поиске вариантов ответов',
     status: HttpStatus.NOT_FOUND
 }
-export const VOTINGS_FOR_MC_NOT_EXIST = {
-    message: (managementCompanyId: number) => `Невозможно получить опросы для управляющей компании с id=${managementCompanyId}`,
+export const VOTINGS_NOT_EXIST = {
+    message: (managementCompanyId: number) => `Невозможно получить опросы для пользователя с id=${managementCompanyId}`,
     status: HttpStatus.NOT_FOUND
 }

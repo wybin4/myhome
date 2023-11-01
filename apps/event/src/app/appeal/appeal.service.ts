@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { AppealRepository } from "./appeal.repository";
-import { APPEAL_NOT_EXIST, getSubscriber, checkUser, getGenericObject, RMQException, APPEALS_NOT_EXIST } from "@myhome/constants";
-import { EventAddAppeal, EventGetAppeal, EventGetAppealsByMCId, ReferenceGetSubscriber, ReferenceGetSubscribersAllInfo } from "@myhome/contracts";
+import { getSubscriber, checkUser, RMQException, INCORRECT_USER_ROLE, checkUsers } from "@myhome/constants";
+import { EventAddAppeal, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByOwner } from "@myhome/contracts";
 import { AppealEntity } from "./appeal.entity";
-import { AppealType, IAppeal, ServiceNotificationType, UserRole } from "@myhome/interfaces";
+import { AppealType, IAppeal, IGetAppeal, ISubscriber, ISubscriberAllInfo, ServiceNotificationType, UserRole } from "@myhome/interfaces";
 import { ServiceNotificationService } from "../notification/services/service-notification.service";
 
 @Injectable()
@@ -15,66 +15,56 @@ export class AppealService {
         private readonly notificationService: ServiceNotificationService
     ) { }
 
-    public async getAppealsByMCId(managementCompanyId: number):
-        Promise<EventGetAppealsByMCId.Response> {
-        const appeals = await this.appealRepository.findByMCId(managementCompanyId);
-        if (!appeals) {
-            throw new RMQException(APPEALS_NOT_EXIST.message, APPEALS_NOT_EXIST.status);
-        }
+    public async getAppeals(userId: number, userRole: UserRole): Promise<{ appeals: IGetAppeal[] }> {
+        let appeals: IAppeal[], subscriberIds: number[],
+            subscribersAll: ISubscriberAllInfo[], subscribers: ISubscriber[],
+            managementCompanyIds: number[], profiles = [];
 
-        const subscriberIds = appeals.map(appeal => appeal.subscriberId);
-
-        const { subscribers } = await this.getSubscribers(subscriberIds);
-
-        return {
-            appeals: appeals
-                .map(appeal => {
-                    const currentSubscriber = subscribers.find(s => s.id === appeal.subscriberId);
-                    return {
-                        currentSubscriber,
-                        appeal
-                    };
-                })
-                .filter(({ currentSubscriber }) => currentSubscriber)
-                .map(({ currentSubscriber, appeal }) => {
-                    return {
-                        apartmentName: currentSubscriber.address,
-                        personalAccount: currentSubscriber.personalAccount,
-                        ownerName: currentSubscriber.name,
-                        ...appeal
-                    };
-                })
-
-        };
-    }
-
-    public async getAppeal(id: number): Promise<EventGetAppeal.Response> {
-        const appeal = await getGenericObject<AppealEntity>
-            (
-                this.appealRepository,
-                (item) => new AppealEntity(item),
-                id,
-                APPEAL_NOT_EXIST
-            ) as IAppeal;
-        const { subscriber } = await this.getSubscriber(appeal.subscriberId);
-        return {
-            appeal: {
-                ...appeal,
-                ownerId: subscriber.ownerId
-            }
-        };
-    }
-
-    private async getSubscriber(subscriberId: number) {
-        try {
-            return await
-                this.rmqService.send<
-                    ReferenceGetSubscriber.Request,
-                    ReferenceGetSubscriber.Response
-                >
-                    (ReferenceGetSubscriber.topic, { id: subscriberId });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
+        switch (userRole) {
+            case UserRole.Owner:
+                ({ subscribers } = await this.getSubscribersByOId(userId));
+                subscriberIds = subscribers.map(s => s.id);
+                appeals = await this.appealRepository.findBySIds(subscriberIds);
+                if (!appeals) {
+                    return;
+                }
+                managementCompanyIds = Array.from(new Set(appeals.map(a => a.managementCompanyId)));
+                ({ profiles } = await checkUsers(
+                    this.rmqService,
+                    managementCompanyIds,
+                    UserRole.ManagementCompany
+                ));
+                return {
+                    appeals: appeals
+                        .map(appeal => {
+                            const currentMC = profiles.find(p => p.id === appeal.managementCompanyId);
+                            return {
+                                name: currentMC.name,
+                                ...appeal
+                            };
+                        })
+                };
+            case UserRole.ManagementCompany:
+                appeals = await this.appealRepository.findByMCId(userId);
+                if (!appeals) {
+                    return;
+                }
+                subscriberIds = appeals.map(appeal => appeal.subscriberId);
+                ({ subscribers: subscribersAll } = await this.getSubscribersBySIds(subscriberIds));
+                return {
+                    appeals: appeals
+                        .map(appeal => {
+                            const currentSubscriber = subscribersAll.find(s => s.id === appeal.subscriberId);
+                            return {
+                                address: currentSubscriber.address,
+                                personalAccount: currentSubscriber.personalAccount,
+                                name: currentSubscriber.name,
+                                ...appeal
+                            };
+                        })
+                };
+            default:
+                throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
         }
     }
 
@@ -133,7 +123,7 @@ export class AppealService {
         });
     }
 
-    private async getSubscribers(subscriberIds: number[]): Promise<ReferenceGetSubscribersAllInfo.Response> {
+    private async getSubscribersBySIds(subscriberIds: number[]): Promise<ReferenceGetSubscribersAllInfo.Response> {
         try {
             return await this.rmqService.send
                 <
@@ -141,6 +131,19 @@ export class AppealService {
                     ReferenceGetSubscribersAllInfo.Response
                 >
                 (ReferenceGetSubscribersAllInfo.topic, { ids: subscriberIds });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
+    }
+
+    private async getSubscribersByOId(ownerId: number) {
+        try {
+            return await this.rmqService.send
+                <
+                    ReferenceGetSubscribersByOwner.Request,
+                    ReferenceGetSubscribersByOwner.Response
+                >
+                (ReferenceGetSubscribersByOwner.topic, { ownerId });
         } catch (e) {
             throw new RMQException(e.message, e.status);
         }

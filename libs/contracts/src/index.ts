@@ -13,6 +13,7 @@ export * from './lib/reference/subscriber/house/reference.get-house';
 export * from './lib/reference/subscriber/house/reference.get-house-all-info';
 export * from './lib/reference/subscriber/house/reference.get-houses';
 export * from './lib/reference/subscriber/house/reference.get-houses-by-mcid';
+export * from './lib/reference/subscriber/house/reference.get-houses-by-owner';
 
 export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-subscribers';
 export * from './lib/reference/subscriber/apartment/reference.add-apartment';
@@ -58,8 +59,6 @@ export * from './lib/reference/common/reference.get-common';
 export * from './lib/email/email.register';
 
 export * from './lib/event/appeal/event.add-appeal';
-export * from './lib/event/appeal/event.get-appeal';
-export * from './lib/event/appeal/event.get-appeals-by-mcid';
 
 export * from './lib/chat/chat.add-chat';
 export * from './lib/chat/chat.get-chats';
@@ -68,8 +67,6 @@ export * from './lib/chat/chat.add-message';
 export * from './lib/chat/chat.read-messages';
 
 export * from './lib/event/notification/house-notification/event.add-house-notification';
-export * from './lib/event/notification/house-notification/event.get-house-notification';
-export * from './lib/event/notification/house-notification/event.get-house-notifications-by-mcid';
 
 export * from './lib/event/notification/service-notification/event.add-service-notification';
 export * from './lib/event/notification/service-notification/event.add-service-notifications';
@@ -102,7 +99,7 @@ export * from './lib/correction/cbr/correction.get-key-rate';
 
 export * from './lib/payment/payment.get-payment-link';
 
-export * from './lib/event/voting/event.get-voting';
-export * from './lib/event/voting/event.get-votings-by-mcid';
 export * from './lib/event/voting/event.add-voting';
 export * from './lib/event/voting/event.update-voting';
+
+export * from './lib/event/event.get-events';

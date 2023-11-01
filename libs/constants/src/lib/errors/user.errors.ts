@@ -1,6 +1,9 @@
 import { HttpStatus } from "@nestjs/common";
 
-export const INCORRECT_USER_ROLE = 'Некорректная роль пользователя';
+export const INCORRECT_USER_ROLE = {
+    message: 'Некорректная роль пользователя',
+    status: HttpStatus.BAD_REQUEST
+};
 export const USER_NOT_EXIST = {
     message: (id: number) => `Пользователь с id=${id} не существует`,
     status: HttpStatus.NOT_FOUND

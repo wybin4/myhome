@@ -1,12 +1,13 @@
+import { RMQException, OPTION_NOT_EXIST, INCORRECT_USER_ROLE, HOUSES_NOT_EXIST, VOTINGS_NOT_EXIST } from "@myhome/constants";
+import { EventAddVoting } from "@myhome/contracts";
+import { UserRole, IGetVoting, IHouse, VotingStatus } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
-import { VotingRepository } from "./repositories/voting.repository";
-import { EventAddVoting, EventGetVoting, EventGetVotingsByMCId, ReferenceGetHouse, ReferenceGetHousesByMCId } from "@myhome/contracts";
-import { HOUSES_NOT_EXIST, OPTIONS_NOT_EXIST, OPTION_NOT_EXIST, RMQException, VOTINGS_FOR_MC_NOT_EXIST, VOTING_NOT_EXIST } from '@myhome/constants';
-import { VotingEntity } from "./entities/voting.entity";
 import { RMQService } from "nestjs-rmq";
+import { getHouse, getHouseByOId, getHousesByMCId } from "../constants";
 import { OptionEntity } from "./entities/option.entity";
+import { VotingEntity } from "./entities/voting.entity";
 import { OptionRepository } from "./repositories/option.repository";
-import { VotingStatus } from "@myhome/interfaces";
+import { VotingRepository } from "./repositories/voting.repository";
 
 @Injectable()
 export class VotingService {
@@ -17,7 +18,7 @@ export class VotingService {
     ) { }
 
     public async addVoting(dto: EventAddVoting.Request): Promise<EventAddVoting.Response> {
-        await this.getHouse(dto.houseId);
+        await getHouse(this.rmqService, dto.houseId);
         const newVotingEntity = new VotingEntity(dto);
         const newVoting = await this.votingRepository.create(newVotingEntity);
 
@@ -44,31 +45,26 @@ export class VotingService {
         ]);
     }
 
-    public async getVoting(id: number): Promise<EventGetVoting.Response> {
-        const voting = await this.votingRepository.findById(id);
-        if (!voting) {
-            throw new RMQException(VOTING_NOT_EXIST.message(id), VOTING_NOT_EXIST.status);
+    async getVotings(userId: number, userRole: UserRole): Promise<{ votings: IGetVoting[] }> {
+        let houses: IHouse[];
+        switch (userRole) {
+            case UserRole.Owner:
+                ({ houses } = await getHouseByOId(this.rmqService, userId));
+                break;
+            case UserRole.ManagementCompany:
+                ({ houses } = await getHousesByMCId(this.rmqService, userId));
+                break;
+            default:
+                throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
         }
-        const gettedVoting = new VotingEntity(voting).get();
 
-        const options = await this.optionRepository.findByVotingId(id);
-        if (!options) {
-            throw new RMQException(OPTIONS_NOT_EXIST.message(id), OPTIONS_NOT_EXIST.status);
-        }
-        const gettedOptions = options.map(option => new OptionEntity(option).get());
-
-        return { voting: gettedVoting, options: gettedOptions };
-    }
-
-    async getVotingsByMCId(managementCompanyId: number): Promise<EventGetVotingsByMCId.Response> {
-        const { houses } = await this.getHousesByMCId(managementCompanyId);
         if (!houses) {
             throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
         }
         const houseIds = houses.map(h => h.id);
         const votings = await this.votingRepository.findVotingsByHouseIds(houseIds);
         if (!votings.length) {
-            throw new RMQException(VOTINGS_FOR_MC_NOT_EXIST.message(managementCompanyId), VOTINGS_FOR_MC_NOT_EXIST.status);
+            throw new RMQException(VOTINGS_NOT_EXIST.message(userId), VOTINGS_NOT_EXIST.status);
         }
 
         const votingIds = votings.map(obj => obj.id);
@@ -94,29 +90,4 @@ export class VotingService {
         };
     }
 
-    private async getHousesByMCId(managementCompanyId: number) {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetHousesByMCId.Request,
-                    ReferenceGetHousesByMCId.Response
-                >
-                (ReferenceGetHousesByMCId.topic, { managementCompanyId });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
-    }
-
-    private async getHouse(houseId: number) {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetHouse.Request,
-                    ReferenceGetHouse.Response
-                >
-                (ReferenceGetHouse.topic, { id: houseId });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
-    }
 }

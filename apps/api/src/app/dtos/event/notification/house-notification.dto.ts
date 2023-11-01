@@ -1,12 +1,6 @@
 import { HouseNotificationType } from "@myhome/interfaces";
 import { IsNumber, IsString, MaxLength, } from "class-validator";
 
-export class GetHouseNotificationsByMCIdDto {
-    @IsNumber()
-    @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
-    managementCompanyId!: number;
-}
-
 export class AddHouseNotificationDto {
     @IsNumber()
     houseId: number;
@@ -21,9 +15,4 @@ export class AddHouseNotificationDto {
     @MaxLength(500)
     @IsString()
     text: string;
-}
-
-export class GetHouseNotificationDto {
-    @IsNumber()
-    id: number;
 }

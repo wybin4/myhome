@@ -23,13 +23,3 @@ export class AddAppealDto {
 
     data: unknown;
 }
-
-export class GetAppealDto {
-    @IsNumber()
-    id: number;
-}
-
-export class GetAppealsByMCIdDto {
-    @IsNumber()
-    managementCompanyId: number;
-}

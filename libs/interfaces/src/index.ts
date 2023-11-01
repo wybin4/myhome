@@ -10,12 +10,12 @@ export * from './lib/reference/common.interface';
 
 export * from './lib/reference/tariff-and-norm.interface';
 
-export * from './lib/event.interface';
-
-export * from './lib/event/appeal.interface';
-export * from './lib/chat.interface';
-
+export * from './lib/event/event.interface';
+export * from './lib/event/voting.interface';
 export * from './lib/event/notification.interface';
+export * from './lib/event/appeal.interface';
+
+export * from './lib/chat.interface';
 
 export * from './lib/single-payment-document/document-detail.interface';
 export * from './lib/single-payment-document/single-payment-document.interface';
@@ -27,4 +27,3 @@ export * from './lib/correction/correction.interface';
 
 export * from './lib/payment/payment.interface';
 
-export * from './lib/event/voting.interface';

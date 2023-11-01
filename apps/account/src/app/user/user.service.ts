@@ -45,7 +45,7 @@ export class UserService {
                 profile = new UserEntity(user).getPublicProfile();
                 break;
             default:
-                throw new RMQException(INCORRECT_USER_ROLE, HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
         }
         return { profile: profile };
     }
@@ -82,7 +82,7 @@ export class UserService {
                 }
                 break;
             default:
-                throw new RMQException(INCORRECT_USER_ROLE, HttpStatus.UNPROCESSABLE_ENTITY);
+                throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
         }
         return { profiles: profiles };
     }

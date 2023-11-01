@@ -12,7 +12,7 @@ import { OptionEntity } from "./entities/option.entity";
         TypeOrmModule.forFeature([VotingEntity, OptionEntity]),
     ],
     providers: [VotingRepository, OptionRepository, VotingService],
-    exports: [VotingRepository, OptionRepository],
     controllers: [VotingController],
+    exports: [VotingService],
 })
 export class VotingModule { }

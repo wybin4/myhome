@@ -33,6 +33,16 @@ export class HouseRepository {
             .getMany();
     }
 
+    async findManyByOwner(ownerId: number) {
+        return await this.houseRepository
+            .createQueryBuilder('house')
+            .innerJoinAndSelect('house.apartments', 'apartment')
+            .innerJoinAndSelect('apartment.subscriber', 'subscriber')
+            .where('subscriber.ownerId = :ownerId', { ownerId })
+            .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
+            .getMany();
+    }
+
     async findWithSubscribers(houseId: number) {
         return await this.houseRepository
             .createQueryBuilder('house')

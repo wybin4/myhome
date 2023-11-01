@@ -18,17 +18,6 @@ export class AddVotingDto {
     options!: string[];
 }
 
-export class GetVotingDto {
-    @IsNumber()
-    id!: number;
-}
-
-export class GetVotingsByMCIdDto {
-    @IsNumber()
-    managementCompanyId: number;
-}
-
-
 export class UpdateVotingDto {
     @IsNumber()
     optionId!: number;

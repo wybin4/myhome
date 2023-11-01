@@ -35,12 +35,13 @@ export class MeterCommandsService {
         await this.generalMeterRepository.saveMany(generalMeters);
         await this.individualMeterRepository.save(individualMeters);
 
-        await this.meterEventEmitter.handle(
-            {
-                topic: ReferenceExpireMeter.topic,
-                data: { generalMeters, individualMeters }
-            }
-        );
+        // ИСПРАВИТЬ
+        // await this.meterEventEmitter.handle(
+        //     {
+        //         topic: ReferenceExpireMeter.topic,
+        //         data: { generalMeters, individualMeters }
+        //     }
+        // );
     }
 
     private changeMeterStatus(meters: GeneralMeterEntity[] | IndividualMeterEntity[]) {

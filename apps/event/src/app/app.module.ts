@@ -7,6 +7,7 @@ import { getMySQLConfig } from './configs/mysql.config';
 import { getRMQConfig } from './configs/rmq.config';
 import { AppealModule } from './appeal/appeal.module';
 import { VotingModule } from './voting/voting.module';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { VotingModule } from './voting/voting.module';
     }),
     NotificationModule,
     AppealModule,
-    VotingModule
+    VotingModule,
+    EventModule
   ],
 })
 export class AppModule { }

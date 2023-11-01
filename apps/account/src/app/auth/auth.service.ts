@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AdminEntity, ManagementCompanyEntity, OwnerEntity, UserEntity } from '../user/entities/user.entity';
 import { UserRole } from '@myhome/interfaces';
 import { JwtService } from '@nestjs/jwt';
@@ -6,9 +6,8 @@ import { AccountRegister, EmailRegister } from '@myhome/contracts';
 import { AdminRepository } from '../user/repositories/admin.repository';
 import { ManagementCompanyRepository } from '../user/repositories/management-company.repository';
 import { OwnerRepository } from '../user/repositories/owner.repository';
-import { INCORRECT_USER_ROLE } from '@myhome/constants';
-import { RMQError, RMQService } from 'nestjs-rmq';
-import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
+import { INCORRECT_USER_ROLE, RMQException } from '@myhome/constants';
+import { RMQService } from 'nestjs-rmq';
 
 @Injectable()
 export class AuthService {
@@ -50,7 +49,7 @@ export class AuthService {
         await this.managementCompanyRepository.createUser(newUserEntity);
         break;
       default:
-        throw new RMQError(INCORRECT_USER_ROLE, ERROR_TYPE.RMQ, HttpStatus.UNPROCESSABLE_ENTITY);
+        throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
     }
 
     await this.rmqService.notify(EmailRegister.topic,
@@ -83,7 +82,7 @@ export class AuthService {
         userEntity = new ManagementCompanyEntity(user);
         break;
       default:
-        throw new RMQError(INCORRECT_USER_ROLE, ERROR_TYPE.RMQ, HttpStatus.UNPROCESSABLE_ENTITY);
+        throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
     }
 
     const isCorrectPassword = await userEntity.validatePassword(password);

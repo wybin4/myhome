@@ -1,6 +1,7 @@
 import { GenericEnumTransformer } from '@myhome/constants';
 import { IVoting, VotingStatus } from '@myhome/interfaces';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { OptionEntity } from './option.entity';
 
 @Entity('votings')
 export class VotingEntity implements IVoting {
@@ -27,7 +28,10 @@ export class VotingEntity implements IVoting {
     })
     status: VotingStatus;
 
-    constructor(data?: Partial<VotingEntity>) {
+    @OneToMany(() => OptionEntity, (option) => option.voting)
+    options: OptionEntity[];
+
+    constructor(data?: Partial<IVoting>) {
         if (data) {
             Object.assign(this, data);
         }
@@ -35,6 +39,7 @@ export class VotingEntity implements IVoting {
 
     public get() {
         return {
+            id: this.id,
             houseId: this.houseId,
             title: this.title,
             createdAt: this.createdAt,

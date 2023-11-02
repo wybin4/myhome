@@ -1,5 +1,7 @@
 import { IOption } from '@myhome/interfaces';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { VotingEntity } from './voting.entity';
+import { VoteEntity } from './vote.entity';
 
 @Entity('options')
 export class OptionEntity implements IOption {
@@ -12,8 +14,11 @@ export class OptionEntity implements IOption {
     @Column({ nullable: false })
     text: string;
 
-    @Column({ nullable: true })
-    numberOfVotes?: number;
+    @ManyToOne(() => VotingEntity, (voting) => voting.options)
+    voting: VotingEntity;
+
+    @OneToMany(() => VoteEntity, (vote) => vote.option)
+    votes: VoteEntity[];
 
     constructor(data?: Partial<OptionEntity>) {
         if (data) {
@@ -23,14 +28,9 @@ export class OptionEntity implements IOption {
 
     public get() {
         return {
+            id: this.id,
             votingId: this.votingId,
-            text: this.text,
-            numberOfVotes: this.numberOfVotes,
+            text: this.text
         }
-    }
-
-    async updateOption() {
-        this.numberOfVotes++;
-        return this;
     }
 }

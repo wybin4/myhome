@@ -1,6 +1,6 @@
 import { IAppeal } from "./appeal.interface";
 import { IHouseNotification } from "./notification.interface";
-import { IVoting } from "./voting.interface";
+import { IOption, IVote, IVoting } from "./voting.interface";
 
 export interface IGetEvents {
     notifications?: IGetHouseNotification[];
@@ -9,7 +9,7 @@ export interface IGetEvents {
 }
 
 export interface IGetHouseNotification extends IHouseNotification {
-    houseName: string;
+    name: string;
 }
 
 export interface IGetAppeal extends IAppeal {
@@ -20,7 +20,17 @@ export interface IGetAppeal extends IAppeal {
 
 export interface IGetVoting extends IVoting {
     result?: string;
-    houseName: string;
+    options?: IGetOption[];
+    name: string;
+}
+
+export interface IGetRepoVoting extends IVoting {
+    options?: IGetOption[];
+}
+
+export interface IGetOption extends IOption {
+    numberOfVotes: number;
+    votes: IVote[];
 }
 
 export enum EventType {

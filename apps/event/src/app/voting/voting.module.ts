@@ -6,12 +6,17 @@ import { VotingRepository } from "./repositories/voting.repository";
 import { VotingService } from "./voting.service";
 import { OptionRepository } from "./repositories/option.repository";
 import { OptionEntity } from "./entities/option.entity";
+import { VoteRepository } from "./repositories/vote.repository";
+import { VoteEntity } from "./entities/vote.entity";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([VotingEntity, OptionEntity]),
+        TypeOrmModule.forFeature([VotingEntity, OptionEntity, VoteEntity]),
     ],
-    providers: [VotingRepository, OptionRepository, VotingService],
+    providers: [
+        VotingRepository, OptionRepository, VoteRepository,
+        VotingService
+    ],
     controllers: [VotingController],
     exports: [VotingService],
 })

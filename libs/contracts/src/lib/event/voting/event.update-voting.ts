@@ -1,4 +1,4 @@
-import { IOption } from "@myhome/interfaces";
+import { IVote } from "@myhome/interfaces";
 import { IsNumber } from "class-validator";
 
 export namespace EventUpdateVoting {
@@ -7,9 +7,12 @@ export namespace EventUpdateVoting {
     export class Request {
         @IsNumber({}, { message: "Id варианта ответа должно быть числом" })
         optionId!: number;
+
+        @IsNumber({}, { message: "Id пользователя должен быть числом" })
+        userId!: number;
     }
 
     export class Response {
-        option!: IOption
+        vote!: IVote
     }
 }

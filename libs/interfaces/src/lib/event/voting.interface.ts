@@ -16,9 +16,10 @@ export interface IOption {
     id?: number;
     votingId: number;
     text: string;
-    numberOfVotes?: number;
 }
 
-export interface IVotingWithOptions {
-    voting: IVoting; options: IOption[];
+export interface IVote {
+    id?: number;
+    optionId: number;
+    userId: number;
 }

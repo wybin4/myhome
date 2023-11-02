@@ -1,4 +1,4 @@
-import { HOUSES_NOT_EXIST, INCORRECT_USER_ROLE, RMQException } from "@myhome/constants";
+import { HOUSES_NOT_EXIST, INCORRECT_USER_ROLE, RMQException, checkUsers } from "@myhome/constants";
 import { EventAddHouseNotification } from "@myhome/contracts";
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
@@ -17,19 +17,53 @@ export class HouseNotificationService {
     ) { }
 
     public async getHouseNotifications(userId: number, userRole: UserRole): Promise<{ notifications: IGetHouseNotification[] }> {
-        let houses: IHouse[];
-
         switch (userRole) {
             case UserRole.Owner:
-                ({ houses } = await getHouseByOId(this.rmqService, userId));
-                break;
+                return await this.getNotificationsForOwner(userId);
             case UserRole.ManagementCompany:
-                ({ houses } = await getHousesByMCId(this.rmqService, userId));
-                break;
+                return await this.getNotificationsForMC(userId);
             default:
                 throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
         }
+    }
 
+    private async getNotificationsForOwner(userId: number): Promise<{ notifications: IGetHouseNotification[] }> {
+        const { houses } = await getHouseByOId(this.rmqService, userId);
+        const mcIds = Array.from(new Set(houses.map(h => h.managementCompanyId)));
+        const { profiles } = await checkUsers(this.rmqService, mcIds, UserRole.ManagementCompany);
+
+        const { notifications } = await this.getNotificationsGeneral(houses);
+
+        return {
+            notifications: notifications.map(notification => {
+                const currentHouse = houses.find(house => house.id === notification.houseId);
+                const currentMC = profiles.find(mc => mc.id === currentHouse.managementCompanyId);
+
+                return {
+                    name: currentMC.name,
+                    ...notification
+                };
+            })
+        }
+    }
+
+    private async getNotificationsForMC(userId: number): Promise<{ notifications: IGetHouseNotification[] }> {
+        const { houses } = await getHousesByMCId(this.rmqService, userId);
+
+        const { notifications } = await this.getNotificationsGeneral(houses);
+
+        return {
+            notifications: notifications.map(notification => {
+                const currentHouse = houses.find(house => house.id === notification.houseId);
+                return {
+                    name: `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}`,
+                    ...notification
+                };
+            })
+        }
+    }
+
+    private async getNotificationsGeneral(houses: IHouse[]) {
         if (!houses) {
             throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
         }
@@ -39,15 +73,8 @@ export class HouseNotificationService {
         if (!notifications) {
             return;
         }
-        return {
-            notifications: notifications.map(notification => {
-                const currentHouse = houses.find(house => house.id === notification.houseId);
-                return {
-                    houseName: `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}`,
-                    ...notification
-                };
-            })
-        }
+
+        return { notifications };
     }
 
     public async addHouseNotification(dto: EventAddHouseNotification.Request):

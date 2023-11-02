@@ -1,18 +1,17 @@
-import { IsArray, IsDate, IsNumber, IsString, MaxLength } from "class-validator";
+import { IsArray, IsDate, IsNumber, IsString } from "class-validator";
 
 export class AddVotingDto {
     @IsNumber()
     houseId!: number;
 
     @IsString()
-    @MaxLength(255)
     title!: string;
 
     @IsDate()
-    createdAt!: Date;
+    createdAt!: string;
 
     @IsDate()
-    expiredAt!: Date;
+    expiredAt!: string;
 
     @IsArray()
     options!: string[];
@@ -21,4 +20,7 @@ export class AddVotingDto {
 export class UpdateVotingDto {
     @IsNumber()
     optionId!: number;
+
+    @IsNumber()
+    userId!: number;
 }

@@ -22,11 +22,12 @@ export class VotingController {
 
     @RMQValidate()
     @RMQRoute(EventUpdateVoting.topic)
-    async updateVoting(@Body() { optionId }: EventUpdateVoting.Request) {
+    async updateVoting(@Body() dto: EventUpdateVoting.Request) {
         try {
-            return this.votingService.updateVoting(optionId);
+            return this.votingService.updateVoting(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
         }
     }
+
 }

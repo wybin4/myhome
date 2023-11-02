@@ -1,5 +1,5 @@
 import { IOption, IVoting } from "@myhome/interfaces";
-import { IsArray, IsDate, IsNumber, IsString, MaxLength } from "class-validator";
+import { IsArray, IsNumber, IsString, MaxLength } from "class-validator";
 
 export namespace EventAddVoting {
     export const topic = 'event.add-voting.query';
@@ -12,14 +12,13 @@ export namespace EventAddVoting {
         @MaxLength(255, { message: "Максимальная длина заголовка не должна превышать 255 символов" })
         title!: string;
 
-        @IsDate()
-        createdAt!: Date;
+        @IsString()
+        createdAt!: string;
 
-        @IsDate()
-        expiredAt!: Date;
+        @IsString()
+        expiredAt!: string;
 
         @IsArray({ message: "Варианты ответа должны быть массивом строк" })
-        @MaxLength(255, { message: "Максимальная длина заголовка не должна превышать 255 символов" })
         options!: string[];
     }
 

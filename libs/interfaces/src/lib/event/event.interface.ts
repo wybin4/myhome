@@ -1,4 +1,4 @@
-import { IAppeal } from "./appeal.interface";
+import { IAppealEntity } from "./appeal.interface";
 import { IHouseNotification } from "./notification.interface";
 import { IOption, IVote, IVoting } from "./voting.interface";
 
@@ -12,7 +12,7 @@ export interface IGetHouseNotification extends IHouseNotification {
     name: string;
 }
 
-export interface IGetAppeal extends IAppeal {
+export interface IGetAppeal extends IAppealEntity {
     name: string;
     address?: string;
     personalAccount?: string;

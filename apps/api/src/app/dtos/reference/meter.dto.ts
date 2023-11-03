@@ -24,14 +24,6 @@ export class AddMeterDto {
     meterType: MeterType;
 }
 
-export class GetMeterDto {
-    @IsNumber()
-    id: number;
-
-    @IsString()
-    meterType: MeterType;
-}
-
 export class GetMetersByMCIdDto {
     @IsNumber()
     managementCompanyId: number;

@@ -27,6 +27,13 @@ export class IndividualMeterRepository {
         return await this.individualMeterRepository.findOne({ where: { id } });
     }
 
+    async findByIdsWithTOS(ids: number[]) {
+        return await this.individualMeterRepository.createQueryBuilder('individualMeter')
+            .innerJoinAndSelect('individualMeter.typeOfService', 'typeOfService')
+            .where('individualMeter.id in (:...ids)', { ids })
+            .getMany();
+    }
+
     async findByFNumber(factoryNumber: string) {
         return await this.individualMeterRepository.findOne({ where: { factoryNumber } });
     }

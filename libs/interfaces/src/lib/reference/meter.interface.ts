@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
-
+import { ITypeOfService } from './common.interface';
 
 export interface IMeter {
     id?: number;
@@ -9,6 +9,10 @@ export interface IMeter {
     verifiedAt: Date;
     issuedAt: Date;
     status: MeterStatus;
+}
+
+export interface IMeterWithTypeOfService extends IMeter {
+    typeOfService: ITypeOfService;
 }
 
 export interface IMeterReading {

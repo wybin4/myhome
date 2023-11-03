@@ -11,7 +11,7 @@ import { NotificationModule } from "../notification/notification.module";
         TypeOrmModule.forFeature([AppealEntity]),
         NotificationModule
     ],
-    providers: [AppealRepository, AppealService,],
+    providers: [AppealRepository, AppealService],
     controllers: [AppealController],
     exports: [AppealService],
 })

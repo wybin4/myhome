@@ -1,25 +1,12 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { ReferenceAddMeter, ReferenceAddMeterReading, ReferenceGetMeter, ReferenceGetMeterReading, ReferenceUpdateMeter, ReferenceGetMetersBySID, ReferenceGetMetersByMCId } from '@myhome/contracts';
+import { ReferenceAddMeter, ReferenceAddMeterReading, ReferenceGetMeterReading, ReferenceUpdateMeter, ReferenceGetMetersBySID, ReferenceGetMetersByMCId } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
-import { GetMeterDto, AddMeterDto, UpdateMeterDto, GetMeterReadingDto, AddMeterReadingDto, GetMetersAllInfoBySID, GetMetersByMCIdDto } from '../../dtos/reference/meter.dto';
+import { AddMeterDto, UpdateMeterDto, GetMeterReadingDto, AddMeterReadingDto, GetMetersAllInfoBySID, GetMetersByMCIdDto } from '../../dtos/reference/meter.dto';
 import { CatchError } from '../../error.filter';
 
 @Controller('meter')
 export class MeterController {
     constructor(private readonly rmqService: RMQService) { }
-
-    @HttpCode(200)
-    @Post('get-meter')
-    async getMeter(@Body() dto: GetMeterDto) {
-        try {
-            return await this.rmqService.send<
-                ReferenceGetMeter.Request,
-                ReferenceGetMeter.Response
-            >(ReferenceGetMeter.topic, dto);
-        } catch (e) {
-            CatchError(e);
-        }
-    }
 
     @HttpCode(200)
     @Post('get-meters-by-mcid')

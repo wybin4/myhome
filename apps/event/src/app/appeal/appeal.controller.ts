@@ -4,7 +4,7 @@ import { EventAddAppeal } from '@myhome/contracts';
 import { AppealService } from './appeal.service';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
-@Controller()
+@Controller("appeal")
 export class AppealController {
     constructor(
         private readonly appealService: AppealService
@@ -12,7 +12,7 @@ export class AppealController {
 
     @RMQValidate()
     @RMQRoute(EventAddAppeal.topic)
-    async addAppeal(@Body() dto: EventAddAppeal.Request) {
+    async addAppeal(@Body() dto: EventAddAppeal.Request): Promise<EventAddAppeal.Response> {
         try {
             return this.appealService.addAppeal(dto);
         } catch (e) {

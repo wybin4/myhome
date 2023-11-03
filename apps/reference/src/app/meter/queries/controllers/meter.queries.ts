@@ -1,6 +1,6 @@
 import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
-import { ReferenceGetMeter, ReferenceGetMetersBySID, ReferenceGetMetersByMCId } from '@myhome/contracts';
+import { ReferenceGetMeters, ReferenceGetMetersBySID, ReferenceGetMetersByMCId } from '@myhome/contracts';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 import { MeterQueriesService } from '../services/meter.queries.service';
 
@@ -11,10 +11,10 @@ export class MeterQueries {
     ) { }
 
     @RMQValidate()
-    @RMQRoute(ReferenceGetMeter.topic)
-    async getMeter(@Body() { id, meterType }: ReferenceGetMeter.Request) {
+    @RMQRoute(ReferenceGetMeters.topic)
+    async getMeters(@Body() { ids, meterType }: ReferenceGetMeters.Request) {
         try {
-            return await this.meterQueriesService.getMeter(id, meterType);
+            return await this.meterQueriesService.getMeters(ids, meterType);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

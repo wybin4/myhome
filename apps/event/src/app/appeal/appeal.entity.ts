@@ -1,9 +1,9 @@
 import { GenericEnumTransformer } from '@myhome/constants';
-import { AppealStatus, AppealType, IAppeal } from '@myhome/interfaces';
+import { AppealStatus, AppealType, IAppealEntity } from '@myhome/interfaces';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('appeals')
-export class AppealEntity implements IAppeal {
+export class AppealEntity implements IAppealEntity {
     @PrimaryGeneratedColumn()
     id: number;
 

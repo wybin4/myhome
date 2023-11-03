@@ -27,6 +27,13 @@ export class GeneralMeterRepository {
         return await this.generalMeterRepository.findOne({ where: { id } });
     }
 
+    async findByIdsWithTOS(ids: number[]) {
+        return await this.generalMeterRepository.createQueryBuilder('generalMeter')
+            .innerJoinAndSelect('generalMeter.typeOfService', 'typeOfService')
+            .where('generalMeter.id in (:...ids)', { ids })
+            .getMany();
+    }
+
     async findByFNumber(factoryNumber: string) {
         return await this.generalMeterRepository.findOne({ where: { factoryNumber } });
     }

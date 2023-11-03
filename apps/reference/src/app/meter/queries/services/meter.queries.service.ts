@@ -1,4 +1,4 @@
-import { getGenericObject, METER_NOT_EXIST, RMQException, INCORRECT_METER_TYPE, checkUser } from "@myhome/constants";
+import { RMQException, INCORRECT_METER_TYPE, checkUser, METERS_NOT_EXIST } from "@myhome/constants";
 import { MeterType, IIndividualMeter, UserRole, IMeter, IMeterReading, IGeneralMeter, IHouse } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { CommonService } from "../../../common/services/common.service";
@@ -8,7 +8,7 @@ import { IndividualMeterEntity } from "../../entities/individual-meter.entity";
 import { GeneralMeterRepository } from "../../repositories/general-meter.repository";
 import { IndividualMeterRepository } from "../../repositories/individual-meter.repository";
 import { MeterReadingQueriesService } from "./meter-reading.queries.service";
-import { ReferenceGetApartmentsByMCId, ReferenceGetMetersByMCId, ReferenceGetMetersBySID } from "@myhome/contracts";
+import { ReferenceGetApartmentsByMCId, ReferenceGetMeters, ReferenceGetMetersByMCId, ReferenceGetMetersBySID } from "@myhome/contracts";
 import { HouseService } from "../../../subscriber/services/house.service";
 import { RMQService } from "nestjs-rmq";
 import { TypeOfServiceService } from "../../../common/services/type-of-service.service";
@@ -70,28 +70,28 @@ export class MeterQueriesService {
         };
     }
 
-    public async getMeter(id: number, meterType: MeterType) {
+    public async getMeters(ids: number[], meterType: MeterType): Promise<ReferenceGetMeters.Response> {
         switch (meterType) {
-            case (MeterType.General):
+            case (MeterType.General): {
+                const meters = await this.individualMeterRepository.findByIdsWithTOS(ids);
+                if (!meters) {
+                    throw new RMQException(METERS_NOT_EXIST.message, METERS_NOT_EXIST.status);
+                }
+                const newMeters = meters.map(m => new IndividualMeterEntity(m));
                 return {
-                    meter: await getGenericObject<GeneralMeterEntity>
-                        (
-                            this.generalMeterRepository,
-                            (item) => new GeneralMeterEntity(item),
-                            id,
-                            METER_NOT_EXIST
-                        )
+                    meters: newMeters
                 };
-            case (MeterType.Individual):
+            };
+            case (MeterType.Individual): {
+                const meters = await this.generalMeterRepository.findByIdsWithTOS(ids);
+                if (!meters) {
+                    throw new RMQException(METERS_NOT_EXIST.message, METERS_NOT_EXIST.status);
+                }
+                const newMeters = meters.map(m => new GeneralMeterEntity(m));
                 return {
-                    meter: await getGenericObject<IndividualMeterEntity>
-                        (
-                            this.individualMeterRepository,
-                            (item) => new IndividualMeterEntity(item),
-                            id,
-                            METER_NOT_EXIST
-                        )
+                    meters: newMeters
                 };
+            }
             default:
                 throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);
         }

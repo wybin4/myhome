@@ -6,7 +6,8 @@ export namespace ReferenceGetMetersByMCId {
     export const topic = 'reference.get-meters-by-mcid.query';
 
     export class Request {
-        @IsNumber({}, { message: "Id управляющей компании должен быть числом" }) managementCompanyId!: number;
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
+        managementCompanyId!: number;
 
         @Validate(IsValidEnumValue, [MeterType])
         meterType!: MeterType;

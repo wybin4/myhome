@@ -1,8 +1,8 @@
 import { HouseRepository } from '../repositories/house.repository';
 import { HouseEntity } from '../entities/house.entity';
 import { IHouse, UserRole } from '@myhome/interfaces';
-import { HOUSES_NOT_EXIST, HOUSE_NOT_EXIST, RMQException, addGenericObject, checkUser, getGenericObject, getGenericObjects } from '@myhome/constants';
-import { ReferenceAddHouse, ReferenceGetHouse, ReferenceGetHouseAllInfo, ReferenceGetHousesByMCId, ReferenceGetHousesByOwner } from '@myhome/contracts';
+import { HOUSES_NOT_EXIST, RMQException, addGenericObject, checkMCIds, checkUser, getGenericObjects } from '@myhome/constants';
+import { ReferenceAddHouse, ReferenceGetHouses, ReferenceGetHousesByUser } from '@myhome/contracts';
 import { Injectable } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
 
@@ -13,53 +13,37 @@ export class HouseService {
 		private readonly rmqService: RMQService
 	) { }
 
-	async getHouse(id: number): Promise<ReferenceGetHouse.Response> {
-		return {
-			house: await getGenericObject<HouseEntity>
-				(
-					this.houseRepository,
-					(item) => new HouseEntity(item),
-					id,
-					HOUSE_NOT_EXIST
-				) as IHouse
-		};
-	}
-
-	async getHouseAllInfo(id: number): Promise<ReferenceGetHouseAllInfo.Response> {
-		const house = await this.houseRepository.findWithSubscribers(id);
-		if (!house) { return; }
-		const { profile } = await checkUser(this.rmqService, house.managementCompanyId, UserRole.ManagementCompany);
-		return {
-			house: {
-				managementCompanyName: profile.name,
-				ownerIds: house.apartments.map(a => a.subscriber.ownerId),
-				...house.get()
+	async getHouses(dto: ReferenceGetHouses.Request): Promise<ReferenceGetHouses.Response> {
+		if (dto.isAllInfo) {
+			const houses = await this.houseRepository.findWithSubscribers(dto.houseIds);
+			if (!houses) { return; }
+			const mcIds = Array.from(new Set(houses.map(h => h.managementCompanyId)));
+			const { profiles } = await checkMCIds(this.rmqService, mcIds);
+			return {
+				houses: houses.map(house => {
+					const currentMc = profiles.find(p => p.id === house.managementCompanyId);
+					return {
+						managementCompanyName: currentMc.name,
+						ownerIds: house.apartments.map(a => a.subscriber.ownerId),
+						...house.get()
+					};
+				})
 			}
+		} else {
+			return {
+				houses: await getGenericObjects<HouseEntity>
+					(
+						this.houseRepository,
+						(item) => new HouseEntity(item),
+						dto.houseIds,
+						HOUSES_NOT_EXIST
+					)
+			};
 		}
 	}
 
-	async getHouses(houseIds: number[]) {
-		return {
-			houses: await getGenericObjects<HouseEntity>
-				(
-					this.houseRepository,
-					(item) => new HouseEntity(item),
-					houseIds,
-					HOUSES_NOT_EXIST
-				)
-		};
-	}
-
-	async getHousesByMCId(managementCompanyId: number): Promise<ReferenceGetHousesByMCId.Response> {
-		const houseItems = await this.houseRepository.findByMCId(managementCompanyId);
-		if (!houseItems.length) {
-			throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
-		}
-		return { houses: houseItems };
-	}
-
-	async getHousesByOwner(ownerId: number): Promise<ReferenceGetHousesByOwner.Response> {
-		const houseItems = await this.houseRepository.findManyByOwner(ownerId);
+	async getHousesByUser(dto: ReferenceGetHousesByUser.Request): Promise<ReferenceGetHousesByUser.Response> {
+		const houseItems = await this.houseRepository.findByUser(dto.userId, dto.userRole);
 		if (!houseItems.length) {
 			throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
 		}
@@ -78,17 +62,4 @@ export class HouseService {
 		};
 	}
 
-	async updateHouse(id: number, managementCompanyId: number) {
-		await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
-		const existedHouse = await this.houseRepository.findById(id);
-		if (!existedHouse) {
-			throw new RMQException(HOUSE_NOT_EXIST.message(id), HOUSE_NOT_EXIST.status);
-		}
-		const houseEntity = new HouseEntity(existedHouse).update(managementCompanyId);
-		return {
-			house: Promise.all([
-				this.houseRepository.update(await houseEntity),
-			])
-		};
-	}
 }

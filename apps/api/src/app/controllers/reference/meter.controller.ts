@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { ReferenceAddMeter, ReferenceAddMeterReading, ReferenceGetMeterReading, ReferenceUpdateMeter, ReferenceGetMetersBySID, ReferenceGetMetersByMCId } from '@myhome/contracts';
+import { ReferenceAddMeter, ReferenceAddMeterReading, ReferenceUpdateMeter, ReferenceGetMetersByUser } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
-import { AddMeterDto, UpdateMeterDto, GetMeterReadingDto, AddMeterReadingDto, GetMetersAllInfoBySID, GetMetersByMCIdDto } from '../../dtos/reference/meter.dto';
+import { AddMeterDto, UpdateMeterDto, AddMeterReadingDto, GetMetersByUserDto } from '../../dtos/reference/meter.dto';
 import { CatchError } from '../../error.filter';
 
 @Controller('meter')
@@ -9,26 +9,13 @@ export class MeterController {
     constructor(private readonly rmqService: RMQService) { }
 
     @HttpCode(200)
-    @Post('get-meters-by-mcid')
-    async getMetersByMCId(@Body() dto: GetMetersByMCIdDto) {
+    @Post('get-meters-by-user')
+    async getMetersByUser(@Body() dto: GetMetersByUserDto) {
         try {
             return await this.rmqService.send<
-                ReferenceGetMetersByMCId.Request,
-                ReferenceGetMetersByMCId.Response
-            >(ReferenceGetMetersByMCId.topic, dto);
-        } catch (e) {
-            CatchError(e);
-        }
-    }
-
-    @HttpCode(200)
-    @Post('get-meters-all-info-by-sid')
-    async getMetersBySID(@Body() dto: GetMetersAllInfoBySID) {
-        try {
-            return await this.rmqService.send<
-                ReferenceGetMetersBySID.Request,
-                ReferenceGetMetersBySID.Response
-            >(ReferenceGetMetersBySID.topic, dto);
+                ReferenceGetMetersByUser.Request,
+                ReferenceGetMetersByUser.Response
+            >(ReferenceGetMetersByUser.topic, dto);
         } catch (e) {
             CatchError(e);
         }
@@ -55,19 +42,6 @@ export class MeterController {
                 ReferenceUpdateMeter.Request,
                 ReferenceUpdateMeter.Response
             >(ReferenceUpdateMeter.topic, dto);
-        } catch (e) {
-            CatchError(e);
-        }
-    }
-
-    @HttpCode(200)
-    @Post('get-meter-reading')
-    async getMeterReading(@Body() dto: GetMeterReadingDto) {
-        try {
-            return await this.rmqService.send<
-                ReferenceGetMeterReading.Request,
-                ReferenceGetMeterReading.Response
-            >(ReferenceGetMeterReading.topic, dto);
         } catch (e) {
             CatchError(e);
         }

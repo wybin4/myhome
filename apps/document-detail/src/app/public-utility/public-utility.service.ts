@@ -1,8 +1,8 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { IGetMeterReading, IGetPublicUtility, IMunicipalTariff, TariffAndNormType } from "@myhome/interfaces";
-import { GetPublicUtilities, ReferenceGetAllTariffs, ReferenceGetIndividualMeterReadings } from "@myhome/contracts";
-import { RMQException, TARIFFS_NOT_EXIST } from "@myhome/constants";
+import { GetPublicUtilities, ReferenceGetIndividualMeterReadings } from "@myhome/contracts";
+import { RMQException, TARIFFS_NOT_EXIST, getIndividualMeterReadingsByHId, getAllTariffs } from "@myhome/constants";
 
 @Injectable()
 export class PublicUtilityService {
@@ -14,8 +14,8 @@ export class PublicUtilityService {
         houseId: number, managementCompanyId: number
     ): Promise<{ publicUtilities: IGetPublicUtility[] }> {
         const result: IGetPublicUtility[] = [];
-        const { meterReadings } = await this.getIndividualMeterReadingsByHId(houseId, managementCompanyId);
-        const tariffs = await this.getPublicUtilityTariffs(managementCompanyId) as unknown as Array<IMunicipalTariff>;
+        const { meterReadings } = await getIndividualMeterReadingsByHId(this.rmqService, houseId, managementCompanyId);
+        const { tariffs } = await this.getPublicUtilityTariffs(managementCompanyId);
 
         for (const meterReading of meterReadings) {
             result.push({
@@ -37,7 +37,7 @@ export class PublicUtilityService {
     ): Promise<GetPublicUtilities.Response> {
         const result: IGetPublicUtility[] = [];
         const { meterReadings } = await this.getIndividualMeterReadingsBySIds(subscriberIds, managementCompanyId);
-        const tariffs = await this.getPublicUtilityTariffs(managementCompanyId) as unknown as Array<IMunicipalTariff>;
+        const { tariffs } = await this.getPublicUtilityTariffs(managementCompanyId);
 
         for (const meterReading of meterReadings) {
             result.push({
@@ -74,40 +74,9 @@ export class PublicUtilityService {
         }
     }
 
-    private async getIndividualMeterReadingsByHId(
-        houseId: number, managementCompanyId: number,
-    ): Promise<ReferenceGetIndividualMeterReadings.Response> {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetIndividualMeterReadings.Request,
-                    ReferenceGetIndividualMeterReadings.Response
-                >
-                (
-                    ReferenceGetIndividualMeterReadings.topic,
-                    {
-                        houseId,
-                        managementCompanyId
-                    });
-        } catch (e) {
-            throw new RMQException(e.message, e.code);
-        }
-    }
-
     private async getPublicUtilityTariffs(managementCompanyId: number) {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetAllTariffs.Request,
-                    ReferenceGetAllTariffs.Response
-                >
-                (
-                    ReferenceGetAllTariffs.topic,
-                    { managementCompanyId: managementCompanyId, type: TariffAndNormType.MunicipalTariff }
-                );
-        } catch (e) {
-            throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
-        }
+        const { tariffs } = await getAllTariffs(this.rmqService, managementCompanyId, TariffAndNormType.MunicipalTariff);
+        return { tariffs: tariffs as IMunicipalTariff[] };
     }
 
     private async getPUAmount(meterReadings: IGetMeterReading[], tariffs: Array<IMunicipalTariff>) {

@@ -1,5 +1,5 @@
-import { getGenericObject, APART_NOT_EXIST, RMQException, APART_ALREADY_EXIST, addGenericObject, checkUser } from "@myhome/constants";
-import { ReferenceAddApartment, ReferenceGetApartmentsAllInfo, ReferenceGetApartmentsByMCId, ReferenceGetApartmentsBySubscribers } from "@myhome/contracts";
+import { RMQException, APART_ALREADY_EXIST, addGenericObject, checkUser, getGenericObjects, APARTS_NOT_EXIST } from "@myhome/constants";
+import { ReferenceAddApartment, ReferenceGetApartmentsByUser, ReferenceGetApartmentsBySubscribers, ReferenceGetApartments, IGetApartmentAllInfo } from "@myhome/contracts";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { ApartmentEntity } from "../entities/apartment.entity";
 import { ApartmentRepository } from "../repositories/apartment.repository";
@@ -12,18 +12,6 @@ export class ApartmentService {
 		private readonly rmqService: RMQService,
 		private readonly apartmentRepository: ApartmentRepository
 	) { }
-
-	async getApartment(id: number) {
-		return {
-			apartment: await getGenericObject<ApartmentEntity>
-				(
-					this.apartmentRepository,
-					(item) => new ApartmentEntity(item),
-					id,
-					APART_NOT_EXIST
-				)
-		};
-	}
 
 	async addApartment(dto: ReferenceAddApartment.Request) {
 		const existedApartment = await this.apartmentRepository.findByNumber(dto.apartmentNumber, dto.houseId);
@@ -40,45 +28,98 @@ export class ApartmentService {
 		};
 	}
 
-	async getApartmentsAllInfo(subscriberIds: number[]): Promise<ReferenceGetApartmentsAllInfo.Response> {
-		const apartments = await this.apartmentRepository.findWithSubscribersAndHouse(subscriberIds);
-		
+	async getApartmentsBySubscribers(dto: ReferenceGetApartmentsBySubscribers.Request):
+		Promise<ReferenceGetApartmentsBySubscribers.Response> {
+		if (dto.isAllInfo) {
+			const apartments = await this.apartmentRepository.findWithSubscribersAndHouse(dto.subscriberIds);
+
+			return {
+				apartments: apartments.map((apartment) => {
+					const currentHouse = apartment.house;
+					const currentSubscriber = apartment.subscriber;
+					return {
+						...apartment.get(),
+						subscriberId: currentSubscriber.id,
+						address: `${currentHouse.getAddress()}, кв. ${apartment.apartmentNumber}`
+					};
+				})
+			};
+		}
+		else {
+			const apartments = await this.apartmentRepository.findWithSubscribers(dto.subscriberIds);
+
+			return {
+				apartments: apartments.map((apartment) => {
+					return {
+						...apartment,
+					};
+				})
+			};
+		}
+	}
+
+	async getApartmentsByUser({ userId, userRole, isAllInfo }: ReferenceGetApartmentsByUser.Request): Promise<ReferenceGetApartmentsByUser.Response> {
+		if (isAllInfo) {
+			await checkUser(this.rmqService, userId, userRole);
+			const apartments = await this.apartmentRepository.findByUser(userId, userRole);
+
+			return {
+				apartments: apartments.map(apartment => {
+					const currentHouse = apartment.house;
+					switch (userRole) {
+						case UserRole.ManagementCompany:
+							return {
+								...apartment.get(),
+								address: currentHouse.getAddress(),
+							};
+						case UserRole.Owner:
+							return {
+								...apartment.get(),
+								address: `${currentHouse.getAddress()}, кв. ${apartment.apartmentNumber}`,
+							};
+					}
+				})
+			};
+		} else {
+			const { profile } = await checkUser(this.rmqService, userId, userRole);
+			const apartments = await this.apartmentRepository.findByUser(userId, userRole);
+
+			return {
+				apartments: apartments.map(apartment => {
+					switch (userRole) {
+						case UserRole.ManagementCompany:
+							return {
+								...apartment.get(),
+								name: apartment.house.getAddress(),
+							};
+						case UserRole.Owner:
+							return {
+								...apartment.get(),
+								name: profile.name,
+							};
+					}
+				})
+			};
+		}
+	}
+
+	async getApartments(ids: number[]): Promise<ReferenceGetApartments.Response> {
 		return {
-			apartments: apartments.map((apartment) => {
-				const currentHouse = apartment.house;
-				const currentSubscriber = apartment.subscriber;
-				return {
-					...apartment.get(),
-					subscriberId: currentSubscriber.id,
-					address: `${currentHouse.getAddress()}, кв. ${apartment.apartmentNumber}`
-				};
-			})
+			apartments: await getGenericObjects<ApartmentEntity>
+				(
+					this.apartmentRepository,
+					(item) => new ApartmentEntity(item),
+					ids,
+					APARTS_NOT_EXIST
+				)
 		};
 	}
 
-	async getApartmentsBySubscribers(subscriberIds: number[]): Promise<ReferenceGetApartmentsBySubscribers.Response> {
-		const apartments = await this.apartmentRepository.findWithSubscribers(subscriberIds);
-
-		return {
-			apartments: apartments.map((apartment) => {
-				return {
-					...apartment,
-				};
-			})
-		};
-	}
-
-	async getApartmentsByMCId(managementCompanyId: number): Promise<ReferenceGetApartmentsByMCId.Response> {
-		await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
-		const apartments = await this.apartmentRepository.findByMCId(managementCompanyId);
-
-		return {
-			apartments: apartments.map(apartment => {
-				return {
-					...apartment.get(),
-					houseName: apartment.house.getAddress(),
-				};
-			})
-		};
+	async getApartmentsAllInfo(subscriberIds: number[]) {
+		const { apartments } = await this.getApartmentsBySubscribers({
+			subscriberIds: subscriberIds,
+			isAllInfo: true
+		});
+		return { apartments: apartments as IGetApartmentAllInfo[] };
 	}
 }

@@ -1,9 +1,8 @@
-import { RMQException, INCORRECT_USER_ROLE, HOUSES_NOT_EXIST, VOTINGS_NOT_EXIST, checkUsers, checkUser } from "@myhome/constants";
+import { RMQException, INCORRECT_USER_ROLE, HOUSES_NOT_EXIST, VOTINGS_NOT_EXIST, checkUsers, checkUser, getHouseAllInfo, getHousesByOId, getHousesByMCId } from "@myhome/constants";
 import { EventAddVoting, EventUpdateVoting } from "@myhome/contracts";
 import { UserRole, IGetVoting, IHouse, VotingStatus, IGetOption } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { getHouse, getHouseByOId, getHousesByMCId } from "../constants";
 import { OptionEntity } from "./entities/option.entity";
 import { VotingEntity } from "./entities/voting.entity";
 import { OptionRepository } from "./repositories/option.repository";
@@ -21,7 +20,7 @@ export class VotingService {
     ) { }
 
     public async addVoting(dto: EventAddVoting.Request): Promise<EventAddVoting.Response> {
-        await getHouse(this.rmqService, dto.houseId);
+        await getHouseAllInfo(this.rmqService, dto.houseId);
         const newVotingEntity = new VotingEntity({
             ...dto,
             createdAt: new Date(dto.createdAt),
@@ -65,7 +64,7 @@ export class VotingService {
     }
 
     private async getVotingsForOwner(userId: number): Promise<{ votings: IGetVoting[] }> {
-        const { houses } = await getHouseByOId(this.rmqService, userId);
+        const { houses } = await getHousesByOId(this.rmqService, userId);
         const mcIds = Array.from(new Set(houses.map(h => h.managementCompanyId)));
         const { profiles } = await checkUsers(this.rmqService, mcIds, UserRole.ManagementCompany);
 

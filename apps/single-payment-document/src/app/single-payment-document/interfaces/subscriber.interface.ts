@@ -1,4 +1,4 @@
-import { ISubscriberAllInfo } from "@myhome/interfaces";
+import { ISubscriberAllInfo } from "@myhome/contracts";
 
 export type ISpdSubscriber = ISubscriberAllInfo;
 

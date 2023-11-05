@@ -1,6 +1,6 @@
 import { IGeneralMeterReading, IGetMeterReading, IGetMeterReadings, IIndividualMeterReading, IMeter, IMeterReading, INorm, MeterStatus, MeterType, TypeOfNorm } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { ReferenceGetIndividualMeterReadings, ReferenceGetMeterReadingByHID } from "@myhome/contracts";
+import { IGetHouseAllInfo, ReferenceGetIndividualMeterReadings, ReferenceGetMeterReadingsByHID } from "@myhome/contracts";
 import { getGenericObject, METER_READING_NOT_EXIST, RMQException, INCORRECT_METER_TYPE, NORMS_NOT_EXIST } from "@myhome/constants";
 import { HouseService } from "../../../subscriber/services/house.service";
 import { SubscriberService, IApartmentAndSubscriber } from "../../../subscriber/services/subscriber.service";
@@ -92,8 +92,8 @@ export class MeterReadingQueriesService {
     }
 
     // получение показаний общедомовых счётчиков
-    public async getMeterReadingsByHID({ houseId, managementCompanyId }: ReferenceGetMeterReadingByHID.Request) {
-        const { house } = await this.houseService.getHouse(houseId);
+    public async getMeterReadingsByHID({ houseId, managementCompanyId }: ReferenceGetMeterReadingsByHID.Request) {
+        const { house } = await this.getHouseAllInfo(houseId);
         let norms: INorm[] = [];
         try {
             norms = await this.normRepository.findByMCIDAndType(managementCompanyId, TypeOfNorm.General);
@@ -231,5 +231,12 @@ export class MeterReadingQueriesService {
         );
     }
 
-
+    private async getHouseAllInfo(houseId: number) {
+        const { houses } = await this.houseService.getHouses({
+            houseIds: [houseId],
+            isAllInfo: true
+        });
+        if (!houses) return;
+        return { house: houses[0] as IGetHouseAllInfo };
+    }
 }

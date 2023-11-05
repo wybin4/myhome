@@ -6,17 +6,6 @@ export interface ISubscriber {
     status: SubscriberStatus;
 }
 
-export interface ISubscriberAllInfo {
-    id: number;
-    houseId: number;
-    name: string;
-    address: string;
-    personalAccount: string;
-    apartmentArea: number;
-    livingArea: number;
-    numberOfRegistered: number;
-}
-
 export enum SubscriberStatus {
     Archieved = 'Archieved',
     Active = 'Active'

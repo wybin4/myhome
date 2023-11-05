@@ -8,50 +8,37 @@ export * from './lib/account/account.get-owners-by-mcid';
 export * from './lib/account/account.change-profile';
 
 export * from './lib/reference/subscriber/house/reference.add-house';
-export * from './lib/reference/subscriber/house/reference.update-house';
-export * from './lib/reference/subscriber/house/reference.get-house';
-export * from './lib/reference/subscriber/house/reference.get-house-all-info';
 export * from './lib/reference/subscriber/house/reference.get-houses';
-export * from './lib/reference/subscriber/house/reference.get-houses-by-mcid';
-export * from './lib/reference/subscriber/house/reference.get-houses-by-owner';
+export * from './lib/reference/subscriber/house/reference.get-houses-by-user';
 
 export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-subscribers';
 export * from './lib/reference/subscriber/apartment/reference.add-apartment';
 export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-subscribers';
-export * from './lib/reference/subscriber/apartment/reference.get-apartments-all-info';
-export * from './lib/reference/subscriber/apartment/reference.get-apartment';
-export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-mcid';
+export * from './lib/reference/subscriber/apartment/reference.get-apartments';
+export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-user';
 
 export * from './lib/reference/subscriber/subscriber/reference.add-subscriber';
-export * from './lib/reference/subscriber/subscriber/reference.get-subscriber';
-export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-owner';
+export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-user';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers';
-export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-all-info';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-houses';
-export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-mcid';
 export * from './lib/reference/subscriber/subscriber/reference.get-owners-by-mcid';
-export * from './lib/reference/subscriber/subscriber/reference.get-management-company';
 export * from './lib/reference/subscriber/subscriber/reference.update-subscriber';
 export * from './lib/reference/subscriber/subscriber/reference.get-receivers-by-owner';
 
 export * from './lib/reference/meter/reference.expire-meter';
 export * from './lib/reference/meter/reference.add-meter';
 export * from './lib/reference/meter/reference.get-meters';
-export * from './lib/reference/meter/reference.get-meters-by-mcid';
-export * from './lib/reference/meter/reference.get-meters-all-info-by-sid';
+export * from './lib/reference/meter/reference.get-meters-by-user';
 export * from './lib/reference/meter/reference.update-meter';
 export * from './lib/reference/meter/reference.add-meter-reading';
-export * from './lib/reference/meter/reference.get-meter-reading';
 export * from './lib/reference/meter/reference.get-individual-meter-readings';
-export * from './lib/reference/meter/reference.get-meter-reading-by-hid';
+export * from './lib/reference/meter/reference.get-meter-readings-by-hid';
 
 export * from './lib/reference/tariff-and-norm/reference.update-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.add-tariff-and-norm';
-export * from './lib/reference/tariff-and-norm/reference.get-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.get-tariffs-and-norms-by-mcid';
 export * from './lib/reference/tariff-and-norm/reference.get-all-tariffs';
 
-export * from './lib/reference/common/reference.get-type-of-service';
 export * from './lib/reference/common/reference.get-types-of-service';
 export * from './lib/reference/common/reference.get-all-types-of-service';
 export * from './lib/reference/common/reference.get-common';

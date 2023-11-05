@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { ApartmentEntity } from '../entities/apartment.entity';
 import { HOUSE_NOT_EXIST, RMQException } from '@myhome/constants';
-import { SubscriberStatus } from '@myhome/interfaces';
+import { SubscriberStatus, UserRole } from '@myhome/interfaces';
 
 @Injectable()
 export class ApartmentRepository {
@@ -68,11 +68,39 @@ export class ApartmentRepository {
             .getMany();
     }
 
-    async findByMCId(managementCompanyId: number) {
-        return await this.apartmentRepository.createQueryBuilder('apartment')
-            .innerJoinAndSelect('apartment.house', 'house')
-            .where('house.managementCompanyId = :managementCompanyId', { managementCompanyId })
-            .getMany();
+    async findByUser(userId: number, userRole: UserRole) {
+        switch (userRole) {
+            case UserRole.ManagementCompany:
+                return await this.apartmentRepository.createQueryBuilder('apartment')
+                    .innerJoinAndSelect('apartment.house', 'house')
+                    .where('house.managementCompanyId = :managementCompanyId', { managementCompanyId: userId })
+                    .getMany();
+            case UserRole.Owner:
+                return await this.apartmentRepository
+                    .createQueryBuilder('apartment')
+                    .innerJoinAndSelect('apartment.subscriber', 'subscriber')
+                    .where('subscriber.ownerId = :ownerId', { ownerId: userId })
+                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
+                    .getMany();
+        }
+    }
+
+    async findByUserAll(userId: number, userRole: UserRole) {
+        switch (userRole) {
+            case UserRole.ManagementCompany:
+                return await this.apartmentRepository.createQueryBuilder('apartment')
+                    .innerJoinAndSelect('apartment.house', 'house')
+                    .where('house.managementCompanyId = :managementCompanyId', { managementCompanyId: userId })
+                    .getMany();
+            case UserRole.Owner:
+                return await this.apartmentRepository
+                    .createQueryBuilder('apartment')
+                    .innerJoinAndSelect('apartment.house', 'house')
+                    .innerJoinAndSelect('apartment.subscriber', 'subscriber')
+                    .where('subscriber.ownerId = :ownerId', { ownerId: userId })
+                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
+                    .getMany();
+        }
     }
 
 }

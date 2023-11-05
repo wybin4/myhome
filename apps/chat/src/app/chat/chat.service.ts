@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { ChatRepository } from "./chat.repository";
-import { AddChat, AddMessage, GetChats, GetReceivers, IGetSubscribersByMCId, ReadMessages, ReferenceGetReceiversByOwner, ReferenceGetSubscribersByMCId } from "@myhome/contracts";
-import { CHAT_NOT_EXIST, RMQException, checkUsers } from "@myhome/constants";
+import { AddChat, AddMessage, GetChats, GetReceivers, ReadMessages } from "@myhome/contracts";
+import { CHAT_NOT_EXIST, RMQException, checkUsers, getReceiversByOwner, getSubscribersByMCId } from "@myhome/constants";
 import { IChatUser, IGetChatUser, IMessage, MessageStatus, UserRole } from "@myhome/interfaces";
 import { ChatEntity, MessageEntity } from "./chat.entity";
 import { RMQService } from "nestjs-rmq";
@@ -46,17 +46,12 @@ export class ChatService {
     }
 
     async getReceivers(dto: GetReceivers.Request): Promise<GetReceivers.Response> {
-        let receivers: IGetChatUser[], subscribers: IGetSubscribersByMCId[];
-
         const chats = await this.chatRepository.findManyByUser({ userId: dto.userId, userRole: dto.userRole });
         const users = chats.flatMap(c => c.users);
 
         switch (dto.userRole) {
-            case UserRole.Owner:
-                ({ receivers } = await this.rmqService.send<
-                    ReferenceGetReceiversByOwner.Request,
-                    ReferenceGetReceiversByOwner.Response
-                >(ReferenceGetReceiversByOwner.topic, { ownerId: dto.userId }));
+            case UserRole.Owner: {
+                const { receivers } = await getReceiversByOwner(this.rmqService, dto.userId);
                 return {
                     receivers: receivers.filter(receiver =>
                         !users.some(user =>
@@ -64,12 +59,10 @@ export class ChatService {
                             receiver.userRole === user.userRole
                         ))
                 };
-            case UserRole.ManagementCompany:
-                ({ subscribers } = await this.rmqService.send<
-                    ReferenceGetSubscribersByMCId.Request,
-                    ReferenceGetSubscribersByMCId.Response
-                >(ReferenceGetSubscribersByMCId.topic, { managementCompanyId: dto.userId }));
-                receivers = subscribers.map(subscriber => {
+            }
+            case UserRole.ManagementCompany: {
+                const { subscribers } = await getSubscribersByMCId(this.rmqService, dto.userId);
+                const receivers = subscribers.map(subscriber => {
                     return {
                         userId: subscriber.ownerId,
                         userRole: UserRole.Owner,
@@ -83,6 +76,7 @@ export class ChatService {
                             receiver.userRole === user.userRole
                         ))
                 };
+            }
             default:
                 return;
         }

@@ -1,5 +1,4 @@
-import { getGenericObject, SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, addGenericObject, getGenericObjects, checkUser, checkUsers } from "@myhome/constants";
-import { ReferenceAddSubscriber, AccountUsersInfo, ReferenceGetSubscribersByMCId, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersAllInfo, ReferenceGetManagementCompany, ReferenceGetOwnersByMCId, ReferenceGetSubscribersByOwner, ReferenceGetReceiversByOwner } from "@myhome/contracts";
+import { SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, addGenericObject, getGenericObjects, checkUser, checkUsers } from "@myhome/constants";
 import { SubscriberStatus, UserRole, ISubscriber } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { SubscriberEntity } from "../entities/subscriber.entity";
@@ -7,6 +6,7 @@ import { ApartmentRepository } from "../repositories/apartment.repository";
 import { HouseRepository } from "../repositories/house.repository";
 import { SubscriberRepository } from "../repositories/subscriber.repository";
 import { RMQService } from "nestjs-rmq";
+import { ReferenceAddSubscriber, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersByUser, ReferenceGetOwnersByMCId, ReferenceGetReceiversByOwner, ReferenceGetSubscribers } from "@myhome/contracts";
 
 export interface IApartmentAndSubscriber {
 	subscriberId: number;
@@ -22,18 +22,6 @@ export class SubscriberService {
 		readonly houseRepository: HouseRepository,
 		readonly rmqService: RMQService,
 	) { }
-
-	async getSubscriber(id: number) {
-		return {
-			subscriber: await getGenericObject<SubscriberEntity>
-				(
-					this.subscriberRepository,
-					(item) => new SubscriberEntity(item),
-					id,
-					SUBSCRIBER_NOT_EXIST
-				)
-		};
-	}
 
 	async addSubscriber(dto: ReferenceAddSubscriber.Request): Promise<ReferenceAddSubscriber.Response> {
 		await checkUser(this.rmqService, dto.ownerId, UserRole.Owner);
@@ -65,11 +53,6 @@ export class SubscriberService {
 		]);
 	}
 
-	async getManagementCompany(subscriberId: number): Promise<ReferenceGetManagementCompany.Response> {
-		const subscriber = await this.subscriberRepository.findByIdAllInfo(subscriberId);
-		return { managementCompanyId: subscriber.apartment.house.managementCompanyId };
-	}
-
 	async getSubscribersByHouses(houseIds: number[]): Promise<ReferenceGetSubscribersByHouses.Response> {
 		const houses = await this.houseRepository.findManyWithSubscribers(houseIds);
 		const ownerIds = houses.map((house) => {
@@ -81,7 +64,7 @@ export class SubscriberService {
 		});
 
 		const flattenedOwnerIds = ownerIds.flat();
-		const { profiles: owners } = await this.getOwners(flattenedOwnerIds);
+		const { profiles: owners } = await checkUsers(this.rmqService, flattenedOwnerIds, UserRole.Owner);
 
 		return {
 			houses: houses.map(house => {
@@ -106,16 +89,41 @@ export class SubscriberService {
 		};
 	}
 
-	async getSubscribers(ids: number[]) {
-		return {
-			subscribers: await getGenericObjects<SubscriberEntity>
-				(
-					this.subscriberRepository,
-					(item) => new SubscriberEntity(item),
-					ids,
-					SUBSCRIBERS_NOT_EXIST
-				)
-		};
+	async getSubscribers(dto: ReferenceGetSubscribers.Request): Promise<ReferenceGetSubscribers.Response> {
+		if (dto.isAllInfo) {
+			const subscribers = await this.subscriberRepository.findByIdsAllInfo(dto.ids);
+
+			const ownerIds = subscribers.map(obj => obj.ownerId);
+			const { profiles: owners } = await checkUsers(this.rmqService, ownerIds, UserRole.Owner);
+
+			return {
+				subscribers: subscribers.map(subscriber => {
+					const currentApart = subscriber.apartment;
+					const currentHouse = subscriber.apartment.house;
+					const currentOwner = owners.find(obj => obj.id === subscriber.ownerId);
+					return {
+						id: subscriber.id,
+						houseId: currentHouse.id,
+						name: currentOwner.name,
+						address: currentHouse.getAddress() + ', кв. ' + currentApart.apartmentNumber,
+						personalAccount: subscriber.personalAccount,
+						apartmentArea: currentApart.totalArea,
+						livingArea: currentApart.livingArea,
+						numberOfRegistered: currentApart.numberOfRegistered
+					};
+				})
+			};
+		} else {
+			return {
+				subscribers: await getGenericObjects<SubscriberEntity>
+					(
+						this.subscriberRepository,
+						(item) => new SubscriberEntity(item),
+						dto.ids,
+						SUBSCRIBERS_NOT_EXIST
+					)
+			};
+		}
 	}
 
 	public async getApartmentsBySIDs(subscriberIds: number[]): Promise<IApartmentAndSubscriber[]> {
@@ -130,77 +138,42 @@ export class SubscriberService {
 		});
 	}
 
-	public async getSubscribersByHId(houseId: number): Promise<IApartmentAndSubscriber[]> {
-		const subscribers = await this.subscriberRepository.findByHIds([houseId]);
+	public async getSubscribersByUser({ userId, userRole }: ReferenceGetSubscribersByUser.Request):
+		Promise<ReferenceGetSubscribersByUser.Response> {
+		await checkUser(this.rmqService, userId, userRole);
 
-		return subscribers.map(subscriber => {
-			return {
-				subscriberId: subscriber.id,
-				apartmentId: subscriber.apartmentId,
-				numberOfRegistered: subscriber.apartment.numberOfRegistered,
-			};
-		});
-	}
+		switch (userRole) {
+			case UserRole.Owner: {
+				const subscribers = await this.subscriberRepository.findByUser(userId, userRole);
+				return { subscribers };
+			}
+			case UserRole.ManagementCompany: {
+				const subscribers = await this.subscriberRepository.findByUser(userId, userRole);
+				const ownerIds = subscribers.map(s => s.ownerId);
+				const { profiles: ownerItems } = await checkUsers(this.rmqService, ownerIds, UserRole.Owner);
 
-	public async getSubscribersByOwner(ownerId: number):
-		Promise<ReferenceGetSubscribersByOwner.Response> {
-		const subscribers = await this.subscriberRepository.findByOwnerId(ownerId);
-		return { subscribers };
-	}
-
-	async getSubscribersAllInfo(ids: number[]): Promise<ReferenceGetSubscribersAllInfo.Response> {
-		const subscribers = await this.subscriberRepository.findByIdsAllInfo(ids);
-
-		const ownerIds = subscribers.map(obj => obj.ownerId);
-		const { profiles: owners } = await this.getOwners(ownerIds);
-
-		return {
-			subscribers: subscribers.map(subscriber => {
-				const currentApart = subscriber.apartment;
-				const currentHouse = subscriber.apartment.house;
-				const currentOwner = owners.find(obj => obj.id === subscriber.ownerId);
 				return {
-					id: subscriber.id,
-					houseId: currentHouse.id,
-					name: currentOwner.name,
-					address: currentHouse.getAddress() + ', кв. ' + currentApart.apartmentNumber,
-					personalAccount: subscriber.personalAccount,
-					apartmentArea: currentApart.totalArea,
-					livingArea: currentApart.livingArea,
-					numberOfRegistered: currentApart.numberOfRegistered
+					subscribers: subscribers.map(subscriber => {
+						const currentApart = subscriber.apartment;
+						const currentOwner = ownerItems.find(obj => obj.id === subscriber.ownerId);
+						const currentHouse = subscriber.apartment.house;
+						return {
+							...subscriber.get(),
+							ownerName: currentOwner.name,
+							houseId: currentHouse.id,
+							houseName: currentHouse.getAddress(),
+							apartmentName: `${currentHouse.getAddress()}, кв. ${currentApart.apartmentNumber}`
+						};
+					})
 				};
-			})
-		};
+			}
+		}
 	}
 
 	async getOwnersByMCId(managementCompanyId: number): Promise<ReferenceGetOwnersByMCId.Response> {
-		const subscribers = await this.subscriberRepository.findByMCId(managementCompanyId);
+		const subscribers = await this.subscriberRepository.findByUser(managementCompanyId, UserRole.ManagementCompany);
 		const ownerIds = subscribers.map(s => s.ownerId);
 		return { ownerIds: ownerIds }
-	}
-
-	async getSubscribersByMCId(managementCompanyId: number):
-		Promise<ReferenceGetSubscribersByMCId.Response> {
-		await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
-
-		const subscribers = await this.subscriberRepository.findByMCId(managementCompanyId);
-		const ownerIds = subscribers.map(s => s.ownerId);
-		const { profiles: ownerItems } = await this.getOwners(ownerIds);
-
-		return {
-			subscribers: subscribers.map(subscriber => {
-				const currentApart = subscriber.apartment;
-				const currentOwner = ownerItems.find(obj => obj.id === subscriber.ownerId);
-				const currentHouse = subscriber.apartment.house;
-				return {
-					...subscriber.get(),
-					ownerName: currentOwner.name,
-					houseId: currentHouse.id,
-					houseName: currentHouse.getAddress(),
-					apartmentName: `${currentHouse.getAddress()}, кв. ${currentApart.apartmentNumber}`
-				};
-			})
-		};
 	}
 
 	async getReceiversByOwner(ownerId: number): Promise<ReferenceGetReceiversByOwner.Response> {
@@ -218,7 +191,7 @@ export class SubscriberService {
 		);
 		subscribers = subscribers.filter(s => s.ownerId !== ownerId);
 		const ownerIds = subscribers.map(s => s.ownerId);
-		const { profiles: ownerProfiles } = await this.getOwners(ownerIds);
+		const { profiles: ownerProfiles } = await checkUsers(this.rmqService, ownerIds, UserRole.Owner);
 
 		const { profiles: MCProfiles } = await checkUsers(
 			this.rmqService,
@@ -243,17 +216,15 @@ export class SubscriberService {
 		return { receivers };
 	}
 
-	private async getOwners(ownerIds: number[]) {
-		try {
-			return await this.rmqService.send
-				<
-					AccountUsersInfo.Request,
-					AccountUsersInfo.Response
-				>
-				(AccountUsersInfo.topic, { ids: ownerIds, role: UserRole.Owner });
-		} catch (e) {
-			throw new RMQException(e.message, e.status);
-		}
-	}
+	public async getSubscribersByHId(houseId: number): Promise<IApartmentAndSubscriber[]> {
+		const subscribers = await this.subscriberRepository.findByHIds([houseId]);
 
+		return subscribers.map(subscriber => {
+			return {
+				subscriberId: subscriber.id,
+				apartmentId: subscriber.apartmentId,
+				numberOfRegistered: subscriber.apartment.numberOfRegistered,
+			};
+		});
+	}
 }

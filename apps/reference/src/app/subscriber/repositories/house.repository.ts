@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { HouseEntity } from '../entities/house.entity';
-import { SubscriberStatus } from '@myhome/interfaces';
+import { SubscriberStatus, UserRole } from '@myhome/interfaces';
 
 @Injectable()
 export class HouseRepository {
@@ -19,8 +19,19 @@ export class HouseRepository {
         return await this.houseRepository.findOne({ where: { id } });
     }
 
-    async findByMCId(managementCompanyId: number) {
-        return await this.houseRepository.find({ where: { managementCompanyId } });
+    async findByUser(userId: number, userRole: UserRole) {
+        switch (userRole) {
+            case UserRole.ManagementCompany:
+                return await this.houseRepository.find({ where: { managementCompanyId: userId } });
+            case UserRole.Owner:
+                return await this.houseRepository
+                    .createQueryBuilder('house')
+                    .innerJoinAndSelect('house.apartments', 'apartment')
+                    .innerJoinAndSelect('apartment.subscriber', 'subscriber')
+                    .where('subscriber.ownerId = :ownerId', { ownerId: userId })
+                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
+                    .getMany();
+        }
     }
 
     async findManyWithSubscribers(houseIds: number[]) {
@@ -33,24 +44,14 @@ export class HouseRepository {
             .getMany();
     }
 
-    async findManyByOwner(ownerId: number) {
+    async findWithSubscribers(houseIds: number[]) {
         return await this.houseRepository
             .createQueryBuilder('house')
             .innerJoinAndSelect('house.apartments', 'apartment')
             .innerJoinAndSelect('apartment.subscriber', 'subscriber')
-            .where('subscriber.ownerId = :ownerId', { ownerId })
+            .where('house.id in (:...houseIds)', { houseIds })
             .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
             .getMany();
-    }
-
-    async findWithSubscribers(houseId: number) {
-        return await this.houseRepository
-            .createQueryBuilder('house')
-            .innerJoinAndSelect('house.apartments', 'apartment')
-            .innerJoinAndSelect('apartment.subscriber', 'subscriber')
-            .where('house.id = :houseId', { houseId })
-            .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
-            .getOne();
     }
 
     async delete(id: number): Promise<void> {

@@ -1,5 +1,5 @@
-import { MeterType, RequireHomeOrApartment } from "@myhome/interfaces";
-import { IsNumber, IsString, IsArray } from "class-validator";
+import { MeterType, RequireHomeOrApartment, UserRole } from "@myhome/interfaces";
+import { IsNumber, IsString, IsEnum } from "class-validator";
 
 export class AddMeterDto {
     @IsNumber()
@@ -24,12 +24,15 @@ export class AddMeterDto {
     meterType: MeterType;
 }
 
-export class GetMetersByMCIdDto {
+export class GetMetersByUserDto {
     @IsNumber()
-    managementCompanyId: number;
+    userId: number;
 
-    @IsString()
-    meterType: MeterType;
+    @IsEnum(UserRole)
+    userRole: UserRole;
+
+    @IsEnum(MeterType)
+    meterType!: MeterType;
 }
 
 export class UpdateMeterDto {
@@ -55,17 +58,4 @@ export class AddMeterReadingDto {
 
     @IsString()
     readAt!: string;
-}
-
-export class GetMeterReadingDto {
-    @IsNumber()
-    id!: number;
-
-    @IsString()
-    meterType!: MeterType;
-}
-
-export class GetMetersAllInfoBySID {
-    @IsArray()
-    subscriberIds!: number[];
 }

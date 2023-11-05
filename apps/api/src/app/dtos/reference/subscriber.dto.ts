@@ -1,5 +1,5 @@
-import { SubscriberStatus } from "@myhome/interfaces";
-import { IsNumber, IsString } from "class-validator";
+import { SubscriberStatus, UserRole } from "@myhome/interfaces";
+import { IsEnum, IsNumber, IsString } from "class-validator";
 
 export class AddSubscriberDto {
     @IsNumber()
@@ -18,18 +18,15 @@ export class AddSubscriberDto {
     status: SubscriberStatus;
 }
 
-export class GetSubscriberDto {
-    @IsNumber()
-    id: number;
-}
-
 export class UpdateSubscriberDto {
     @IsNumber()
     id: number;
 }
 
-export class GetSubscribersByMCIdDto {
+export class GetSubscribersByUserDto {
     @IsNumber()
-    @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
-    managementCompanyId!: number;
+    userId: number;
+
+    @IsEnum(UserRole)
+    userRole: UserRole;
 }

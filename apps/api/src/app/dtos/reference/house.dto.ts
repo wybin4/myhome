@@ -1,4 +1,5 @@
-import { IsNumber, IsString } from "class-validator";
+import { UserRole } from "@myhome/interfaces";
+import { IsEnum, IsNumber, IsString } from "class-validator";
 
 export class AddHouseDto {
     @IsNumber()
@@ -23,20 +24,10 @@ export class AddHouseDto {
     commonArea!: number;
 }
 
-export class GetHouseDto {
+export class GetHousesByUserDto {
     @IsNumber()
-    id: number;
-}
+    userId: number;
 
-export class GetHousesByMCIdDto {
-    @IsNumber()
-    managementCompanyId: number;
-}
-
-export class UpdateHouseDto {
-    @IsNumber()
-    id: number;
-
-    @IsNumber()
-    managementCompanyId: number;
+    @IsEnum(UserRole)
+    userRole: UserRole;
 }

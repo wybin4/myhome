@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { AppealRepository } from "./appeal.repository";
-import { getSubscriber, checkUser, RMQException, INCORRECT_USER_ROLE, checkUsers } from "@myhome/constants";
-import { EventAddAppeal, ReferenceGetApartment, ReferenceGetMeters, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByOwner, ReferenceGetTypeOfService, ReferenceGetTypesOfService } from "@myhome/contracts";
+import { getSubscriber, checkUser, RMQException, INCORRECT_USER_ROLE, checkUsers, getSubscribersAllInfo, getSubscribersByOId, getApartment, getTypeOfService, getMeters, getMeter, getTypesOfService } from "@myhome/constants";
+import { EventAddAppeal } from "@myhome/contracts";
 import { AppealEntity } from "./appeal.entity";
 import { AddIndividualMeterData, AppealType, IAppealData, IAppealEntity, IGetAppeal, IMeter, IMeterWithTypeOfService, ITypeOfService, MeterType, ServiceNotificationType, UserRole, VerifyIndividualMeterData } from "@myhome/interfaces";
 import { ServiceNotificationService } from "../notification/services/service-notification.service";
@@ -18,7 +18,7 @@ export class AppealService {
     public async getAppeals(userId: number, userRole: UserRole): Promise<{ appeals: IGetAppeal[] }> {
         switch (userRole) {
             case UserRole.Owner: {
-                const { subscribers } = await this.getSubscribersByOId(userId);
+                const { subscribers } = await getSubscribersByOId(this.rmqService, userId);
                 const subscriberIds = subscribers.map(s => s.id);
                 const appeals = await this.appealRepository.findBySIds(subscriberIds);
                 if (!appeals) {
@@ -57,7 +57,7 @@ export class AppealService {
                 const { meters, typesOfService } = await this.getMeterData(appeals);
 
                 const subscriberIds = appeals.map(appeal => appeal.subscriberId);
-                const { subscribers: subscribersAll } = await this.getSubscribersBySIds(subscriberIds);
+                const { subscribers: subscribersAll } = await getSubscribersAllInfo(this.rmqService, subscriberIds);
                 return {
                     appeals: appeals
                         .map(appeal => {
@@ -85,8 +85,8 @@ export class AppealService {
         const meterIds = Array.from(new Set(appeals.filter(a => a.typeOfAppeal === AppealType.VerifyIndividualMeter)
             .map(a => JSON.parse(a.data).meterId)));
 
-        const { meters } = await this.getMeters(meterIds);
-        const { typesOfService } = await this.getTypesOfService(typeOfServiceIds);
+        const { meters } = await getMeters(this.rmqService, meterIds, MeterType.Individual);
+        const { typesOfService } = await getTypesOfService(this.rmqService, typeOfServiceIds);
 
         return { meters, typesOfService };
     }
@@ -115,15 +115,14 @@ export class AppealService {
         switch (dto.typeOfAppeal) {
             case AppealType.AddIndividualMeter: {
                 const data = dto.data as AddIndividualMeterData;
-                await this.getApartment(data.apartmentId);
-                ({ typeOfService } = await this.getTypeOfService(data.typeOfServiceId));
+                await getApartment(this.rmqService, data.apartmentId);
+                ({ typeOfService } = await getTypeOfService(this.rmqService, data.typeOfServiceId));
                 break;
             }
             case AppealType.VerifyIndividualMeter: {
                 const data = dto.data as VerifyIndividualMeterData;
-                const { meters } = await this.getMeters([data.meterId]);
-                meter = meters[0];
-                typeOfService = meters[0].typeOfService;
+                const { meter } = await getMeter(this.rmqService, data.meterId, MeterType.Individual);
+                typeOfService = meter.typeOfService;
                 break;
             }
         }
@@ -194,83 +193,5 @@ export class AppealService {
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const year = date.getFullYear();
         return `${day}.${month}.${year}`;
-    }
-
-    private async getSubscribersBySIds(subscriberIds: number[]): Promise<ReferenceGetSubscribersAllInfo.Response> {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetSubscribersAllInfo.Request,
-                    ReferenceGetSubscribersAllInfo.Response
-                >
-                (ReferenceGetSubscribersAllInfo.topic, { ids: subscriberIds });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
-    }
-
-    private async getMeters(meterIds: number[]): Promise<ReferenceGetMeters.Response> {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetMeters.Request,
-                    ReferenceGetMeters.Response
-                >
-                (ReferenceGetMeters.topic, { ids: meterIds, meterType: MeterType.Individual });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
-    }
-
-    private async getApartment(apartmentId: number): Promise<ReferenceGetApartment.Response> {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetApartment.Request,
-                    ReferenceGetApartment.Response
-                >
-                (ReferenceGetApartment.topic, { id: apartmentId });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
-    }
-
-    private async getTypeOfService(typeOfServiceId: number): Promise<ReferenceGetTypeOfService.Response> {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetTypeOfService.Request,
-                    ReferenceGetTypeOfService.Response
-                >
-                (ReferenceGetTypeOfService.topic, { id: typeOfServiceId });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
-    }
-
-    private async getTypesOfService(typeOfServiceIds: number[]): Promise<ReferenceGetTypesOfService.Response> {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetTypesOfService.Request,
-                    ReferenceGetTypesOfService.Response
-                >
-                (ReferenceGetTypesOfService.topic, { typeOfServiceIds });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
-    }
-
-    private async getSubscribersByOId(ownerId: number) {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetSubscribersByOwner.Request,
-                    ReferenceGetSubscribersByOwner.Response
-                >
-                (ReferenceGetSubscribersByOwner.topic, { ownerId });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
     }
 }

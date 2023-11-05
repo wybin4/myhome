@@ -16,6 +16,6 @@ export namespace ReferenceGetAllTariffs {
     }
 
     export class Response {
-        tariffs!: IMunicipalTariff | ICommonHouseNeedTariff;
+        tariffs!: IMunicipalTariff[] | ICommonHouseNeedTariff[];
     }
 }

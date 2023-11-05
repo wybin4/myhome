@@ -4,9 +4,8 @@ import { RMQService } from "nestjs-rmq";
 import { AdminRepository } from "./repositories/admin.repository";
 import { OwnerRepository } from "./repositories/owner.repository";
 import { ManagementCompanyRepository } from "./repositories/management-company.repository";
-import { ADMIN_NOT_EXIST, OWNER_NOT_EXIST, MANAG_COMP_NOT_EXIST, INCORRECT_USER_ROLE, ADMINS_NOT_EXIST, MANAG_COMPS_NOT_EXIST, OWNERS_NOT_EXIST, RMQException } from "@myhome/constants";
+import { ADMIN_NOT_EXIST, OWNER_NOT_EXIST, MANAG_COMP_NOT_EXIST, INCORRECT_USER_ROLE, ADMINS_NOT_EXIST, MANAG_COMPS_NOT_EXIST, OWNERS_NOT_EXIST, RMQException, getOwnerIdsByMCId } from "@myhome/constants";
 import { UserEntity } from "./entities/user.entity";
-import { ReferenceGetOwnersByMCId } from "@myhome/contracts";
 
 @Injectable()
 export class UserService {
@@ -92,7 +91,7 @@ export class UserService {
         if (!managementC) {
             throw new RMQException(MANAG_COMP_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
-        const { ownerIds } = await this.getOwnerIdsByMCId(managementConpmayId);
+        const { ownerIds } = await getOwnerIdsByMCId(this.rmqService, managementConpmayId);
         const ownerItems = await this.ownerRepository.findUsers(ownerIds);
         if (!ownerItems.length) {
             throw new RMQException(OWNERS_NOT_EXIST.message, OWNERS_NOT_EXIST.status);
@@ -102,19 +101,6 @@ export class UserService {
             owners.push(new UserEntity(ownerItem).getPublicProfile());
         }
         return { owners: owners };
-    }
-
-    private async getOwnerIdsByMCId(managementCompanyId: number) {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetOwnersByMCId.Request,
-                    ReferenceGetOwnersByMCId.Response
-                >
-                (ReferenceGetOwnersByMCId.topic, { managementCompanyId });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
     }
 
     // public async changeProfile(user: Pick<IUser, 'name'>, id: number) {

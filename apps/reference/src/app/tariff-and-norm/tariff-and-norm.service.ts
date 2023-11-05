@@ -5,7 +5,7 @@ import { NormEntity, SeasonalityFactorEntity, MunicipalTariffEntity, SocialNormE
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
 import { IBaseTariffAndNorm, ICommonHouseNeedTariff, IHouse, IUnit, TariffAndNormType, UserRole } from "@myhome/interfaces";
 import { ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceUpdateTariffOrNorm } from "@myhome/contracts";
-import {  TYPE_OF_SERVICE_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, checkUser, RMQException, HOUSES_NOT_EXIST, TYPES_OF_SERVICE_NOT_EXIST, UNITS_NOT_EXIST } from "@myhome/constants";
+import { TYPE_OF_SERVICE_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, checkUser, RMQException, HOUSES_NOT_EXIST, TYPES_OF_SERVICE_NOT_EXIST, UNITS_NOT_EXIST } from "@myhome/constants";
 import { TypeOfServiceRepository } from "../common/repositories/type-of-service.repository";
 import { UnitRepository } from "../common/repositories/unit.repository";
 import { HouseService } from "../subscriber/services/house.service";
@@ -112,7 +112,10 @@ export class TariffAndNormService {
                     )
                 };
             case TariffAndNormType.CommonHouseNeedTariff:
-                ({ houses } = await this.houseService.getHousesByMCId(managementCompanyId));
+                ({ houses } = await this.houseService.getHousesByUser({
+                    userId: managementCompanyId,
+                    userRole: UserRole.ManagementCompany
+                }));
                 if (!houses && !houses.length) {
                     throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
                 }
@@ -163,52 +166,6 @@ export class TariffAndNormService {
 
         const gettedTNs = tItems.map(item => createInstance(item));
         return gettedTNs;
-    }
-
-    public async getTariffAndNorm(id: number, type: TariffAndNormType) {
-        let tItem: CommonHouseNeedTariffEntity, gettedTN: ICommonHouseNeedTariff;
-        switch (type) {
-            case TariffAndNormType.Norm:
-                return this.genericGetTariffAndNorm<NormEntity>
-                    (
-                        this.normRepository,
-                        id, (item) => new NormEntity(item),
-                        'Такая норма'
-                    );
-            case TariffAndNormType.SeasonalityFactor:
-                return this.genericGetTariffAndNorm<SeasonalityFactorEntity>
-                    (
-                        this.seasonalityFactorRepository,
-                        id,
-                        (item) => new SeasonalityFactorEntity(item),
-                        'Такой сезонный фактор'
-                    );
-            case TariffAndNormType.MunicipalTariff:
-                return this.genericGetTariffAndNorm<MunicipalTariffEntity>
-                    (
-                        this.municipalTariffRepository,
-                        id,
-                        (item) => new MunicipalTariffEntity(item),
-                        'Такой муниципальный тариф'
-                    );
-            case TariffAndNormType.SocialNorm:
-                return this.genericGetTariffAndNorm<SocialNormEntity>
-                    (
-                        this.socialNormRepository,
-                        id,
-                        (item) => new SocialNormEntity(item),
-                        'Такая социальная норма'
-                    );
-            case TariffAndNormType.CommonHouseNeedTariff:
-                tItem = await this.commonHouseNeedTariffRepository.findById(id);
-                if (!tItem) {
-                    throw new RMQException('Такой тариф на общедомовые нужды не существует', HttpStatus.NOT_FOUND);
-                }
-                gettedTN = new CommonHouseNeedTariffEntity(tItem);
-                return { gettedTN };
-            default:
-                throw new RMQException('Такая сущность не существует', HttpStatus.CONFLICT);
-        }
     }
 
     private async genericGetTariffAndNorm<T extends BaseTariffAndNormEntity>(

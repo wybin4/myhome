@@ -1,9 +1,9 @@
-import { CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByMCId, GetSinglePaymentDocumentsBySId, ReferenceGetApartmentsAllInfo, ReferenceGetHouses, ReferenceGetHousesByMCId, ReferenceGetSubscribersAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
+import { CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByMCId, GetSinglePaymentDocumentsBySId, ISubscriberAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
-import { CalculationState, ISubscriberAllInfo, ITypeOfService, IUnit, UserRole } from "@myhome/interfaces";
-import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, CANT_GET_SPDS, HOUSES_NOT_EXIST, RMQException, SUBSCRIBERS_NOT_EXIST, checkUser, getCommon } from "@myhome/constants";
+import { CalculationState, ITypeOfService, IUnit, UserRole } from "@myhome/interfaces";
+import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, CANT_GET_SPDS, RMQException, SUBSCRIBERS_NOT_EXIST, checkUser, getApartmentsAllInfo, getCommon, getHouses, getHousesByMCId, getSubscribersAllInfo } from "@myhome/constants";
 import { GetSinglePaymentDocumentSaga } from "../sagas/get-single-payment-document.saga";
 import { PdfService } from "./pdf.service";
 import { ISpdHouse, ISpdManagementCompany, ISpdSubscriber } from "../interfaces/subscriber.interface";
@@ -25,7 +25,7 @@ export class SinglePaymentDocumentService {
     async getSinglePaymentDocumentsByMCId(dto: GetSinglePaymentDocumentsByMCId.Request):
         Promise<GetSinglePaymentDocumentsByMCId.Response> {
         await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
-        const { houses } = await this.getHousesByMCId(dto.managementCompanyId);
+        const { houses } = await getHousesByMCId(this.rmqService, dto.managementCompanyId);
         const spds = await this.totalRepository.findByMCId(dto.managementCompanyId);
         if (!spds) {
             throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
@@ -61,7 +61,7 @@ export class SinglePaymentDocumentService {
 
     async getSinglePaymentDocumentsBySId(dto: GetSinglePaymentDocumentsBySId.Request):
         Promise<GetSinglePaymentDocumentsBySId.Response> {
-        const { apartments } = await this.getApartmentsAllInfo(dto.subscriberIds);
+        const { apartments } = await getApartmentsAllInfo(this.rmqService, dto.subscriberIds);
         const spds = await this.singlePaymentDocumentRepository.findBySIds(dto.subscriberIds);
         if (!spds) {
             throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
@@ -247,7 +247,7 @@ export class SinglePaymentDocumentService {
             await this.totalRepository.create(newTotalEntity);
             return { pdfBuffer: pdfBuffer.toString('binary') };
         } else if (dto.subscriberIds) {
-            let { subscribers } = (await this.getSubscribers(dto.subscriberIds));
+            let { subscribers } = await getSubscribersAllInfo(this.rmqService, dto.subscriberIds);
             if (!subscribers.length) {
                 throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
             }
@@ -257,7 +257,7 @@ export class SinglePaymentDocumentService {
             });
 
             const houseIds = subscribers.map(s => s.houseId);
-            const { houses } = await this.getHouses(houseIds);
+            const { houses } = await getHouses(this.rmqService, houseIds);
 
             for (const house of houses) {
                 const currentSubscribers = subscribers.filter(s => s.houseId === house.id);
@@ -346,58 +346,6 @@ export class SinglePaymentDocumentService {
                     ReferenceGetSubscribersByHouses.Response
                 >
                 (ReferenceGetSubscribersByHouses.topic, { houseIds });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
-    }
-
-    private async getHouses(houseIds: number[]) {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetHouses.Request,
-                    ReferenceGetHouses.Response
-                >
-                (ReferenceGetHouses.topic, { houseIds });
-        } catch (e) {
-            throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
-        }
-    }
-
-    private async getHousesByMCId(managementCompanyId: number) {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetHousesByMCId.Request,
-                    ReferenceGetHousesByMCId.Response
-                >
-                (ReferenceGetHousesByMCId.topic, { managementCompanyId });
-        } catch (e) {
-            throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
-        }
-    }
-
-    private async getSubscribers(subscriberIds: number[]): Promise<ReferenceGetSubscribersAllInfo.Response> {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetSubscribersAllInfo.Request,
-                    ReferenceGetSubscribersAllInfo.Response
-                >
-                (ReferenceGetSubscribersAllInfo.topic, { ids: subscriberIds });
-        } catch (e) {
-            throw new RMQException(e.message, e.status);
-        }
-    }
-
-    private async getApartmentsAllInfo(subscriberIds: number[]): Promise<ReferenceGetApartmentsAllInfo.Response> {
-        try {
-            return await this.rmqService.send
-                <
-                    ReferenceGetApartmentsAllInfo.Request,
-                    ReferenceGetApartmentsAllInfo.Response
-                >
-                (ReferenceGetApartmentsAllInfo.topic, { subscriberIds });
         } catch (e) {
             throw new RMQException(e.message, e.status);
         }

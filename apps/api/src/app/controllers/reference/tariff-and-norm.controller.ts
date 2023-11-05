@@ -1,25 +1,12 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { ReferenceAddTariffOrNorm, ReferenceGetTariffOrNorm, ReferenceGetTariffsOrNormsByMCId, ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
+import { ReferenceAddTariffOrNorm, ReferenceGetTariffsOrNormsByMCId, ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
-import { AddTariffAndNormDto, GetTariffAndNormDto, GetTariffsAndNormsByMCIdDto, UpdateTariffAndNormDto } from '../../dtos/reference/tariff-and-norm.dto';
+import { AddTariffAndNormDto, GetTariffsAndNormsByMCIdDto, UpdateTariffAndNormDto } from '../../dtos/reference/tariff-and-norm.dto';
 
 @Controller('tariff-and-norm')
 export class TariffAndNormController {
     constructor(private readonly rmqService: RMQService) { }
-
-    @HttpCode(200)
-    @Post('get-tariff-and-norm')
-    async getTariffAndNorm(@Body() dto: GetTariffAndNormDto) {
-        try {
-            return await this.rmqService.send<
-                ReferenceGetTariffOrNorm.Request,
-                ReferenceGetTariffOrNorm.Response
-            >(ReferenceGetTariffOrNorm.topic, dto);
-        } catch (e) {
-            CatchError(e);
-        }
-    }
 
     @HttpCode(200)
     @Post('get-tariffs-and-norms-by-mcid')

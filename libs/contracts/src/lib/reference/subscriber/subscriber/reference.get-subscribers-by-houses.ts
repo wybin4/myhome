@@ -1,5 +1,6 @@
-import { IHouse, ISubscriberAllInfo } from '@myhome/interfaces';
+import { IHouse } from '@myhome/interfaces';
 import { IsArray } from 'class-validator';
+import { ISubscriberAllInfo } from './reference.get-subscribers';
 
 export namespace ReferenceGetSubscribersByHouses {
     export const topic = 'reference.get-subscribers-by-houses.query';

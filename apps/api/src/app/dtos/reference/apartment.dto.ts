@@ -1,4 +1,5 @@
-import { IsNumber } from "class-validator";
+import { UserRole } from "@myhome/interfaces";
+import { IsBoolean, IsEnum, IsNumber } from "class-validator";
 
 export class AddApartmentDto {
     @IsNumber()
@@ -20,13 +21,13 @@ export class AddApartmentDto {
     numberOfRegistered: number;
 }
 
-export class GetApartmentDto {
+export class GetApartmentsByUserDto {
     @IsNumber()
-    id: number;
-}
+    userId: number;
 
-export class GetApartmentsByMCIdDto {
-    @IsNumber()
-    @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
-    managementCompanyId!: number;
+    @IsEnum(UserRole)
+    userRole: UserRole;
+
+    @IsBoolean()
+    isAllInfo!: boolean;
 }

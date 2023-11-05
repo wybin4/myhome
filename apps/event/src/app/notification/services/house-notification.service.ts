@@ -1,4 +1,4 @@
-import { HOUSES_NOT_EXIST, INCORRECT_USER_ROLE, RMQException, checkUsers } from "@myhome/constants";
+import { HOUSES_NOT_EXIST, INCORRECT_USER_ROLE, RMQException, checkUsers, getHouseAllInfo, getHousesByMCId, getHousesByOId } from "@myhome/constants";
 import { EventAddHouseNotification } from "@myhome/contracts";
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
@@ -6,7 +6,6 @@ import { HouseNotificationEntity } from "../entities/house-notification.entity";
 import { HouseNotificationRepository } from "../repositories/house-notification.repository";
 import { IGetHouseNotification, IHouse, IHouseNotification, ServiceNotificationType, UserRole } from "@myhome/interfaces";
 import { ServiceNotificationService } from "./service-notification.service";
-import { getHouse, getHouseByOId, getHousesByMCId } from "../../constants";
 
 @Injectable()
 export class HouseNotificationService {
@@ -28,7 +27,7 @@ export class HouseNotificationService {
     }
 
     private async getNotificationsForOwner(userId: number): Promise<{ notifications: IGetHouseNotification[] }> {
-        const { houses } = await getHouseByOId(this.rmqService, userId);
+        const { houses } = await getHousesByOId(this.rmqService, userId);
         const mcIds = Array.from(new Set(houses.map(h => h.managementCompanyId)));
         const { profiles } = await checkUsers(this.rmqService, mcIds, UserRole.ManagementCompany);
 
@@ -79,7 +78,7 @@ export class HouseNotificationService {
 
     public async addHouseNotification(dto: EventAddHouseNotification.Request):
         Promise<EventAddHouseNotification.Response> {
-        const { house } = await getHouse(this.rmqService, dto.houseId);
+        const { house } = await getHouseAllInfo(this.rmqService, dto.houseId);
 
         const newHouseNotificationEntity = new HouseNotificationEntity({
             houseId: dto.houseId,

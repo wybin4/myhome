@@ -2,7 +2,7 @@ import { Body, Controller } from '@nestjs/common';
 import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 import { HouseService } from '../services/house.service';
-import { ReferenceGetHouse, ReferenceGetHouseAllInfo, ReferenceGetHouses, ReferenceGetHousesByMCId, ReferenceGetHousesByOwner } from '@myhome/contracts';
+import { ReferenceGetHouses, ReferenceGetHousesByUser } from '@myhome/contracts';
 
 @Controller()
 export class HouseQueries {
@@ -11,52 +11,23 @@ export class HouseQueries {
     ) { }
 
     @RMQValidate()
-    @RMQRoute(ReferenceGetHouse.topic)
-    async getHouse(@Body() { id }: ReferenceGetHouse.Request) {
-        try {
-            return await this.houseService.getHouse(id);
-        } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
-        }
-    }
-
-    @RMQValidate()
-    @RMQRoute(ReferenceGetHouseAllInfo.topic)
-    async getHouseAllInfo(@Body() { id }: ReferenceGetHouseAllInfo.Request) {
-        try {
-            return await this.houseService.getHouseAllInfo(id);
-        } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
-        }
-    }
-
-    @RMQValidate()
     @RMQRoute(ReferenceGetHouses.topic)
-    async getHouses(@Body() { houseIds }: ReferenceGetHouses.Request) {
+    async getHouses(@Body() dto: ReferenceGetHouses.Request) {
         try {
-            return await this.houseService.getHouses(houseIds);
+            return await this.houseService.getHouses(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 
     @RMQValidate()
-    @RMQRoute(ReferenceGetHousesByMCId.topic)
-    async getHousesByMCId(@Body() { managementCompanyId }: ReferenceGetHousesByMCId.Request) {
+    @RMQRoute(ReferenceGetHousesByUser.topic)
+    async getHousesByMCId(@Body() dto: ReferenceGetHousesByUser.Request) {
         try {
-            return await this.houseService.getHousesByMCId(managementCompanyId);
+            return await this.houseService.getHousesByUser(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 
-    @RMQValidate()
-    @RMQRoute(ReferenceGetHousesByOwner.topic)
-    async getHousesByOwner(@Body() { ownerId }: ReferenceGetHousesByOwner.Request) {
-        try {
-            return await this.houseService.getHousesByOwner(ownerId);
-        } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
-        }
-    }
 }

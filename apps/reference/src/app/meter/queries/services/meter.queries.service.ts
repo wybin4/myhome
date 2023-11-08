@@ -8,7 +8,7 @@ import { IndividualMeterEntity } from "../../entities/individual-meter.entity";
 import { GeneralMeterRepository } from "../../repositories/general-meter.repository";
 import { IndividualMeterRepository } from "../../repositories/individual-meter.repository";
 import { MeterReadingQueriesService } from "./meter-reading.queries.service";
-import { IGetApartment, IGetApartmentWithInfo, ReferenceGetMeters, ReferenceGetMetersByUser } from "@myhome/contracts";
+import { IGetApartment, IGetApartmentWithInfo, IGetMeterByAIDs, IGetMeters, IGetMetersByMCId, ReferenceGetMeters, ReferenceGetMetersByUser } from "@myhome/contracts";
 import { HouseService } from "../../../subscriber/services/house.service";
 import { RMQService } from "nestjs-rmq";
 import { TypeOfServiceService } from "../../../common/services/type-of-service.service";
@@ -57,28 +57,44 @@ export class MeterQueriesService {
     }
 
     async getMetersByUser(dto: ReferenceGetMetersByUser.Request): Promise<ReferenceGetMetersByUser.Response> {
+        await checkUser(this.rmqService, dto.userId, dto.userRole);
+
         switch (dto.userRole) {
             case UserRole.ManagementCompany:
-                return await this.getMetersByMCId(dto.userId, dto.meterType);
+                return { meters: await this.getMetersByMCId(dto.userId, dto.meterType, dto.isNotAllInfo) };
             case UserRole.Owner:
-                return await this.getMetersByOID(dto.userId);
+                return { meters: await this.getMetersByOID(dto.userId, dto.isNotAllInfo) };
         }
     }
 
-    private async getMetersByOID(ownerId: number) {
+    private async getMetersByOID(ownerId: number, isNotAllInfo: boolean):
+        Promise<IGetMeterByAIDs[] | IGetMeters[]> {
         const { apartments } = await this.apartmentService.getApartmentsByUser({
             userId: ownerId, userRole: UserRole.Owner, isAllInfo: true
         }) as { apartments: IGetApartmentWithInfo[] };
         const apartmentIds = apartments.map(a => a.id);
 
-        const meters = await this.meterReadingQueriesService.getMeterReadings(
-            MeterType.Individual, 15, 25, undefined, apartmentIds
-        ); // ИСПРАВИТЬ
+        if (isNotAllInfo) {
+            const meters = await this.getMetersByApartments(apartmentIds);
+            const { typesOfService } = await this.typeOfServiceService.getAll();
+            return meters.map(meter => {
+                const currentTOS = typesOfService.find(tos => tos.id === meter.typeOfServiceId);
+                const currentApartment = apartments.find(a => a.id === meter.apartmentId);
+                return {
+                    ...meter,
+                    typeOfServiceName: currentTOS.name,
+                    address: currentApartment.address,
+                    subscriberId: currentApartment.subscriberId
+                }
+            });
+        } else {
+            const meters = await this.meterReadingQueriesService.getMeterReadings(
+                MeterType.Individual, 15, 25, undefined, apartmentIds
+            ); // ИСПРАВИТЬ
 
-        const { typesOfService, units } = await this.commonService.getCommon();
+            const { typesOfService, units } = await this.commonService.getCommon();
 
-        return {
-            meters: apartments.map(apartment => {
+            return apartments.map(apartment => {
                 const currentMeters = meters.filter(meter => (meter.meter as IIndividualMeter).apartmentId === apartment.id);
                 return {
                     apartmentId: apartment.id,
@@ -104,13 +120,12 @@ export class MeterQueriesService {
                         };
                     })
                 }
-            })
-        };
+            });
+        }
     }
 
-    private async getMetersByMCId(managementCompanyId: number, meterType: MeterType) {
-        await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
-
+    private async getMetersByMCId(managementCompanyId: number, meterType: MeterType, isNotAllInfo: boolean):
+        Promise<IGetMetersByMCId[] | IGetMeters[]> {
         const { typesOfService } = await this.typeOfServiceService.getAll();
 
         switch (meterType) {
@@ -121,12 +136,23 @@ export class MeterQueriesService {
                 });
                 const houseIds = houses.map(obj => obj.id);
 
-                const meters = await this.meterReadingQueriesService.getMeterReadings(
-                    MeterType.General, 15, 25, houseIds, undefined
-                ); // ИСПРАВИТЬ
+                if (isNotAllInfo) {
+                    const meters = await this.getMetersByHouses(houseIds);
+                    return meters.map(meter => {
+                        const currentTOS = typesOfService.find(obj => obj.id === meter.typeOfServiceId);
+                        const currentHouse = houses.find(h => h.id === meter.houseId);
+                        return {
+                            ...meter.get(),
+                            typeOfServiceName: currentTOS.name,
+                            address: this.houseService.getAddress(currentHouse)
+                        };
+                    });
+                } else {
+                    const meters = await this.meterReadingQueriesService.getMeterReadings(
+                        MeterType.General, 15, 25, houseIds, undefined
+                    ); // ИСПРАВИТЬ
 
-                return {
-                    meters: meters.map(meter => {
+                    return meters.map(meter => {
                         const currentTypeOfService = typesOfService.find(obj => obj.id === meter.meter.typeOfServiceId);
                         const currentHouse = houses.find(obj => obj.id === (meter.meter as IGeneralMeter).houseId);
                         const currentReading = meter.reading.current;
@@ -141,8 +167,8 @@ export class MeterQueriesService {
                             currentReadAt: currentReading ? currentReading.readAt : undefined,
                             previousReadAt: previousReading ? previousReading.readAt : undefined,
                         };
-                    })
-                };
+                    });
+                }
             }
             case (MeterType.Individual): {
                 const { apartments } = await this.getApartmentsByUser(
@@ -152,12 +178,25 @@ export class MeterQueriesService {
                 ) as { apartments: IGetApartment[] };
                 const apartmentIds = apartments.map(obj => obj.id);
 
-                const meters = await this.meterReadingQueriesService.getMeterReadings(
-                    MeterType.Individual, 15, 25, undefined, apartmentIds
-                ); // ИСПРАВИТЬ
+                if (isNotAllInfo) {
+                    const meters = await this.getMetersByApartments(apartmentIds);
 
-                return {
-                    meters: meters.map(meter => {
+                    return meters.map(meter => {
+                        const currentTOS = typesOfService.find(obj => obj.id === meter.typeOfServiceId);
+                        const currentApartment = apartments.find(a => a.id === meter.apartmentId);
+
+                        return {
+                            ...meter.get(),
+                            typeOfServiceName: currentTOS.name,
+                            address: currentApartment.name
+                        };
+                    });
+                } else {
+                    const meters = await this.meterReadingQueriesService.getMeterReadings(
+                        MeterType.Individual, 15, 25, undefined, apartmentIds
+                    ); // ИСПРАВИТЬ
+
+                    return meters.map(meter => {
                         const currentTypeOfService = typesOfService.find(obj => obj.id === meter.meter.typeOfServiceId);
                         const currentApartment = apartments.find(obj => obj.id === (meter.meter as IIndividualMeter).apartmentId);
                         const currentReading = meter.reading.current;
@@ -172,8 +211,8 @@ export class MeterQueriesService {
                             currentReadAt: currentReading ? currentReading.readAt : undefined,
                             previousReadAt: previousReading ? previousReading.readAt : undefined,
                         };
-                    })
-                };
+                    });
+                }
             }
             default:
                 throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);
@@ -182,5 +221,13 @@ export class MeterQueriesService {
 
     private async getApartmentsByUser(userId: number, userRole: UserRole, isAllInfo: boolean) {
         return await this.apartmentService.getApartmentsByUser({ userId, userRole, isAllInfo });
+    }
+
+    private async getMetersByApartments(apartmentIds: number[]) {
+        return await this.individualMeterRepository.findByApartments(apartmentIds);
+    }
+
+    private async getMetersByHouses(houseIds: number[]) {
+        return await this.generalMeterRepository.findManyByHouses(houseIds);
     }
 }

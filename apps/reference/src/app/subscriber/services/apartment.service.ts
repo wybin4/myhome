@@ -61,7 +61,7 @@ export class ApartmentService {
 	async getApartmentsByUser({ userId, userRole, isAllInfo }: ReferenceGetApartmentsByUser.Request): Promise<ReferenceGetApartmentsByUser.Response> {
 		if (isAllInfo) {
 			await checkUser(this.rmqService, userId, userRole);
-			const apartments = await this.apartmentRepository.findByUser(userId, userRole);
+			const apartments = await this.apartmentRepository.findByUserAll(userId, userRole);
 
 			return {
 				apartments: apartments.map(apartment => {
@@ -70,11 +70,13 @@ export class ApartmentService {
 						case UserRole.ManagementCompany:
 							return {
 								...apartment.get(),
+								subscriberId: 0,
 								address: currentHouse.getAddress(),
 							};
 						case UserRole.Owner:
 							return {
 								...apartment.get(),
+								subscriberId: apartment.subscriber.id,
 								address: `${currentHouse.getAddress()}, кв. ${apartment.apartmentNumber}`,
 							};
 					}

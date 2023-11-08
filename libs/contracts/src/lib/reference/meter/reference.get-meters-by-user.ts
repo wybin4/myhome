@@ -1,4 +1,4 @@
-import { IsNumber, Validate } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, Validate } from 'class-validator';
 import { IMeter, MeterType, UserRole } from '@myhome/interfaces';
 import { IsValidEnumValue } from '../../enum.validator';
 
@@ -14,10 +14,14 @@ export namespace ReferenceGetMetersByUser {
 
         @Validate(IsValidEnumValue, [MeterType])
         meterType!: MeterType;
+
+        @IsOptional()
+        @IsBoolean({ message: "Флаг должен быть правдой или ложью" })
+        isNotAllInfo?: boolean;
     }
 
     export class Response {
-        meters!: IGetMetersByMCId[] | IGetMeterByAIDs[];
+        meters!: IGetMetersByMCId[] | IGetMeterByAIDs[] | IGetMeters[];
     }
 }
 
@@ -51,4 +55,10 @@ export interface IGetMeterByAID {
     factoryNumber: string;
     verifiedAt: Date;
     issuedAt: Date;
+}
+
+export interface IGetMeters extends IMeter {
+    typeOfServiceName: string;
+    address: string;
+    subscriberId?: number;
 }

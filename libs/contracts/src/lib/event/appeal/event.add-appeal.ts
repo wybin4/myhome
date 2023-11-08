@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AppealData, AppealType, IAppealData } from '@myhome/interfaces';
-import { IsNumber, IsString, Validate, ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
+import { IsNumber, Validate, ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import { IsValidEnumValue } from '../../enum.validator';
 
 export namespace EventAddAppeal {
@@ -12,9 +12,6 @@ export namespace EventAddAppeal {
 
         @IsNumber({}, { message: "Id абонента должен быть числом" })
         subscriberId!: number;
-
-        @IsString()
-        createdAt!: string;
 
         @Validate(IsValidEnumValue, [AppealType])
         typeOfAppeal!: AppealType;

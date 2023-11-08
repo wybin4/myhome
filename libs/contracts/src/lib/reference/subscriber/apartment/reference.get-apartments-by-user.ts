@@ -1,5 +1,5 @@
 import { IApartment, UserRole } from '@myhome/interfaces';
-import { IsBoolean, IsNumber, Validate } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, Validate } from 'class-validator';
 import { IsValidEnumValue } from '../../../enum.validator';
 
 export namespace ReferenceGetApartmentsByUser {
@@ -12,6 +12,7 @@ export namespace ReferenceGetApartmentsByUser {
         @Validate(IsValidEnumValue, [UserRole])
         userRole!: UserRole;
 
+        @IsOptional()
         @IsBoolean({ message: "Флаг должен быть правдой или ложью" })
         isAllInfo!: boolean;
     }
@@ -27,4 +28,5 @@ export interface IGetApartment extends IApartment {
 
 export interface IGetApartmentWithInfo extends IApartment {
     address: string;
+    subscriberId: number;
 }

@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { AppealRepository } from "./appeal.repository";
 import { getSubscriber, checkUser, RMQException, INCORRECT_USER_ROLE, checkUsers, getSubscribersAllInfo, getSubscribersByOId, getApartment, getTypeOfService, getMeters, getMeter, getTypesOfService } from "@myhome/constants";
@@ -6,13 +6,17 @@ import { EventAddAppeal } from "@myhome/contracts";
 import { AppealEntity } from "./appeal.entity";
 import { AddIndividualMeterData, AppealType, IAppealData, IAppealEntity, IGetAppeal, IMeter, IMeterWithTypeOfService, ITypeOfService, MeterType, ServiceNotificationType, UserRole, VerifyIndividualMeterData } from "@myhome/interfaces";
 import { ServiceNotificationService } from "../notification/services/service-notification.service";
+import path from "path";
+import * as fs from "fs";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class AppealService {
     constructor(
         private readonly appealRepository: AppealRepository,
         private readonly rmqService: RMQService,
-        private readonly notificationService: ServiceNotificationService
+        private readonly notificationService: ServiceNotificationService,
+        private readonly configService: ConfigService
     ) { }
 
     public async getAppeals(userId: number, userRole: UserRole): Promise<{ appeals: IGetAppeal[] }> {
@@ -117,23 +121,31 @@ export class AppealService {
                 const data = dto.data as AddIndividualMeterData;
                 await getApartment(this.rmqService, data.apartmentId);
                 ({ typeOfService } = await getTypeOfService(this.rmqService, data.typeOfServiceId));
+
+                const fileName = await this.uploadAttachment(data.attachment);
+                data.attachment = fileName;
                 break;
             }
             case AppealType.VerifyIndividualMeter: {
                 const data = dto.data as VerifyIndividualMeterData;
                 const { meter } = await getMeter(this.rmqService, data.meterId, MeterType.Individual);
                 typeOfService = meter.typeOfService;
+
+                const fileName = await this.uploadAttachment(data.attachment);
+                data.attachment = fileName;
                 break;
             }
         }
+
 
         const newAppealEntity = new AppealEntity({
             managementCompanyId: dto.managementCompanyId,
             typeOfAppeal: dto.typeOfAppeal,
             subscriberId: dto.subscriberId,
-            createdAt: new Date(dto.createdAt),
+            createdAt: new Date(),
             data: JSON.stringify(dto.data),
         });
+
         const appeal = await this.appealRepository.create(newAppealEntity);
         const newAppeal: IAppealData = { ...appeal, data: dto.data };
 
@@ -194,4 +206,32 @@ export class AppealService {
         const year = date.getFullYear();
         return `${day}.${month}.${year}`;
     }
+
+    private async uploadAttachment(attachment: string) {
+        const buffer = Buffer.from(attachment, 'base64');
+        const uploadDirectory = this.configService.get("UPLOAD_DIRECTORY");
+        if (!fs.existsSync(uploadDirectory)) {
+            fs.mkdirSync(uploadDirectory);
+        }
+
+        const filename = `${Date.now()}.${this.getFileType(buffer)}`;
+        fs.writeFile(path.join(uploadDirectory, filename), buffer, (err) => {
+            if (err) {
+                throw new RMQException("Невозможно сохранить файл", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        });
+
+        return path.join(uploadDirectory, filename);
+    }
+
+    private getFileType(buffer: Buffer) {
+        if (buffer[0] === 0xFF && buffer[1] === 0xD8) {
+            return "jpeg";
+        } else if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
+            return "png";
+        } else {
+            return "unknown";
+        }
+    }
+
 }

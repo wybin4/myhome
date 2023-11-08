@@ -50,6 +50,7 @@ export class GeneralMeterEntity implements IGeneralMeter {
 
     public get(): IGeneralMeter {
         return {
+            id: this.id,
             typeOfServiceId: this.typeOfServiceId,
             houseId: this.houseId,
             factoryNumber: this.factoryNumber,

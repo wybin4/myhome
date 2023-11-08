@@ -24,12 +24,13 @@ export interface AddIndividualMeterData extends AppealData {
     factoryNumber: string;
     issuedAt: Date;
     verifiedAt: Date;
+    attachment: string;
 }
 
 export interface VerifyIndividualMeterData extends AppealData {
     meterId: number;
     verifiedAt: Date;
-    attachment: unknown;
+    attachment: string;
 }
 
 export interface ProblemOrQuestionData extends AppealData {

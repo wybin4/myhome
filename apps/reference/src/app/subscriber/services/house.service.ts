@@ -62,4 +62,12 @@ export class HouseService {
 		};
 	}
 
+	public getAddress(house: IHouse, withCity = true): string {
+		if (withCity) {
+			return `${house.city}, ${house.street} ${house.houseNumber}`;
+		} else {
+			return `${house.street} д. ${house.houseNumber}`;
+		}
+	}
+
 }

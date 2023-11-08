@@ -14,9 +14,6 @@ export class AddAppealDto {
     @IsNumber()
     subscriberId: number;
 
-    @IsString()
-    createdAt: string;
-
     @IsOptional()
     @IsString()
     status?: AppealStatus;

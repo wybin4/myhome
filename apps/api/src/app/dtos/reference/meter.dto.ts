@@ -1,5 +1,5 @@
 import { MeterType, RequireHomeOrApartment, UserRole } from "@myhome/interfaces";
-import { IsNumber, IsString, IsEnum } from "class-validator";
+import { IsNumber, IsString, IsEnum, IsBoolean, IsOptional } from "class-validator";
 
 export class AddMeterDto {
     @IsNumber()
@@ -33,6 +33,10 @@ export class GetMetersByUserDto {
 
     @IsEnum(MeterType)
     meterType!: MeterType;
+
+    @IsOptional()
+    @IsBoolean()
+    isNotAllInfo?: boolean;
 }
 
 export class UpdateMeterDto {

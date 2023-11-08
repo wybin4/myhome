@@ -14,9 +14,14 @@ import { isNumber } from 'class-validator';
 import * as fs from "fs";
 import * as path from "path";
 import { promisify } from 'util';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PdfService {
+    constructor(
+        private readonly configService: ConfigService
+    ) { }
+
     private arialBold = join(__dirname, '.', 'assets', 'Arial-Bold.ttf');
     private arial = join(__dirname, '.', 'assets', 'Arial.ttf');
 
@@ -275,7 +280,7 @@ export class PdfService {
 
     private async uploadPdf(pdfBuffer: Buffer, uploadDirectory: string) {
 
-        const filename = `pdf_${Date.now()}.pdf`;
+        const filename = `${Date.now()}.pdf`;
         fs.writeFile(path.join(uploadDirectory, filename), pdfBuffer, (err) => {
             if (err) {
                 throw new RMQException("Невозможно сохранить файл", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -296,7 +301,7 @@ export class PdfService {
         const qrs = await this.getQRS(subscribers, SPDs);
 
         const files: { subscriberId: number; fileName: string }[] = [];
-        const uploadDirectory = './uploads';
+        const uploadDirectory = this.configService.get("UPLOAD_DIRECTORY");
         if (!fs.existsSync(uploadDirectory)) {
             fs.mkdirSync(uploadDirectory);
         }
@@ -391,7 +396,7 @@ export class PdfService {
                 doc.end();
             });
 
-            const uploadDirectory = './uploads';
+            const uploadDirectory = this.configService.get("UPLOAD_DIRECTORY");
             if (!fs.existsSync(uploadDirectory)) {
                 fs.mkdirSync(uploadDirectory);
             }

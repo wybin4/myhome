@@ -50,6 +50,7 @@ export class IndividualMeterEntity implements IIndividualMeter {
 
     public get(): IIndividualMeter {
         return {
+            id: this.id,
             typeOfServiceId: this.typeOfServiceId,
             apartmentId: this.apartmentId,
             factoryNumber: this.factoryNumber,

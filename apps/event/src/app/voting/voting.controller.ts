@@ -16,7 +16,7 @@ export class VotingController {
         try {
             return this.votingService.addVoting(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 
@@ -26,7 +26,7 @@ export class VotingController {
         try {
             return this.votingService.updateVoting(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 

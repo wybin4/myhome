@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { AppealRepository } from "./appeal.repository";
-import { getSubscriber, checkUser, RMQException, INCORRECT_USER_ROLE, checkUsers, getSubscribersAllInfo, getSubscribersByOId, getApartment, getTypeOfService, getMeters, getMeter, getTypesOfService } from "@myhome/constants";
-import { EventAddAppeal } from "@myhome/contracts";
+import { getSubscriber, checkUser, RMQException, INCORRECT_USER_ROLE, checkUsers, getSubscribersAllInfo, getSubscribersByOId, getApartment, getTypeOfService, getMeters, getMeter, getTypesOfService, APPEAL_NOT_EXIST, addMeter, updateMeter } from "@myhome/constants";
+import { EventAddAppeal, EventUpdateAppeal } from "@myhome/contracts";
 import { AppealEntity } from "./appeal.entity";
-import { AddIndividualMeterData, AppealType, IAppealEntity, IGetAppeal, IMeter, IMeterWithTypeOfService, ITypeOfService, MeterType, ServiceNotificationType, UserRole, VerifyIndividualMeterData } from "@myhome/interfaces";
+import { AddIndividualMeterData, AppealStatus, AppealType, IAppealEntity, IGetAppeal, IMeter, IMeterWithTypeOfService, ITypeOfService, MeterType, ServiceNotificationType, UserRole, VerifyIndividualMeterData } from "@myhome/interfaces";
 import { ServiceNotificationService } from "../notification/services/service-notification.service";
 import path from "path";
 import * as fs from "fs";
@@ -51,7 +51,7 @@ export class AppealService {
                             return {
                                 name: currentMC.name,
                                 ...appeal,
-                                data: this.getText(appeal, currentMeter, currentTOS).text,
+                                data: this.getText(appeal, "get", currentMeter, currentTOS).text,
                                 attachment: currentFile ? currentFile.file : undefined
                             };
                         })
@@ -83,7 +83,7 @@ export class AppealService {
                                 personalAccount: currentSubscriber.personalAccount,
                                 name: currentSubscriber.name,
                                 ...appeal,
-                                data: this.getText(appeal, currentMeter, currentTOS).text,
+                                data: this.getText(appeal, "get", currentMeter, currentTOS).text,
                                 attachment: currentFile ? currentFile.file : undefined
                             };
                         })
@@ -145,7 +145,7 @@ export class AppealService {
                 appeal: {
                     name: mc.name,
                     ...appeal,
-                    data: this.getText(appeal, undefined, typeOfService).text,
+                    data: this.getText(appeal, "add", undefined, typeOfService).text,
                     attachment
                 }
             };
@@ -178,6 +178,56 @@ export class AppealService {
         return await getResult(dto, meter, typeOfService, realAttachment);
     }
 
+    public async updateAppeal(dto: EventUpdateAppeal.Request): Promise<EventUpdateAppeal.Response> {
+        if (dto.status === AppealStatus.Processing) {
+            throw new RMQException("Вы не можете изменить статус обращения на обработку", HttpStatus.BAD_REQUEST);
+        }
+
+        const existed = await this.appealRepository.findById(dto.id);
+        if (!existed) {
+            throw new RMQException(APPEAL_NOT_EXIST.message(dto.id), APPEAL_NOT_EXIST.status);
+        }
+
+        if (existed.status !== AppealStatus.Processing) {
+            throw new RMQException("Вы не можете изменить статус закрытого или обработанного обращения", HttpStatus.BAD_REQUEST);
+        }
+
+        const appealEntity = new AppealEntity(existed).update(dto.status);
+        await this.appealRepository.update(appealEntity);
+        const appeal = appealEntity.get();
+
+        if (dto.status === AppealStatus.Closed) {
+            switch (appealEntity.typeOfAppeal) {
+                case AppealType.AddIndividualMeter: {
+                    const data = (appeal.data as AddIndividualMeterData);
+                    await addMeter(this.rmqService,
+                        {
+                            ...data,
+                            verifiedAt: String(data.verifiedAt),
+                            issuedAt: String(data.issuedAt),
+                            meterType: MeterType.Individual
+                        }
+                    );
+                    break;
+                }
+                case AppealType.VerifyIndividualMeter: {
+                    const data = (appeal.data as VerifyIndividualMeterData);
+                    const id = data.meterId;
+                    await updateMeter(this.rmqService,
+                        {
+                            id,
+                            verifiedAt: String(data.verifiedAt),
+                            meterType: MeterType.Individual
+                        }
+                    );
+                }
+            }
+        }
+
+        await this.sendNotification(appealEntity, "update");
+
+        return { appeal };
+    }
     private async createAppealEntity(
         dtoAppeal: EventAddAppeal.Request,
         meter?: IMeter,
@@ -192,18 +242,37 @@ export class AppealService {
         });
 
         const appeal = await this.appealRepository.create(newAppealEntity);
-        await this.sendNotification(appeal, meter, typeOfService);
+        await this.sendNotification(appeal, "add", meter, typeOfService);
 
         return appeal;
     }
 
-    private getText(appeal: IAppealEntity, meter?: IMeter, typeOfService?: ITypeOfService) {
+    private getText(appeal: IAppealEntity, type: "add" | "update" | "get", meter?: IMeter, typeOfService?: ITypeOfService) {
         const data = JSON.parse(appeal.data);
+        let typeInText = "";
+        switch (type) {
+            case "add":
+                typeInText = "Отправлено";
+                break;
+            case "update": {
+                switch (appeal.status) {
+                    case AppealStatus.Closed: {
+                        typeInText = "Закрыто";
+                        break;
+                    }
+                    case AppealStatus.Rejected: {
+                        typeInText = "Отклонено";
+                        break;
+                    }
+                }
+                typeInText = "Изменено";
+            }
+        }
 
         switch (appeal.typeOfAppeal) {
             case AppealType.AddIndividualMeter: {
                 return {
-                    title: `Отправлено обращение №${appeal.id}`,
+                    title: `${typeInText} обращение №${appeal.id}`,
                     description: "Добавление счётчика",
                     text: typeOfService ? `Прошу ввести ИПУ в эксплуатацию после его замены. ИПУ на услугу "${typeOfService.name}". Заводской номер - ${data.factoryNumber}. Дата поверки - ${this.formatDate(new Date(data.verifiedAt))}.` :
                         ""
@@ -211,28 +280,28 @@ export class AppealService {
             }
             case AppealType.VerifyIndividualMeter: {
                 return {
-                    title: `Отправлено обращение №${appeal.id}`,
+                    title: `${typeInText} обращение №${appeal.id}`,
                     description: "Поверка счётчика",
                     text: meter && typeOfService ? `Прошу ввести ИПУ в эксплуатацию после проведения его поверки. ИПУ на услугу "${typeOfService.name}". Заводской номер - ${meter.factoryNumber}. Дата поверки - ${this.formatDate(new Date(meter.verifiedAt))}.` : ""
                 };
             }
             case AppealType.ProblemOrQuestion:
                 return {
-                    title: `Отправлено обращение №${appeal.id}`,
+                    title: `${typeInText} обращение №${appeal.id}`,
                     description: "Проблема или вопрос",
                     text: data.text
                 };
             case AppealType.Claim:
                 return {
-                    title: `Отправлено обращение №${appeal.id}`,
+                    title: `${typeInText} обращение №${appeal.id}`,
                     description: "Другое",
                     text: data.text
                 };
         }
     }
 
-    private async sendNotification(appeal: IAppealEntity, meter?: IMeter, typeOfService?: ITypeOfService) {
-        const { title, description, text } = this.getText(appeal, meter, typeOfService);
+    private async sendNotification(appeal: IAppealEntity, type: "add" | "update", meter?: IMeter, typeOfService?: ITypeOfService,) {
+        const { title, description, text } = this.getText(appeal, type, meter, typeOfService);
         await this.notificationService.addServiceNotification({
             userId: appeal.managementCompanyId,
             userRole: UserRole.ManagementCompany,

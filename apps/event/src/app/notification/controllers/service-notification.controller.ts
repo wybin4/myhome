@@ -16,7 +16,7 @@ export class ServiceNotificationController {
         try {
             return this.serviceNotificationService.getServiceNotifications(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 
@@ -26,7 +26,7 @@ export class ServiceNotificationController {
         try {
             return this.serviceNotificationService.addServiceNotification(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 
@@ -36,7 +36,7 @@ export class ServiceNotificationController {
         try {
             return this.serviceNotificationService.addServiceNotifications(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 
@@ -46,7 +46,7 @@ export class ServiceNotificationController {
         try {
             return this.serviceNotificationService.updateServiceNotification(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 
@@ -56,7 +56,7 @@ export class ServiceNotificationController {
         try {
             return this.serviceNotificationService.updateAllServiceNotifications(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 

@@ -20,3 +20,11 @@ export class AddAppealDto {
 
     data: AppealData;
 }
+
+export class UpdateAppealDto {
+    @IsNumber()
+    id!: number;
+
+    @IsEnum(AppealStatus)
+    status!: AppealStatus;
+}

@@ -1,12 +1,12 @@
 import { BadRequestException, Body, Controller, HttpCode, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { EventAddAppeal } from '@myhome/contracts';
+import { EventAddAppeal, EventUpdateAppeal } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
 import { FileInterceptor } from "@nestjs/platform-express";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Multer } from 'multer';
 import { AddIndividualMeterData, AppealType, VerifyIndividualMeterData } from '@myhome/interfaces';
-import { AddAppealDto } from '../../dtos/event/appeal.dto';
+import { AddAppealDto, UpdateAppealDto } from '../../dtos/event/appeal.dto';
 
 @Controller('appeal')
 export class AppealController {
@@ -49,6 +49,19 @@ export class AppealController {
                 EventAddAppeal.Request,
                 EventAddAppeal.Response
             >(EventAddAppeal.topic, dto);
+        } catch (e) {
+            CatchError(e);
+        }
+    }
+
+    @HttpCode(200)
+    @Post('update-appeal')
+    async updateAppeal(@Body() dto: UpdateAppealDto) {
+        try {
+            return await this.rmqService.send<
+                EventUpdateAppeal.Request,
+                EventUpdateAppeal.Response
+            >(EventUpdateAppeal.topic, dto);
         } catch (e) {
             CatchError(e);
         }

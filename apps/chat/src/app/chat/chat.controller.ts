@@ -16,7 +16,7 @@ export class ChatController {
         try {
             return this.chatService.getChats(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 
@@ -26,7 +26,7 @@ export class ChatController {
         try {
             return this.chatService.getReceivers(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 
@@ -36,7 +36,7 @@ export class ChatController {
         try {
             return this.chatService.addChat(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 
@@ -46,7 +46,7 @@ export class ChatController {
         try {
             return this.chatService.addMessage(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 
@@ -56,7 +56,7 @@ export class ChatController {
         try {
             return this.chatService.readMessages(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 }

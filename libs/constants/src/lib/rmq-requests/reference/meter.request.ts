@@ -1,9 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ReferenceGetIndividualMeterReadings, ReferenceGetMeterReadingsByHID, ReferenceGetMeters } from "@myhome/contracts";
+import { ReferenceAddMeter, ReferenceGetIndividualMeterReadings, ReferenceGetMeterReadingsByHID, ReferenceGetMeters, ReferenceUpdateMeter } from "@myhome/contracts";
 import { MeterType } from "@myhome/interfaces";
 import { RMQService } from "nestjs-rmq";
 import { RMQException } from "../../exception";
+
+export async function addMeter(rmqService: RMQService, dto: ReferenceAddMeter.Request) {
+    try {
+        return await rmqService.send
+            <
+                ReferenceAddMeter.Request,
+                ReferenceAddMeter.Response
+            >
+            (ReferenceAddMeter.topic, dto);
+    } catch (e: any) {
+        throw new RMQException(e.message, e.status);
+    }
+}
+
+export async function updateMeter(rmqService: RMQService, dto: ReferenceUpdateMeter.Request) {
+    try {
+        return await rmqService.send
+            <
+                ReferenceUpdateMeter.Request,
+                ReferenceUpdateMeter.Response
+            >
+            (ReferenceUpdateMeter.topic, dto);
+    } catch (e: any) {
+        throw new RMQException(e.message, e.status);
+    }
+}
 
 export async function getMeters(rmqService: RMQService, meterIds: number[], meterType: MeterType) {
     try {

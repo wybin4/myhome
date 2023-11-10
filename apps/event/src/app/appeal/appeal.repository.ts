@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { AppealEntity } from './appeal.entity';
-import { AppealStatus } from '@myhome/interfaces';
 
 @Injectable()
 export class AppealRepository {
@@ -27,21 +26,9 @@ export class AppealRepository {
         return await this.appealRepository.find({ where: { subscriberId: In(subscriberIds) } });
     }
 
-    async close(id: number): Promise<AppealEntity | undefined> {
-        const appeal = await this.findById(id);
-        if (appeal) {
-            appeal.status = AppealStatus.Closed;
-            return await this.appealRepository.save(appeal);
-        }
-        return undefined;
+    async update(appeal: AppealEntity) {
+        await this.appealRepository.update(appeal.id, appeal);
+        return await this.findById(appeal.id);
     }
 
-    async reject(id: number): Promise<AppealEntity | undefined> {
-        const appeal = await this.findById(id);
-        if (appeal) {
-            appeal.status = AppealStatus.Rejected;
-            return await this.appealRepository.save(appeal);
-        }
-        return undefined;
-    }
 }

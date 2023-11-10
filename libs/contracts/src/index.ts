@@ -46,6 +46,7 @@ export * from './lib/reference/common/reference.get-common';
 export * from './lib/email/email.register';
 
 export * from './lib/event/appeal/event.add-appeal';
+export * from './lib/event/appeal/event.update-appeal';
 
 export * from './lib/chat/chat.add-chat';
 export * from './lib/chat/chat.get-chats';

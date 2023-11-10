@@ -41,6 +41,7 @@ export class AppealEntity implements IAppealEntity {
     }
 
     public get() {
+        const data = JSON.parse(this.data);
         return {
             id: this.id,
             managementCompanyId: this.managementCompanyId,
@@ -48,17 +49,12 @@ export class AppealEntity implements IAppealEntity {
             subscriberId: this.subscriberId,
             createdAt: this.createdAt,
             status: this.status,
-            data: this.data,
+            data: data
         }
     }
 
-    public async close() {
-        this.status = AppealStatus.Closed;
-        return this;
-    }
-
-    public async reject() {
-        this.status = AppealStatus.Rejected;
+    public update(status: AppealStatus) {
+        this.status = status;
         return this;
     }
 

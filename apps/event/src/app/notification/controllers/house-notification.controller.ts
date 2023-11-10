@@ -16,7 +16,7 @@ export class HouseNotificationController {
         try {
             return this.houseNotificationService.addHouseNotification(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 

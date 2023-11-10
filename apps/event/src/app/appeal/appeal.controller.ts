@@ -1,6 +1,6 @@
 import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
-import { EventAddAppeal } from '@myhome/contracts';
+import { EventAddAppeal, EventUpdateAppeal } from '@myhome/contracts';
 import { AppealService } from './appeal.service';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
@@ -14,9 +14,19 @@ export class AppealController {
     @RMQRoute(EventAddAppeal.topic)
     async addAppeal(@Body() dto: EventAddAppeal.Request): Promise<EventAddAppeal.Response> {
         try {
-            return this.appealService.addAppeal(dto);
+            return await this.appealService.addAppeal(dto);
         } catch (e) {
-            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.code);
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
+    }
+
+    @RMQValidate()
+    @RMQRoute(EventUpdateAppeal.topic)
+    async updateAppeal(@Body() dto: EventUpdateAppeal.Request): Promise<EventUpdateAppeal.Response> {
+        try {
+            return await this.appealService.updateAppeal(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
     }
 }

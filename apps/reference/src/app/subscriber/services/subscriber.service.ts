@@ -6,7 +6,7 @@ import { ApartmentRepository } from "../repositories/apartment.repository";
 import { HouseRepository } from "../repositories/house.repository";
 import { SubscriberRepository } from "../repositories/subscriber.repository";
 import { RMQService } from "nestjs-rmq";
-import { ReferenceAddSubscriber, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersByUser, ReferenceGetOwnersByMCId, ReferenceGetReceiversByOwner, ReferenceGetSubscribers } from "@myhome/contracts";
+import { ReferenceAddSubscriber, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersByUser, ReferenceGetUsersByAnotherRole, ReferenceGetReceiversByOwner, ReferenceGetSubscribers } from "@myhome/contracts";
 
 export interface IApartmentAndSubscriber {
 	subscriberId: number;
@@ -77,7 +77,7 @@ export class SubscriberService {
 							id: currentSubscriber.id,
 							houseId: house.id,
 							name: currentOwner.name,
-							address: house.getAddress(false) + ', кв. ' + apartment.apartmentNumber,
+							address: apartment.getAddress(house, false),
 							personalAccount: currentSubscriber.personalAccount,
 							apartmentArea: apartment.totalArea,
 							livingArea: apartment.livingArea,
@@ -105,7 +105,7 @@ export class SubscriberService {
 						id: subscriber.id,
 						houseId: currentHouse.id,
 						name: currentOwner.name,
-						address: currentHouse.getAddress() + ', кв. ' + currentApart.apartmentNumber,
+						address: currentApart.getAddress(currentHouse),
 						personalAccount: subscriber.personalAccount,
 						apartmentArea: currentApart.totalArea,
 						livingArea: currentApart.livingArea,
@@ -162,7 +162,7 @@ export class SubscriberService {
 							ownerName: currentOwner.name,
 							houseId: currentHouse.id,
 							houseName: currentHouse.getAddress(),
-							apartmentName: `${currentHouse.getAddress()}, кв. ${currentApart.apartmentNumber}`
+							apartmentName: currentApart.getAddress(currentHouse)
 						};
 					})
 				};
@@ -170,10 +170,28 @@ export class SubscriberService {
 		}
 	}
 
-	async getOwnersByMCId(managementCompanyId: number): Promise<ReferenceGetOwnersByMCId.Response> {
-		const subscribers = await this.subscriberRepository.findByUser(managementCompanyId, UserRole.ManagementCompany);
-		const ownerIds = subscribers.map(s => s.ownerId);
-		return { ownerIds: ownerIds }
+	async getUsersByAnotherRole(dto: ReferenceGetUsersByAnotherRole.Request):
+		Promise<ReferenceGetUsersByAnotherRole.Response> {
+		const subscribers = await this.subscriberRepository.findByUserByAnotherRole(dto.userId, dto.userRole);
+		switch (dto.userRole) {
+			case UserRole.ManagementCompany: {
+				const anotherUserIds = subscribers.map(s => s.ownerId);
+				return { anotherUserIds };
+			}
+			case UserRole.Owner: {
+				return {
+					anotherUserIds: subscribers.map(subscriber => {
+						return {
+							anotherUserId: subscriber.apartment.house.managementCompanyId,
+							subscriber: {
+								id: subscriber.id,
+								address: subscriber.apartment.getAddress(subscriber.apartment.house, false)
+							}
+						};
+					})
+				};
+			}
+		}
 	}
 
 	async getReceiversByOwner(ownerId: number): Promise<ReferenceGetReceiversByOwner.Response> {

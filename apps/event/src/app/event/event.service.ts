@@ -19,15 +19,27 @@ export class EventService {
 
         for (const event of dto.events) {
             switch (event) {
-                case EventType.Appeal:
-                    ({ appeals: events.appeals } = await this.appealService.getAppeals(dto.userId, dto.userRole));
+                case EventType.Appeal: {
+                    const data = await this.appealService.getAppeals(dto.userId, dto.userRole);
+                    if (data) {
+                        events.appeals = data.appeals;
+                    }
                     break;
-                case EventType.Voting:
-                    ({ votings: events.votings } = await this.votingService.getVotings(dto.userId, dto.userRole));
+                }
+                case EventType.Voting: {
+                    const data = await this.votingService.getVotings(dto.userId, dto.userRole);
+                    if (data) {
+                        events.votings = data.votings;
+                    }
                     break;
-                case EventType.Notification:
-                    ({ notifications: events.notifications } = await this.notificationService.getHouseNotifications(dto.userId, dto.userRole));
+                }
+                case EventType.Notification: {
+                    const data = await this.notificationService.getHouseNotifications(dto.userId, dto.userRole);
+                    if (data) {
+                        events.notifications = data.notifications;
+                    }
                     break;
+                }
                 default:
                     throw new RMQException("Неверно выбран тип события", HttpStatus.BAD_REQUEST);
             }

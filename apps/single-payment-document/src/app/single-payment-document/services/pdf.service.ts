@@ -263,10 +263,13 @@ export class PdfService {
     }
 
     async readFileToBuffer(files: { fileName: string; id: number }[]) {
+        const uploadDirectory = this.configService.get("UPLOAD_DIRECTORY");
+
         const readFileAsync = promisify(fs.readFile);
         const getStatAsync = promisify(fs.stat);
         const promises = files.map(async (file) => {
             try {
+                file.fileName = path.join(uploadDirectory, file.fileName);
                 const buffer = await readFileAsync(file.fileName);
                 const stat = await getStatAsync(file.fileName);
                 return { id: file.id, buffer, size: stat.size };

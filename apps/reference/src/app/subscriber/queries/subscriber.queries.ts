@@ -2,7 +2,7 @@ import { Body, Controller } from '@nestjs/common';
 import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 import { SubscriberService } from '../services/subscriber.service';
-import { ReferenceGetSubscribersByHouses, ReferenceGetSubscribersByUser, ReferenceGetSubscribers, ReferenceGetOwnersByMCId, ReferenceGetReceiversByOwner } from '@myhome/contracts';
+import { ReferenceGetSubscribersByHouses, ReferenceGetSubscribersByUser, ReferenceGetSubscribers, ReferenceGetUsersByAnotherRole, ReferenceGetReceiversByOwner } from '@myhome/contracts';
 
 @Controller("subscriber")
 export class SubscriberQueries {
@@ -41,10 +41,10 @@ export class SubscriberQueries {
     }
 
     @RMQValidate()
-    @RMQRoute(ReferenceGetOwnersByMCId.topic)
-    async getOwnersByMCId(@Body() { managementCompanyId }: ReferenceGetOwnersByMCId.Request) {
+    @RMQRoute(ReferenceGetUsersByAnotherRole.topic)
+    async getUsersByAnotherRole(@Body() dto: ReferenceGetUsersByAnotherRole.Request) {
         try {
-            return await this.subscriberService.getOwnersByMCId(managementCompanyId);
+            return await this.subscriberService.getUsersByAnotherRole(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post/*, UseGuards*/ } from '@nestjs/common';
 // import { JWTAuthGuard } from '../guards/jwt.guard';
 import { RMQService } from 'nestjs-rmq';
-import { AccountGetOwnersByMCId, AccountUserInfo } from '@myhome/contracts';
-import { GetOwnersByMCIdDto, UserInfoDto } from '../../dtos/account/user.dto';
+import { AccountGetUsersByAnotherRole, AccountUserInfo } from '@myhome/contracts';
+import { GetUsersByAnotherRoleDto, UserInfoDto } from '../../dtos/account/user.dto';
 import { CatchError } from '../../error.filter';
 
 @Controller('user')
@@ -26,13 +26,13 @@ export class UserController {
   }
 
   @HttpCode(200)
-  @Post('get-owners-by-mcid')
-  async getOwnersByMCId(@Body() dto: GetOwnersByMCIdDto) {
+  @Post('get-users-by-another-role')
+  async getOwnersByMCId(@Body() dto: GetUsersByAnotherRoleDto) {
     try {
       return await this.rmqService.send<
-        AccountGetOwnersByMCId.Request,
-        AccountGetOwnersByMCId.Response
-      >(AccountGetOwnersByMCId.topic, dto);
+        AccountGetUsersByAnotherRole.Request,
+        AccountGetUsersByAnotherRole.Response
+      >(AccountGetUsersByAnotherRole.topic, dto);
     } catch (e) {
       CatchError(e);
     }

@@ -16,6 +16,7 @@ export interface IGetAppeal extends IAppealEntity {
     name: string;
     address?: string;
     personalAccount?: string;
+    attachment?: string;
 }
 
 export interface IGetVoting extends IVoting {

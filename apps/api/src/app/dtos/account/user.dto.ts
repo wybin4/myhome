@@ -1,15 +1,18 @@
 import { UserRole } from '@myhome/interfaces';
-import { IsNumber, IsString } from 'class-validator';
+import { IsEnum, IsNumber } from 'class-validator';
 
 export class UserInfoDto {
     @IsNumber()
     id: number;
 
-    @IsString()
+    @IsEnum(UserRole)
     role: UserRole;
 }
 
-export class GetOwnersByMCIdDto {
+export class GetUsersByAnotherRoleDto {
     @IsNumber()
-    managementCompanyId: number;
+    userId: number;
+
+    @IsEnum(UserRole)
+    userRole: UserRole;
 }

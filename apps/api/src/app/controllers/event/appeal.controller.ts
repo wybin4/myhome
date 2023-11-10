@@ -6,6 +6,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Multer } from 'multer';
 import { AddIndividualMeterData, AppealType, VerifyIndividualMeterData } from '@myhome/interfaces';
+import { AddAppealDto } from '../../dtos/event/appeal.dto';
 
 @Controller('appeal')
 export class AppealController {
@@ -14,13 +15,13 @@ export class AppealController {
     @UseInterceptors(FileInterceptor("file"))
     @HttpCode(201)
     @Post('add-appeal')
-    async addAppeal(@UploadedFile() file: Express.Multer.File, @Body() dto: EventAddAppeal.Request) {
+    async addAppeal(@UploadedFile() file: Express.Multer.File, @Body() dto: AddAppealDto) {
         if (
             dto.typeOfAppeal === AppealType.AddIndividualMeter ||
             dto.typeOfAppeal === AppealType.VerifyIndividualMeter
         ) {
             if (!file || !file.mimetype.includes('image')) {
-                throw new BadRequestException('Неверный формат файла')
+                throw new BadRequestException('Неверный формат вложения')
             }
             if (dto.typeOfAppeal === AppealType.AddIndividualMeter) {
                 (dto.data as AddIndividualMeterData).attachment = file.buffer.toString('base64');

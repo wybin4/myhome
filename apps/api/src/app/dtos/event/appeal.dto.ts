@@ -1,4 +1,4 @@
-import { AppealStatus, AppealType, IAppealEntity } from "@myhome/interfaces";
+import { AppealData, AppealStatus, AppealType } from "@myhome/interfaces";
 import { IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class AddAppealDto {
@@ -18,5 +18,5 @@ export class AddAppealDto {
     @IsString()
     status?: AppealStatus;
 
-    data: IAppealEntity;
+    data: AppealData;
 }

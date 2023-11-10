@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AppealData, AppealType, IAppealData } from '@myhome/interfaces';
+import { AppealData, AppealType, IGetAppeal } from '@myhome/interfaces';
 import { IsNumber, Validate, ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import { IsValidEnumValue } from '../../enum.validator';
 
@@ -21,7 +21,7 @@ export namespace EventAddAppeal {
     }
 
     export class Response {
-        appeal!: IAppealData;
+        appeal!: IGetAppeal;
     }
 }
 
@@ -45,6 +45,7 @@ export function IsDataValidBasedOnTypeOfAppeal(validationOptions?: ValidationOpt
                                     && typeof data.factoryNumber === 'string'
                                     && new Date(data.verifiedAt) instanceof Date
                                     && new Date(data.issuedAt) instanceof Date
+                                    && data.attachment !== undefined;
                             case AppealType.VerifyIndividualMeter:
                                 return typeof data.meterId === 'number'
                                     && new Date(data.verifiedAt) instanceof Date
@@ -81,6 +82,9 @@ export function IsDataValidBasedOnTypeOfAppeal(validationOptions?: ValidationOpt
                                 }
                                 if (!(new Date(data.issuedAt) instanceof Date)) {
                                     errors.push("Дата окончания поверки должна быть датой");
+                                }
+                                if (data.attachment === undefined) {
+                                    errors.push("Вложение отсутствует");
                                 }
                                 return "Неверные данные для обращения по поводу добавления счётчика: ".concat(errors.join("; "));
                             case AppealType.VerifyIndividualMeter:

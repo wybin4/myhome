@@ -66,6 +66,25 @@ export class SubscriberRepository {
         }
     }
 
+    async findByUserByAnotherRole(userId: number, userRole: UserRole) {
+        switch (userRole) {
+            case UserRole.ManagementCompany:
+                return await this.subscriberRepository.createQueryBuilder('subscriber')
+                    .innerJoinAndSelect('subscriber.apartment', 'apartment')
+                    .innerJoinAndSelect('apartment.house', 'house')
+                    .where('house.managementCompanyId = :managementCompanyId', { managementCompanyId: userId })
+                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
+                    .getMany();
+            case UserRole.Owner:
+                return await this.subscriberRepository.createQueryBuilder('subscriber')
+                    .innerJoinAndSelect('subscriber.apartment', 'apartment')
+                    .innerJoinAndSelect('apartment.house', 'house')
+                    .where('subscriber.ownerId = :ownerId', { ownerId: userId })
+                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
+                    .getMany();
+        }
+    }
+
     async findByMCIds(managementCompanyIds: number[]) {
         return await this.subscriberRepository.createQueryBuilder('subscriber')
             .innerJoinAndSelect('subscriber.apartment', 'apartment')

@@ -40,7 +40,7 @@ export class ApartmentService {
 					return {
 						...apartment.get(),
 						subscriberId: currentSubscriber.id,
-						address: `${currentHouse.getAddress()}, кв. ${apartment.apartmentNumber}`
+						address: apartment.getAddress(currentHouse)
 					};
 				})
 			};
@@ -77,7 +77,7 @@ export class ApartmentService {
 							return {
 								...apartment.get(),
 								subscriberId: apartment.subscriber.id,
-								address: `${currentHouse.getAddress()}, кв. ${apartment.apartmentNumber}`,
+								address: apartment.getAddress(currentHouse),
 							};
 					}
 				})

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IGetSubscribersByMCId, ISubscriberAllInfo, ReferenceGetOwnersByMCId, ReferenceGetReceiversByOwner, ReferenceGetSubscribers, ReferenceGetSubscribersByUser } from "@myhome/contracts";
+import { IGetSubscribersByMCId, ISubscriberAllInfo, ReferenceGetUsersByAnotherRole, ReferenceGetReceiversByOwner, ReferenceGetSubscribers, ReferenceGetSubscribersByUser } from "@myhome/contracts";
 import { RMQException } from "../../exception";
 import { RMQService } from 'nestjs-rmq';
 import { ISubscriber, UserRole } from "@myhome/interfaces";
@@ -70,14 +70,14 @@ export async function getReceiversByOwner(rmqService: RMQService, ownerId: numbe
     }
 }
 
-export async function getOwnerIdsByMCId(rmqService: RMQService, managementCompanyId: number) {
+export async function getUserIdsByAnotherRoleId(rmqService: RMQService, userId: number, userRole: UserRole) {
     try {
         return await rmqService.send
             <
-                ReferenceGetOwnersByMCId.Request,
-                ReferenceGetOwnersByMCId.Response
+                ReferenceGetUsersByAnotherRole.Request,
+                ReferenceGetUsersByAnotherRole.Response
             >
-            (ReferenceGetOwnersByMCId.topic, { managementCompanyId });
+            (ReferenceGetUsersByAnotherRole.topic, { userId, userRole });
     } catch (e: any) {
         throw new RMQException(e.message, e.status);
     }

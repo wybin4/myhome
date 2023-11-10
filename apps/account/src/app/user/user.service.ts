@@ -4,8 +4,9 @@ import { RMQService } from "nestjs-rmq";
 import { AdminRepository } from "./repositories/admin.repository";
 import { OwnerRepository } from "./repositories/owner.repository";
 import { ManagementCompanyRepository } from "./repositories/management-company.repository";
-import { ADMIN_NOT_EXIST, OWNER_NOT_EXIST, MANAG_COMP_NOT_EXIST, INCORRECT_USER_ROLE, ADMINS_NOT_EXIST, MANAG_COMPS_NOT_EXIST, OWNERS_NOT_EXIST, RMQException, getOwnerIdsByMCId } from "@myhome/constants";
+import { ADMIN_NOT_EXIST, OWNER_NOT_EXIST, MANAG_COMP_NOT_EXIST, INCORRECT_USER_ROLE, ADMINS_NOT_EXIST, MANAG_COMPS_NOT_EXIST, OWNERS_NOT_EXIST, RMQException, getUserIdsByAnotherRoleId } from "@myhome/constants";
 import { UserEntity } from "./entities/user.entity";
+import { AccountGetUsersByAnotherRole, IGetUserAndSubscriber } from "@myhome/contracts";
 
 @Injectable()
 export class UserService {
@@ -50,57 +51,84 @@ export class UserService {
     }
 
     async usersInfo(ids: number[], role: UserRole) {
-        let users: UserEntity[];
-        const profiles = [];
+        const profiles: Omit<IUser, "passwordHash">[] = [];
+
         switch (role) {
-            case UserRole.Admin:
-                users = await this.adminRepository.findUsers(ids);
+            case UserRole.Admin: {
+                const users = await this.adminRepository.findUsers(ids);
                 if (!users.length) {
                     throw new RMQException(ADMINS_NOT_EXIST.message, ADMINS_NOT_EXIST.status);
                 }
                 for (const user of users) {
                     profiles.push(new UserEntity(user).getPublicProfile());
                 }
-                break;
-            case UserRole.Owner:
-                users = await this.ownerRepository.findUsers(ids);
+                return { profiles };
+            }
+            case UserRole.Owner: {
+                const users = await this.ownerRepository.findUsers(ids);
                 if (!users.length) {
                     throw new RMQException(OWNERS_NOT_EXIST.message, OWNERS_NOT_EXIST.status);
                 }
                 for (const user of users) {
                     profiles.push(new UserEntity(user).getPublicProfile());
                 }
-                break;
-            case UserRole.ManagementCompany:
-                users = await this.managementCompanyRepository.findUsers(ids);
+                return { profiles };
+            }
+            case UserRole.ManagementCompany: {
+                const users = await this.managementCompanyRepository.findUsers(ids);
                 if (!users.length) {
                     throw new RMQException(MANAG_COMPS_NOT_EXIST.message, MANAG_COMPS_NOT_EXIST.status);
                 }
                 for (const user of users) {
                     profiles.push(new UserEntity(user).getPublicProfile());
                 }
-                break;
+                return { profiles };
+            }
             default:
                 throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
         }
-        return { profiles: profiles };
     }
 
-    async getOwnersByMCId(managementConpmayId: number) {
-        const managementC = await this.managementCompanyRepository.findUserById(managementConpmayId);
-        if (!managementC) {
-            throw new RMQException(MANAG_COMP_NOT_EXIST, HttpStatus.NOT_FOUND);
+    async getUsersByAnotherRole(dto: AccountGetUsersByAnotherRole.Request):
+        Promise<AccountGetUsersByAnotherRole.Response> {
+        switch (dto.userRole) {
+            case UserRole.ManagementCompany: {
+                const user = await this.managementCompanyRepository.findUserById(dto.userId);
+                if (!user) {
+                    throw new RMQException(MANAG_COMP_NOT_EXIST, HttpStatus.NOT_FOUND);
+                }
+                const { anotherUserIds } = await getUserIdsByAnotherRoleId(this.rmqService, dto.userId, dto.userRole);
+                const { profiles } = await this.usersInfo(anotherUserIds as number[], UserRole.Owner);
+                return { users: profiles }
+            }
+            case UserRole.Owner: {
+                const user = await this.ownerRepository.findUserById(dto.userId);
+                if (!user) {
+                    throw new RMQException(OWNER_NOT_EXIST, HttpStatus.NOT_FOUND);
+                }
+                const { anotherUserIds } = await getUserIdsByAnotherRoleId(this.rmqService, dto.userId, dto.userRole);
+                const anotherUserIdsArr = Array.from(new Set((
+                    anotherUserIds as IGetUserAndSubscriber[])
+                    .map(a => a.anotherUserId)
+                ));
+                const { profiles } = await this.usersInfo(anotherUserIdsArr, UserRole.ManagementCompany);
+                return {
+                    users: profiles.map(profile => {
+                        const current = (anotherUserIds as IGetUserAndSubscriber[])
+                            .filter(a => a.anotherUserId === profile.id)
+                            .map(a => a.subscriber);
+                        return {
+                            user: profile,
+                            subscribers: current
+                        };
+                    })
+                }
+            }
+            default:
+                throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
         }
-        const { ownerIds } = await getOwnerIdsByMCId(this.rmqService, managementConpmayId);
-        const ownerItems = await this.ownerRepository.findUsers(ownerIds);
-        if (!ownerItems.length) {
-            throw new RMQException(OWNERS_NOT_EXIST.message, OWNERS_NOT_EXIST.status);
-        }
-        const owners = [];
-        for (const ownerItem of ownerItems) {
-            owners.push(new UserEntity(ownerItem).getPublicProfile());
-        }
-        return { owners: owners };
+
+
     }
 
     // public async changeProfile(user: Pick<IUser, 'name'>, id: number) {

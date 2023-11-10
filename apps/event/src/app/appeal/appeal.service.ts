@@ -4,11 +4,12 @@ import { AppealRepository } from "./appeal.repository";
 import { getSubscriber, checkUser, RMQException, INCORRECT_USER_ROLE, checkUsers, getSubscribersAllInfo, getSubscribersByOId, getApartment, getTypeOfService, getMeters, getMeter, getTypesOfService } from "@myhome/constants";
 import { EventAddAppeal } from "@myhome/contracts";
 import { AppealEntity } from "./appeal.entity";
-import { AddIndividualMeterData, AppealType, IAppealData, IAppealEntity, IGetAppeal, IMeter, IMeterWithTypeOfService, ITypeOfService, MeterType, ServiceNotificationType, UserRole, VerifyIndividualMeterData } from "@myhome/interfaces";
+import { AddIndividualMeterData, AppealType, IAppealEntity, IGetAppeal, IMeter, IMeterWithTypeOfService, ITypeOfService, MeterType, ServiceNotificationType, UserRole, VerifyIndividualMeterData } from "@myhome/interfaces";
 import { ServiceNotificationService } from "../notification/services/service-notification.service";
 import path from "path";
 import * as fs from "fs";
 import { ConfigService } from "@nestjs/config";
+import { promisify } from "util";
 
 @Injectable()
 export class AppealService {
@@ -37,16 +38,21 @@ export class AppealService {
                     managementCompanyIds,
                     UserRole.ManagementCompany
                 );
+
+                const files = await this.getFileFromAppeals(appeals);
+
                 return {
                     appeals: appeals
                         .map(appeal => {
                             const currentMC = profiles.find(p => p.id === appeal.managementCompanyId);
                             const { currentMeter, currentTOS } = this.getCurrentMeterData(appeal, typesOfService, meters);
+                            const currentFile = files.find(f => f.id === appeal.id);
 
                             return {
                                 name: currentMC.name,
                                 ...appeal,
-                                data: this.getText(appeal, currentMeter, currentTOS).text
+                                data: this.getText(appeal, currentMeter, currentTOS).text,
+                                attachment: currentFile ? currentFile.file : undefined
                             };
                         })
                 };
@@ -62,18 +68,23 @@ export class AppealService {
 
                 const subscriberIds = appeals.map(appeal => appeal.subscriberId);
                 const { subscribers: subscribersAll } = await getSubscribersAllInfo(this.rmqService, subscriberIds);
+
+                const files = await this.getFileFromAppeals(appeals);
+
                 return {
                     appeals: appeals
                         .map(appeal => {
                             const currentSubscriber = subscribersAll.find(s => s.id === appeal.subscriberId);
                             const { currentMeter, currentTOS } = this.getCurrentMeterData(appeal, typesOfService, meters);
+                            const currentFile = files.find(f => f.id === appeal.id);
 
                             return {
                                 address: currentSubscriber.address,
                                 personalAccount: currentSubscriber.personalAccount,
                                 name: currentSubscriber.name,
                                 ...appeal,
-                                data: this.getText(appeal, currentMeter, currentTOS).text
+                                data: this.getText(appeal, currentMeter, currentTOS).text,
+                                attachment: currentFile ? currentFile.file : undefined
                             };
                         })
                 };
@@ -84,12 +95,18 @@ export class AppealService {
     }
 
     private async getMeterData(appeals: IAppealEntity[]) {
-        const typeOfServiceIds = Array.from(new Set(appeals.filter(a => a.typeOfAppeal === AppealType.AddIndividualMeter)
+        let typeOfServiceIds = Array.from(new Set(appeals.filter(a => a.typeOfAppeal === AppealType.AddIndividualMeter)
             .map(a => JSON.parse(a.data).typeOfServiceId)));
         const meterIds = Array.from(new Set(appeals.filter(a => a.typeOfAppeal === AppealType.VerifyIndividualMeter)
             .map(a => JSON.parse(a.data).meterId)));
 
         const { meters } = await getMeters(this.rmqService, meterIds, MeterType.Individual);
+
+
+        if (meters.length && !typeOfServiceIds.length) {
+            typeOfServiceIds = meters.map(m => m.typeOfServiceId);
+        }
+
         const { typesOfService } = await getTypesOfService(this.rmqService, typeOfServiceIds);
 
         return { meters, typesOfService };
@@ -111,10 +128,28 @@ export class AppealService {
     }
 
     public async addAppeal(dto: EventAddAppeal.Request): Promise<EventAddAppeal.Response> {
-        let meter: IMeter, typeOfService: ITypeOfService;
+        let realAttachment: string, meter: IMeterWithTypeOfService, typeOfService: ITypeOfService;
 
-        await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
+        const { profile: mc } = await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
         await getSubscriber(this.rmqService, dto.subscriberId);
+
+        const getResult = async (
+            appealDto: EventAddAppeal.Request,
+            meter?: IMeter,
+            typeOfService?: ITypeOfService,
+            attachment?: string
+        ) => {
+            const appeal = await this.createAppealEntity(appealDto, meter, typeOfService);
+
+            return {
+                appeal: {
+                    name: mc.name,
+                    ...appeal,
+                    data: this.getText(appeal, undefined, typeOfService).text,
+                    attachment
+                }
+            };
+        };
 
         switch (dto.typeOfAppeal) {
             case AppealType.AddIndividualMeter: {
@@ -122,36 +157,44 @@ export class AppealService {
                 await getApartment(this.rmqService, data.apartmentId);
                 ({ typeOfService } = await getTypeOfService(this.rmqService, data.typeOfServiceId));
 
+                realAttachment = data.attachment;
                 const fileName = await this.uploadAttachment(data.attachment);
                 data.attachment = fileName;
+
                 break;
             }
             case AppealType.VerifyIndividualMeter: {
                 const data = dto.data as VerifyIndividualMeterData;
-                const { meter } = await getMeter(this.rmqService, data.meterId, MeterType.Individual);
+                ({ meter } = await getMeter(this.rmqService, data.meterId, MeterType.Individual));
                 typeOfService = meter.typeOfService;
 
+                realAttachment = data.attachment;
                 const fileName = await this.uploadAttachment(data.attachment);
                 data.attachment = fileName;
+
                 break;
             }
         }
+        return await getResult(dto, meter, typeOfService, realAttachment);
+    }
 
-
+    private async createAppealEntity(
+        dtoAppeal: EventAddAppeal.Request,
+        meter?: IMeter,
+        typeOfService?: ITypeOfService
+    ) {
         const newAppealEntity = new AppealEntity({
-            managementCompanyId: dto.managementCompanyId,
-            typeOfAppeal: dto.typeOfAppeal,
-            subscriberId: dto.subscriberId,
+            managementCompanyId: dtoAppeal.managementCompanyId,
+            typeOfAppeal: dtoAppeal.typeOfAppeal,
+            subscriberId: dtoAppeal.subscriberId,
             createdAt: new Date(),
-            data: JSON.stringify(dto.data),
+            data: JSON.stringify(dtoAppeal.data),
         });
 
         const appeal = await this.appealRepository.create(newAppealEntity);
-        const newAppeal: IAppealData = { ...appeal, data: dto.data };
-
         await this.sendNotification(appeal, meter, typeOfService);
 
-        return { appeal: newAppeal };
+        return appeal;
     }
 
     private getText(appeal: IAppealEntity, meter?: IMeter, typeOfService?: ITypeOfService) {
@@ -221,7 +264,40 @@ export class AppealService {
             }
         });
 
-        return path.join(uploadDirectory, filename);
+        return filename;
+    }
+
+    private async readAttachments(files: { fileName: string; id: number }[]) {
+        const uploadDirectory = this.configService.get("UPLOAD_DIRECTORY");
+
+        const readFileAsync = promisify(fs.readFile);
+        const promises = files.map(async (file) => {
+            try {
+                file.fileName = path.join(uploadDirectory, file.fileName);
+                const buffer = await readFileAsync(file.fileName);
+                return { id: file.id, file: buffer.toString('base64') };
+            } catch (error) {
+                throw new RMQException("Ошибка при чтении файла", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        });
+
+        return Promise.all(promises);
+    }
+
+    private async getFileFromAppeals(appeals: IAppealEntity[]) {
+        const appealWithFiles = appeals.
+            filter(a =>
+                a.typeOfAppeal === AppealType.AddIndividualMeter
+                || a.typeOfAppeal === AppealType.VerifyIndividualMeter
+            )
+            .map(appeal => {
+                return {
+                    id: appeal.id,
+                    fileName: JSON.parse(appeal.data).attachment
+                };
+            });
+
+        return await this.readAttachments(appealWithFiles);
     }
 
     private getFileType(buffer: Buffer) {

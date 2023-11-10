@@ -51,4 +51,8 @@ export class ApartmentEntity implements IApartment {
             numberOfRegistered: this.numberOfRegistered
         }
     }
+
+    public getAddress(house: HouseEntity, withCity?: boolean): string {
+        return `${house.getAddress(withCity)}, кв. ${this.apartmentNumber}`;
+    }
 }

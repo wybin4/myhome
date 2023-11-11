@@ -264,7 +264,6 @@ export class PdfService {
 
     async readFileToBuffer(files: { fileName: string; id: number }[]) {
         const uploadDirectory = this.configService.get("UPLOAD_DIRECTORY");
-
         const readFileAsync = promisify(fs.readFile);
         const getStatAsync = promisify(fs.stat);
         const promises = files.map(async (file) => {
@@ -290,7 +289,7 @@ export class PdfService {
             }
         });
 
-        return path.join(uploadDirectory, filename);
+        return filename;
     }
 
     async generatePdfs(

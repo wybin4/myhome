@@ -1,17 +1,25 @@
 import { UserRole } from '@myhome/interfaces';
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class RegisterDto {
-  @IsString()
-  role: UserRole;
+  @IsEnum(UserRole)
+  userRole!: UserRole;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
-  password: string;
+  password!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   name?: string;
+
+  @IsOptional()
+  @IsString()
+  checkingAccount?: string;
+
+  @IsEnum(UserRole)
+  registerRole!: UserRole;
 }

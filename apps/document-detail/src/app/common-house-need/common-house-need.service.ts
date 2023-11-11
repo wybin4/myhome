@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { GetCommonHouseNeeds } from "@myhome/contracts";
-import { getHouseByMCId, FAILED_TO_GET_INDIVIDUAL_READINGS, RMQException, getApartmentsBySubscribers, getMeterReadingsByHID, getAllTypesOfService, getAllTariffs } from "@myhome/constants";
+import { getHouseByMCId, FAILED_TO_GET_INDIVIDUAL_READINGS, RMQException, getApartmentsBySubscribers, getMeterReadingsByHID, getAllTypesOfService, getAllTariffs, TARIFFS_NOT_EXIST } from "@myhome/constants";
 import { PublicUtilityService } from "../public-utility/public-utility.service";
 import { ICommonHouseNeedTariff, IGetCommonHouseNeed, IGetDocumentDetail, IGetMeterData, Reading, TariffAndNormType } from "@myhome/interfaces";
 
@@ -39,7 +39,10 @@ export class CommonHouseNeedService {
         const { apartments } = await getApartmentsBySubscribers(this.rmqService, subscriberIds);
 
         const { tariffs } = await this.getCommonHouseNeedTariffs(managementCompanyId);
-
+        if (!tariffs || !tariffs.length) {
+            throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
+        
         for (const apartmentEntity of apartments) {
             const temp: IGetDocumentDetail[] = [];
             const meterData: IGetMeterData[] = [];

@@ -1,5 +1,5 @@
 import { IsNumber, Validate } from 'class-validator';
-import { IUser, UserRole } from '@myhome/interfaces';
+import {  IGetUser, UserRole } from '@myhome/interfaces';
 import { IsValidEnumValue } from '../enum.validator';
 
 export namespace AccountUserInfo {
@@ -14,6 +14,6 @@ export namespace AccountUserInfo {
   }
 
   export class Response {
-    profile!: Omit<IUser, 'passwordHash'>;
+    profile!: IGetUser;
   }
 }

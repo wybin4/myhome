@@ -3,10 +3,8 @@ import { UserCommands } from './user.commands';
 import { UserQueries } from './user.queries';
 import { UserService } from './user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AdminEntity, ManagementCompanyEntity, OwnerEntity } from './entities/user.entity';
-import { AdminRepository } from './repositories/admin.repository';
-import { ManagementCompanyRepository } from './repositories/management-company.repository';
-import { OwnerRepository } from './repositories/owner.repository';
+import { AdminEntity, ManagementCompanyEntity, OwnerEntity } from './user.entity';
+import { AdminRepository, OwnerRepository, ManagementCompanyRepository } from './user.repository';
 
 @Module({
   imports: [

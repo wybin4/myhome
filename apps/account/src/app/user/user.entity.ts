@@ -43,6 +43,7 @@ export class UserEntity implements IUser {
       name: this.name
     }
   }
+
 }
 
 @Entity('admins')
@@ -57,6 +58,15 @@ export class ManagementCompanyEntity extends UserEntity {
   checkingAccount: string;
 
   public getPublicProfile() {
+    return {
+      id: this.id,
+      email: this.email,
+      name: this.name,
+      checkingAccount: this.checkingAccount
+    }
+  }
+
+  public getWithCheckingAccount() {
     return {
       id: this.id,
       email: this.email,

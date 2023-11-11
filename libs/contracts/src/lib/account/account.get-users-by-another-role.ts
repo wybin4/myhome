@@ -1,5 +1,5 @@
 import { IsNumber, Validate } from 'class-validator';
-import { IUser, UserRole } from '@myhome/interfaces';
+import { IGetUser, UserRole } from '@myhome/interfaces';
 import { IsValidEnumValue } from '../enum.validator';
 import { IGetSubscriber } from '../reference/subscriber/subscriber/reference.get-users-by-another-role';
 
@@ -15,11 +15,11 @@ export namespace AccountGetUsersByAnotherRole {
   }
 
   export class Response {
-    users!: Omit<IUser, 'passwordHash'>[] | IGetProfileWithSubscriber[];
+    users!: IGetUser[] | IGetProfileWithSubscriber[];
   }
 }
 
 export interface IGetProfileWithSubscriber {
-  user: Omit<IUser, 'passwordHash'>;
+  user: IGetUser;
   subscribers: IGetSubscriber[];
 }

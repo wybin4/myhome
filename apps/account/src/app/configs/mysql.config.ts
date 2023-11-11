@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { AdminEntity, ManagementCompanyEntity, OwnerEntity } from '../user/entities/user.entity';
+import { AdminEntity, ManagementCompanyEntity, OwnerEntity } from '../user/user.entity';
 
 export const getMySQLConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
   type: 'mysql',

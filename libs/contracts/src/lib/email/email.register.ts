@@ -1,10 +1,10 @@
-import { IUser } from '@myhome/interfaces';
+import { IGetUser } from '@myhome/interfaces';
 
 export namespace EmailRegister {
     export const topic = 'email.register.event';
 
     export class Request {
-        user!: Omit<IUser, 'passwordHash'>;
+        user!: IGetUser;
         html!: string;
     }
 

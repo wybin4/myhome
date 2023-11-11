@@ -16,3 +16,11 @@ export class GetUsersByAnotherRoleDto {
     @IsEnum(UserRole)
     userRole: UserRole;
 }
+
+export class GetAllUsersDto {
+    @IsEnum(UserRole)
+    userRole: UserRole;
+
+    @IsEnum(UserRole)
+    requesterRole: UserRole;
+}

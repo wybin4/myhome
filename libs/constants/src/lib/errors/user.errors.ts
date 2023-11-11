@@ -8,9 +8,21 @@ export const USER_NOT_EXIST = {
     message: (id: number) => `Пользователь с id=${id} не существует`,
     status: HttpStatus.NOT_FOUND
 };
+export const USER_ALREADY_EXIST = {
+    message: 'Такой пользователь уже существует',
+    status: HttpStatus.BAD_REQUEST
+};
 export const USERS_NOT_EXIST = {
     message: "Такие пользователи не существуют",
     status: HttpStatus.NOT_FOUND
+};
+export const INCORRECT_ROLE_ACCESS = {
+    message: "Вы не можете получить доступ к этой информации",
+    status: HttpStatus.BAD_REQUEST
+};
+export const INCORRECT_ROLE_ACTION = {
+    message: "Вы не можете сделать это",
+    status: HttpStatus.BAD_REQUEST
 };
 export const OWNER_NOT_EXIST = 'Такой пользователь не существует';
 export const ADMIN_NOT_EXIST = 'Такой администратор не существует';

@@ -354,13 +354,13 @@ export class TariffAndNormService {
             case TariffAndNormType.MunicipalTariff:
                 await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 try {
-                    return await this.municipalTariffRepository.findByMCId(dto.managementCompanyId);
+                    return { tariffs: await this.municipalTariffRepository.findByMCId(dto.managementCompanyId) };
                 } catch (e) {
                     throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
                 }
             case TariffAndNormType.CommonHouseNeedTariff:
                 try {
-                    return await this.commonHouseNeedTariffRepository.findByHouseId(dto.houseId);
+                    return { tariffs: await this.commonHouseNeedTariffRepository.findByHouseId(dto.houseId) };
                 } catch (e) {
                     throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
                 }

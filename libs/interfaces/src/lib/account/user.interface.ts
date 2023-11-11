@@ -3,6 +3,7 @@ export enum UserRole {
   Owner = 'Owner',
   Admin = 'Admin',
 }
+
 export interface IUser {
   id?: number;
   name?: string;
@@ -10,3 +11,5 @@ export interface IUser {
   passwordHash: string;
   checkingAcount?: string;
 }
+
+export type IGetUser = Omit<IUser, 'passwordHash'>;

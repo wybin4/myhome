@@ -5,6 +5,7 @@ export * from './lib/account/account.register';
 export * from './lib/account/account.user-info';
 export * from './lib/account/account.users-info';
 export * from './lib/account/account.get-users-by-another-role';
+export * from './lib/account/account.get-all-users';
 export * from './lib/account/account.change-profile';
 
 export * from './lib/reference/subscriber/house/reference.add-house';

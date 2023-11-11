@@ -16,7 +16,10 @@ export class PublicUtilityService {
         const result: IGetPublicUtility[] = [];
         const { meterReadings } = await getIndividualMeterReadingsByHId(this.rmqService, houseId, managementCompanyId);
         const { tariffs } = await this.getPublicUtilityTariffs(managementCompanyId);
-
+        if (!tariffs || !tariffs.length) {
+            throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
+        
         for (const meterReading of meterReadings) {
             result.push({
                 subscriberId: meterReading.subscriberId,
@@ -38,6 +41,9 @@ export class PublicUtilityService {
         const result: IGetPublicUtility[] = [];
         const { meterReadings } = await this.getIndividualMeterReadingsBySIds(subscriberIds, managementCompanyId);
         const { tariffs } = await this.getPublicUtilityTariffs(managementCompanyId);
+        if (!tariffs || !tariffs.length) {
+            throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
+        }
 
         for (const meterReading of meterReadings) {
             result.push({

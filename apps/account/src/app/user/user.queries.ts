@@ -1,4 +1,4 @@
-import { AccountUserInfo, AccountUsersInfo, AccountGetUsersByAnotherRole } from "@myhome/contracts";
+import { AccountUserInfo, AccountUsersInfo, AccountGetUsersByAnotherRole, AccountGetAllUsers } from "@myhome/contracts";
 import { Controller, Body } from "@nestjs/common";
 import { RMQValidate, RMQRoute, RMQError } from "nestjs-rmq";
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
@@ -35,6 +35,16 @@ export class UserQueries {
 	async getUsersByAnotherRole(@Body() dto: AccountGetUsersByAnotherRole.Request) {
 		try {
 			return await this.userService.getUsersByAnotherRole(dto);
+		} catch (e) {
+			throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+		}
+	}
+
+	@RMQValidate()
+	@RMQRoute(AccountGetAllUsers.topic)
+	async getAllUsers(@Body() dto: AccountGetAllUsers.Request) {
+		try {
+			return await this.userService.getAllUsers(dto);
 		} catch (e) {
 			throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
 		}

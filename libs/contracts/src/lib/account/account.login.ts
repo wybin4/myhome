@@ -13,10 +13,11 @@ export namespace AccountLogin {
     password!: string;
 
     @Validate(IsValidEnumValue, [UserRole])
-    role!: UserRole;
+    userRole!: UserRole;
   }
 
   export class Response {
-    access_token!: string;
+    token!: string;
+    refreshToken!: string;
   }
 }

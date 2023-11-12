@@ -2,7 +2,7 @@ import { EventGetServiceNotifications, EventAddServiceNotification, EventUpdateS
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { ServiceNotificationRepository } from "../repositories/service-notification.repository";
-import { NOTIFICATIONS_NOT_EXIST, NOTIFICATION_NOT_EXIST, RMQException, checkUser, checkUsers } from "@myhome/constants";
+import { NOTIFICATIONS_NOT_EXIST, NOTIFICATION_NOT_EXIST, RMQException } from "@myhome/constants";
 import { ServiceNotificationEntity } from "../entities/service-notification.entity";
 import { NotificationStatus } from "@myhome/interfaces";
 import { ServiceNotificationEventEmitter } from "../service-notification.event-emitter";
@@ -17,7 +17,6 @@ export class ServiceNotificationService {
 
     public async getServiceNotifications(dto: EventGetServiceNotifications.Request):
         Promise<EventGetServiceNotifications.Response> {
-        await checkUser(this.rmqService, dto.userId, dto.userRole);
         const notifications = await this.serviceNotificationRepository.findByUserIdAndRole(
             dto.userId,
             dto.userRole
@@ -30,8 +29,6 @@ export class ServiceNotificationService {
 
     public async addServiceNotification(dto: EventAddServiceNotification.Request):
         Promise<EventAddServiceNotification.Response> {
-        await checkUser(this.rmqService, dto.userId, dto.userRole);
-
         const notificationEntity = new ServiceNotificationEntity({
             status: NotificationStatus.Unread,
             createdAt: new Date(),
@@ -44,8 +41,6 @@ export class ServiceNotificationService {
 
     public async addServiceNotifications(dto: EventAddServiceNotifications.Request):
         Promise<EventAddServiceNotifications.Response> {
-        await checkUsers(this.rmqService, dto.userIds, dto.userRole);
-
         const notificationEntities = dto.userIds.map(userId =>
             new ServiceNotificationEntity({
                 status: NotificationStatus.Unread,
@@ -74,7 +69,6 @@ export class ServiceNotificationService {
 
     public async updateAllServiceNotifications(dto: EventUpdateAllServiceNotifications.Request)
         : Promise<EventUpdateAllServiceNotifications.Response> {
-        await checkUser(this.rmqService, dto.userId, dto.userRole);
         const existedNotifications = await this.serviceNotificationRepository.findByUserIdAndRole(dto.userId, dto.userRole);
         if (!existedNotifications.length) {
             throw new RMQException(NOTIFICATIONS_NOT_EXIST.message, NOTIFICATIONS_NOT_EXIST.status);

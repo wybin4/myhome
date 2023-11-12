@@ -1,4 +1,4 @@
-import { SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, addGenericObject, getGenericObjects, checkUser, checkUsers } from "@myhome/constants";
+import { SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, addGenericObject, getGenericObjects, checkUsers } from "@myhome/constants";
 import { SubscriberStatus, UserRole, ISubscriber } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { SubscriberEntity } from "../entities/subscriber.entity";
@@ -24,7 +24,6 @@ export class SubscriberService {
 	) { }
 
 	async addSubscriber(dto: ReferenceAddSubscriber.Request): Promise<ReferenceAddSubscriber.Response> {
-		await checkUser(this.rmqService, dto.ownerId, UserRole.Owner);
 		const existedSubscriber = await this.subscriberRepository.findByPersonalAccount(dto.personalAccount);
 		if (existedSubscriber) {
 			throw new RMQException(SUBSCRIBER_ALREADY_EXIST, HttpStatus.CONFLICT);
@@ -140,8 +139,6 @@ export class SubscriberService {
 
 	public async getSubscribersByUser({ userId, userRole }: ReferenceGetSubscribersByUser.Request):
 		Promise<ReferenceGetSubscribersByUser.Response> {
-		await checkUser(this.rmqService, userId, userRole);
-
 		switch (userRole) {
 			case UserRole.Owner: {
 				const subscribers = await this.subscriberRepository.findByUser(userId, userRole);

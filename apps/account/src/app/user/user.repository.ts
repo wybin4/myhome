@@ -7,7 +7,7 @@ import { AdminEntity, ManagementCompanyEntity, OwnerEntity } from "./user.entity
 export abstract class IUserRepository<T extends IUser> {
     abstract findByIds(ids: number[]): Promise<T[]>;
     abstract findById(id: number): Promise<T>;
-    abstract findByEmail(email: string): Promise<T[]>;
+    abstract findByEmail(email: string): Promise<T>;
     abstract create(item: T): Promise<T>;
     abstract update(item: T): Promise<T>;
 }
@@ -29,9 +29,9 @@ export class UserRepository<T extends User> implements IUserRepository<T> {
             where: { id: In(ids) } as unknown as FindOptionsWhere<T>
         });
     }
-    async findByEmail(email: string): Promise<T[]> {
-        return await this.repository.find({
-            where: { id: email } as unknown as FindOptionsWhere<T>
+    async findByEmail(email: string): Promise<T> {
+        return await this.repository.findOne({
+            where: { email: email } as unknown as FindOptionsWhere<T>
         });
     }
 

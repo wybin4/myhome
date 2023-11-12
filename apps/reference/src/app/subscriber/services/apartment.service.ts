@@ -60,7 +60,6 @@ export class ApartmentService {
 
 	async getApartmentsByUser({ userId, userRole, isAllInfo }: ReferenceGetApartmentsByUser.Request): Promise<ReferenceGetApartmentsByUser.Response> {
 		if (isAllInfo) {
-			await checkUser(this.rmqService, userId, userRole);
 			const apartments = await this.apartmentRepository.findByUserAll(userId, userRole);
 
 			return {

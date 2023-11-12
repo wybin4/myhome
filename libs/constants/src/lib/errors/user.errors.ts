@@ -8,6 +8,14 @@ export const USER_NOT_EXIST = {
     message: (id: number) => `Пользователь с id=${id} не существует`,
     status: HttpStatus.NOT_FOUND
 };
+export const INCORRECT_LOGIN = {
+    message: 'Неверный логин',
+    status: HttpStatus.BAD_REQUEST
+};
+export const INCORRECT_PASSWORD = {
+    message: 'Неверный пароль',
+    status: HttpStatus.BAD_REQUEST
+};
 export const USER_ALREADY_EXIST = {
     message: 'Такой пользователь уже существует',
     status: HttpStatus.BAD_REQUEST

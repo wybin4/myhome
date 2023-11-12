@@ -44,6 +44,10 @@ export class UserEntity implements IUser {
     }
   }
 
+  public getWithCheckingAccount() {
+    return this.getPublicProfile();
+  }
+
 }
 
 @Entity('admins')

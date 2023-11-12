@@ -23,6 +23,8 @@ import { SocketGateway } from './socket.gateway';
 import { ChatController } from './controllers/chat/chat.controller';
 import { EventController } from './controllers/event/event.controller';
 import { CommonController } from './controllers/reference/common.controller';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { RefreshStrategy } from './strategies/refresh.strategy';
 
 @Module({
   imports: [
@@ -48,6 +50,6 @@ import { CommonController } from './controllers/reference/common.controller';
       EventController,
       CommonController
     ],
-  providers: [SocketGateway]
+  providers: [SocketGateway, JwtStrategy, RefreshStrategy]
 })
 export class AppModule { }

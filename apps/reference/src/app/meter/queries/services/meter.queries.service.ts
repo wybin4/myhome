@@ -1,4 +1,4 @@
-import { RMQException, INCORRECT_METER_TYPE, checkUser, METERS_NOT_EXIST } from "@myhome/constants";
+import { RMQException, INCORRECT_METER_TYPE, METERS_NOT_EXIST } from "@myhome/constants";
 import { MeterType, IIndividualMeter, UserRole, IGeneralMeter } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { CommonService } from "../../../common/services/common.service";
@@ -57,8 +57,6 @@ export class MeterQueriesService {
     }
 
     async getMetersByUser(dto: ReferenceGetMetersByUser.Request): Promise<ReferenceGetMetersByUser.Response> {
-        await checkUser(this.rmqService, dto.userId, dto.userRole);
-
         switch (dto.userRole) {
             case UserRole.ManagementCompany:
                 return { meters: await this.getMetersByMCId(dto.userId, dto.meterType, dto.isNotAllInfo) };

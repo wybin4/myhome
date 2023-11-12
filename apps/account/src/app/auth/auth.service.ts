@@ -1,11 +1,12 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AdminEntity, ManagementCompanyEntity, OwnerEntity, UserEntity } from '../user/user.entity';
-import { IUser, UserRole } from '@myhome/interfaces';
+import { IJWTPayload, IUser, UserRole } from '@myhome/interfaces';
 import { JwtService } from '@nestjs/jwt';
-import { AccountRegister, EmailRegister, IAddUser } from '@myhome/contracts';
-import { INCORRECT_ROLE_ACTION, RMQException, USER_ALREADY_EXIST } from '@myhome/constants';
+import { AccountLogin, AccountRefresh, AccountRegister, EmailRegister, IAddUser } from '@myhome/contracts';
+import { INCORRECT_LOGIN, INCORRECT_PASSWORD, INCORRECT_ROLE_ACTION, RMQException, USER_ALREADY_EXIST, USER_NOT_EXIST } from '@myhome/constants';
 import { RMQService } from 'nestjs-rmq';
 import { AdminRepository, OwnerRepository, ManagementCompanyRepository, IUserRepository } from '../user/user.repository';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -14,10 +15,11 @@ export class AuthService {
     private readonly ownerRepository: OwnerRepository,
     private readonly managementCompanyRepository: ManagementCompanyRepository,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
     private readonly rmqService: RMQService,
   ) { }
 
-  async register(dto: AccountRegister.Request) {
+  async register(dto: AccountRegister.Request): Promise<AccountRegister.Response> {
     const { registerRole, userRole, ...rest } = dto;
 
     if (
@@ -25,31 +27,14 @@ export class AuthService {
       (registerRole === UserRole.ManagementCompany && userRole === UserRole.Owner) ||
       (registerRole === UserRole.Admin && userRole === UserRole.Admin)
     ) {
-      switch (dto.userRole) {
+      switch (userRole) {
         case UserRole.Admin:
-          return await this.genericAddUser<AdminEntity>
-            (
-              this.adminRepository,
-              rest,
-              AdminEntity,
-              USER_ALREADY_EXIST
-            );
+          return await this.genericAddUser<AdminEntity>(this.adminRepository, rest, AdminEntity);
         case UserRole.ManagementCompany:
-          return await this.genericAddUser<ManagementCompanyEntity>
-            (
-              this.managementCompanyRepository,
-              rest,
-              ManagementCompanyEntity,
-              USER_ALREADY_EXIST
-            );
+          return await this.genericAddUser<ManagementCompanyEntity>(this.managementCompanyRepository,
+            rest, ManagementCompanyEntity);
         case UserRole.Owner:
-          return await this.genericAddUser<OwnerEntity>
-            (
-              this.ownerRepository,
-              rest,
-              OwnerEntity,
-              USER_ALREADY_EXIST
-            );
+          return await this.genericAddUser<OwnerEntity>(this.ownerRepository, rest, OwnerEntity);
       }
     } else {
       throw new RMQException(INCORRECT_ROLE_ACTION.message, INCORRECT_ROLE_ACTION.status);
@@ -60,59 +45,63 @@ export class AuthService {
     repository: IUserRepository<T>,
     dto: IAddUser,
     createInstance: new (dto: IUser) => T,
-    error: { message: string, status: HttpStatus },
   ) {
     const old = await repository.findByEmail(dto.email);
-    if (old && old.length) {
-      throw new RMQException(error.message, error.status);
+    if (old) {
+      throw new RMQException(USER_ALREADY_EXIST.message, USER_ALREADY_EXIST.status);
     }
-
-    const newTEntity = await new createInstance({ ...dto, passwordHash: "" }).setPassword(dto.password);
+    // const newTEntity = await new createInstance({ ...dto, passwordHash: "" }).setPassword("sds2015sds");
+    const newTEntity = new createInstance({ ...dto, passwordHash: "" });
     const newT = await repository.create(newTEntity);
 
     await this.rmqService.notify(EmailRegister.topic,
       { user: newT, link: 'https://nx.dev/packages/nest' }
     );
 
-    return { user: newT };
+    return { profile: newT.getWithCheckingAccount() };
   }
 
-  // async validateUser(email: string, password: string, role: UserRole) {
-  //   const user =
-  //     (await this.adminRepository.findByEmail(email)) ||
-  //     (await this.ownerRepository.findByEmail(email)) ||
-  //     (await this.managementCompanyRepository.findByEmail(email));
+  async validateUser(dto: AccountLogin.Request) {
+    switch (dto.userRole) {
+      case UserRole.Admin:
+        return await this.genericValidateUser(this.adminRepository, dto, AdminEntity);
+      case UserRole.Owner:
+        return await this.genericValidateUser(this.ownerRepository, dto, OwnerEntity);
+      case UserRole.ManagementCompany:
+        return await this.genericValidateUser(this.managementCompanyRepository, dto, ManagementCompanyEntity);
+    }
+  }
 
-  //   if (!user) {
-  //     throw new Error('Неверный логин или пароль');
-  //   }
+  private async genericValidateUser<T extends UserEntity>(
+    repository: IUserRepository<T>,
+    dto: AccountLogin.Request,
+    createInstance: new (t: UserEntity) => T,
+  ) {
+    const user = await repository.findByEmail(dto.email);
+    if (!user) {
+      throw new RMQException(INCORRECT_LOGIN.message, USER_NOT_EXIST.status);
+    }
 
-  //   let userEntity: UserEntity;
+    const userEntity = new createInstance(user);
 
-  //   switch (role) {
-  //     case UserRole.Admin:
-  //       userEntity = new AdminEntity(user);
-  //       break;
-  //     case UserRole.Owner:
-  //       userEntity = new OwnerEntity(user);
-  //       break;
-  //     case UserRole.ManagementCompany:
-  //       userEntity = new ManagementCompanyEntity(user);
-  //       break;
-  //     default:
-  //       throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
-  //   }
+    const isCorrectPassword = await userEntity.validatePassword(dto.password);
+    if (!isCorrectPassword) {
+      throw new RMQException(INCORRECT_PASSWORD.message, INCORRECT_PASSWORD.status);
+    }
 
-  //   const isCorrectPassword = await userEntity.validatePassword(password);
-  //   if (!isCorrectPassword) {
-  //     throw new Error('Неверный логин или пароль');
-  //   }
+    return { id: userEntity.id, userRole: dto.userRole };
+  }
 
-  //   return { id: userEntity.id };
-  // }
-  // async login(id: number) {
-  //   return {
-  //     access_token: await this.jwtService.signAsync({ id }),
-  //   };
-  // }
+  async login(user: IJWTPayload) {
+    return {
+      token: await this.jwtService.signAsync(user),
+      refreshToken: await this.jwtService.signAsync(user, { expiresIn: this.configService.get("EXPIRE_REFRESH") })
+    };
+  }
+
+  async refresh(user: AccountRefresh.Request) {
+    return {
+      token: await this.jwtService.signAsync(user),
+    };
+  }
 }

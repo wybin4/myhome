@@ -1,4 +1,4 @@
-import { RMQException, INCORRECT_USER_ROLE, HOUSES_NOT_EXIST, VOTINGS_NOT_EXIST, checkUsers, checkUser, getHouseAllInfo, getHousesByOId, getHousesByMCId } from "@myhome/constants";
+import { RMQException, INCORRECT_USER_ROLE, HOUSES_NOT_EXIST, VOTINGS_NOT_EXIST, checkUsers, getHouseAllInfo, getHousesByOId, getHousesByMCId } from "@myhome/constants";
 import { EventAddVoting, EventUpdateVoting } from "@myhome/contracts";
 import { UserRole, IGetVoting, IHouse, VotingStatus, IGetOption } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
@@ -41,8 +41,6 @@ export class VotingService {
     }
 
     public async updateVoting(dto: EventUpdateVoting.Request): Promise<EventUpdateVoting.Response> {
-        await checkUser(this.rmqService, dto.userId, UserRole.Owner);
-
         const voteEntity = new VoteEntity({
             userId: dto.userId,
             optionId: dto.optionId

@@ -12,9 +12,6 @@ export namespace AccountRegister {
         @IsEmail({}, { message: "Неверный email" })
         email!: string;
 
-        @IsString()
-        password!: string;
-
         @IsOptional()
         @IsString({ message: "Имя должно быть строкой" })
         @MaxLength(100, { message: "Имя пользователя не должно превышать 100 символов" })
@@ -29,10 +26,8 @@ export namespace AccountRegister {
     }
 
     export class Response {
-        user!: IGetUser;
+        profile!: IGetUser;
     }
 }
 
-export interface IAddUser extends Omit<Omit<IUser, "passwordHash">, "id"> {
-    password: string;
-}
+export type IAddUser = Omit<Omit<IUser, "passwordHash">, "id">;

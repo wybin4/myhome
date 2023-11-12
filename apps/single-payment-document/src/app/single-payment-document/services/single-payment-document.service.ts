@@ -24,7 +24,6 @@ export class SinglePaymentDocumentService {
 
     async getSinglePaymentDocumentsByMCId(dto: GetSinglePaymentDocumentsByMCId.Request):
         Promise<GetSinglePaymentDocumentsByMCId.Response> {
-        await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
         const { houses } = await getHousesByMCId(this.rmqService, dto.managementCompanyId);
         const spds = await this.totalRepository.findByMCId(dto.managementCompanyId);
         if (!spds) {

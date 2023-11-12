@@ -5,7 +5,7 @@ import { NormEntity, SeasonalityFactorEntity, MunicipalTariffEntity, SocialNormE
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
 import { IBaseTariffAndNorm, ICommonHouseNeedTariff, IHouse, IUnit, TariffAndNormType, UserRole } from "@myhome/interfaces";
 import { ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceUpdateTariffOrNorm } from "@myhome/contracts";
-import { TYPE_OF_SERVICE_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, checkUser, RMQException, HOUSES_NOT_EXIST, TYPES_OF_SERVICE_NOT_EXIST, UNITS_NOT_EXIST } from "@myhome/constants";
+import { TYPE_OF_SERVICE_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, RMQException, HOUSES_NOT_EXIST, TYPES_OF_SERVICE_NOT_EXIST, UNITS_NOT_EXIST } from "@myhome/constants";
 import { TypeOfServiceRepository } from "../common/repositories/type-of-service.repository";
 import { UnitRepository } from "../common/repositories/unit.repository";
 import { HouseService } from "../subscriber/services/house.service";
@@ -26,8 +26,6 @@ export class TariffAndNormService {
     ) { }
 
     public async getTariffsAndNormsByMCId(managementCompanyId: number, type: TariffAndNormType) {
-        await checkUser(this.rmqService, managementCompanyId, UserRole.ManagementCompany);
-
         let tItems: CommonHouseNeedTariffEntity[], gettedTNs: ICommonHouseNeedTariff[];
         let houses: IHouse[], houseIds: number[], units: IUnit[];
 
@@ -190,7 +188,6 @@ export class TariffAndNormService {
         let newTEntity: CommonHouseNeedTariffEntity, newT: ICommonHouseNeedTariff;
         switch (dto.type) {
             case TariffAndNormType.Norm:
-                await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 await this.checkUnit(dto.unitId);
                 if (!dto.norm) {
                     throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
@@ -203,7 +200,6 @@ export class TariffAndNormService {
                     dto, NormEntity
                 )
             case TariffAndNormType.SeasonalityFactor:
-                await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 if (!dto.monthName) {
                     throw new RMQException(INCORRECT_PARAM + 'monthName', HttpStatus.BAD_REQUEST);
                 }
@@ -215,7 +211,6 @@ export class TariffAndNormService {
                     dto, SeasonalityFactorEntity
                 )
             case TariffAndNormType.MunicipalTariff:
-                await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 await this.checkUnit(dto.unitId);
                 if (!dto.norm) {
                     throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
@@ -228,7 +223,6 @@ export class TariffAndNormService {
                     dto, MunicipalTariffEntity
                 )
             case TariffAndNormType.SocialNorm:
-                await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 await this.checkUnit(dto.unitId);
                 if (!dto.norm) {
                     throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
@@ -352,7 +346,6 @@ export class TariffAndNormService {
     public async getAllTariffs(dto: ReferenceGetAllTariffs.Request) {
         switch (dto.type) {
             case TariffAndNormType.MunicipalTariff:
-                await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
                 try {
                     return { tariffs: await this.municipalTariffRepository.findByMCId(dto.managementCompanyId) };
                 } catch (e) {

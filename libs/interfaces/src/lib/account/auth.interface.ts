@@ -1,3 +1,6 @@
+import { UserRole } from "./user.interface";
+
 export interface IJWTPayload {
-  id: string;
+  id: number;
+  userRole: UserRole;
 }

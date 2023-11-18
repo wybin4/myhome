@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AccountLogin, AccountRefresh, AccountRegister } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
@@ -15,6 +15,7 @@ export class AuthController {
     private readonly configService: ConfigService
   ) { }
 
+  @HttpCode(200)
   @UseGuards(JWTAuthGuard)
   @Post('register')
   async register(@Body() dto: RegisterDto) {
@@ -28,6 +29,7 @@ export class AuthController {
     }
   }
 
+  @HttpCode(200)
   @Post('login')
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     try {
@@ -44,23 +46,28 @@ export class AuthController {
     }
   }
 
+  @HttpCode(200)
   @UseGuards(JWTAuthGuard)
   @Post('get')
   async get() {
     return "Привет!";
   }
 
+  @HttpCode(200)
   @Get('refresh')
   @UseGuards(RefreshAuthGuard)
   async regenerateTokens(@Req() req, @Res({ passthrough: true }) res: Response) {
-    const { token } = await this.rmqService.send<
-      AccountRefresh.Request,
-      AccountRefresh.Response
-    >(AccountRefresh.topic, req.user);
+    try {
+      const { token } = await this.rmqService.send<
+        AccountRefresh.Request,
+        AccountRefresh.Response
+      >(AccountRefresh.topic, req.user);
 
-    this.setCookie(res, token);
-
-    return { msg: 'success' };
+      this.setCookie(res, token);
+      return;
+    } catch (e) {
+      CatchError(e);
+    }
   }
 
   private getExpires() {

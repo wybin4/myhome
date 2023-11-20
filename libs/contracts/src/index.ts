@@ -38,7 +38,7 @@ export * from './lib/reference/meter/reference.get-meter-readings-by-hid';
 
 export * from './lib/reference/tariff-and-norm/reference.update-tariff-and-norm';
 export * from './lib/reference/tariff-and-norm/reference.add-tariff-and-norm';
-export * from './lib/reference/tariff-and-norm/reference.get-tariffs-and-norms-by-mcid';
+export * from './lib/reference/tariff-and-norm/reference.get-tariffs-and-norms-by-user';
 export * from './lib/reference/tariff-and-norm/reference.get-all-tariffs';
 
 export * from './lib/reference/common/reference.get-types-of-service';

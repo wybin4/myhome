@@ -1,6 +1,6 @@
 import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
-import { ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceGetTariffsOrNormsByMCId, ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
+import { ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceGetTariffsOrNormsByUser, ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
 import { TariffAndNormService } from './tariff-and-norm.service';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
@@ -11,10 +11,10 @@ export class TariffAndNormController {
     ) { }
 
     @RMQValidate()
-    @RMQRoute(ReferenceGetTariffsOrNormsByMCId.topic)
-    async getTariffsAndNormsByMCId(@Body() { managementCompanyId, type }: ReferenceGetTariffsOrNormsByMCId.Request) {
+    @RMQRoute(ReferenceGetTariffsOrNormsByUser.topic)
+    async getTariffsAndNormsByUser(@Body() { userId, userRole, type }: ReferenceGetTariffsOrNormsByUser.Request) {
         try {
-            return this.tariffAndNormService.getTariffsAndNormsByMCId(managementCompanyId, type);
+            return this.tariffAndNormService.getTariffsAndNormsByUser(userId, userRole, type);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

@@ -1,64 +1,63 @@
 import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { RMQService } from "nestjs-rmq";
-import { UserRole } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
 import { GetChats, EventGetServiceNotifications, AddMessage, ReadMessages, AddChat, EventAddServiceNotifications, EventUpdateServiceNotification, EventUpdateAllServiceNotifications } from "@myhome/contracts";
 import { Server, Socket } from "socket.io";
+import { WSAuthMiddleware } from "./ws.middleware";
+import { JwtService } from "@nestjs/jwt";
+import { AuthController } from "./controllers/account/auth.controller";
 
 @Injectable()
 @WebSocketGateway({
     cors: {
-        origin: '*',
+        origin: true,
+        credentials: true,
     },
 })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     constructor(
-        private rmqService: RMQService,
+        private readonly rmqService: RMQService,
+        private readonly jwtService: JwtService,
+        private readonly authController: AuthController
     ) { }
 
     @WebSocketServer()
     server: Server;
     private clients = new Map<string, Socket>();
 
-    // @UseGuards(JwtGuard)
-    async handleConnection(socket: Socket) {
-        // const jwt = socket.handshake.headers.authorization || null;
-        // this.authService.getJwtUser(jwt).subscribe((user: User) => {
-        //     if (!user) {
-        //         console.log('No USER');
-        //         this.handleDisconnect(socket);
-        //     } else {
-        //         socket.data.user = user;
-        //         this.getConversations(socket, user.id);
-        //     }
-        // });
-        const userId = 1;
-        const userRole = UserRole.Owner;
-        socket.data.user = { userId, userRole };
-        const key = `${userId}_${userRole}`;
-        this.clients.set(key, socket);
-        this.getNotifications(socket, userId, userRole);
-        this.getChats(socket, userId, userRole);
+    afterInit() {
+        const middle = WSAuthMiddleware(
+            this.jwtService,
+            this.clients,
+            this.rmqService,
+            this.authController
+        );
+        this.server.use(middle);
     }
 
-    async getNotifications(socket: Socket, userId: number, userRole: UserRole) {
+    async handleConnection(socket: Socket) {
+        this.getNotifications(socket);
+        this.getChats(socket);
+    }
+
+    async getNotifications(socket: Socket) {
         try {
             const notifications = await this.rmqService.send<
                 EventGetServiceNotifications.Request,
                 EventGetServiceNotifications.Response
-            >(EventGetServiceNotifications.topic, { userId, userRole });
+            >(EventGetServiceNotifications.topic, socket.data.user);
             socket.emit('notifications', notifications);
         } catch (e) {
             socket.emit('notifications', { message: "Ошибка при получении уведомлений" });
         }
     }
 
-    async getChats(socket: Socket, userId: number, userRole: UserRole) {
+    async getChats(socket: Socket) {
         try {
             const chats = await this.rmqService.send<
                 GetChats.Request,
                 GetChats.Response
-            >(GetChats.topic, { userId, userRole });
+            >(GetChats.topic, socket.data.user);
             socket.emit('chats', chats);
         } catch (e) {
             socket.emit('chats', { message: "Ошибка при получении чатов" });

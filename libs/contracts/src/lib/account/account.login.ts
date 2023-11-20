@@ -19,5 +19,7 @@ export namespace AccountLogin {
   export class Response {
     token!: string;
     refreshToken!: string;
+    id!: number;
+    userRole!: UserRole;
   }
 }

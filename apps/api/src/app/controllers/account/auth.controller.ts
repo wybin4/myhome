@@ -7,6 +7,7 @@ import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { RefreshAuthGuard } from '../../guards/refresh.guard';
 import { RegisterDto, LoginDto } from '../../dtos/account/account.dto';
+import { UserRole } from '@myhome/interfaces';
 
 @Controller('auth')
 export class AuthController {
@@ -33,24 +34,17 @@ export class AuthController {
   @Post('login')
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     try {
-      const { token, refreshToken } = await this.rmqService.send<
+      const { token, refreshToken, id, userRole } = await this.rmqService.send<
         AccountLogin.Request,
         AccountLogin.Response
       >(AccountLogin.topic, dto);
 
-      this.setCookie(res, token, refreshToken);
+      this.setCookie(res, token, refreshToken, { id, userRole });
 
-      return { msg: 'success' };
+      return { msg: "success" };
     } catch (e) {
       CatchError(e);
     }
-  }
-
-  @HttpCode(200)
-  @UseGuards(JWTAuthGuard)
-  @Post('get')
-  async get() {
-    return "Привет!";
   }
 
   @HttpCode(200)
@@ -64,13 +58,25 @@ export class AuthController {
       >(AccountRefresh.topic, req.user);
 
       this.setCookie(res, token);
-      return;
+
+      return { msg: "success" };
     } catch (e) {
       CatchError(e);
     }
   }
 
-  private getExpires() {
+  @HttpCode(200)
+  @Get('logout')
+  async logout(@Res({ passthrough: true }) res: Response) {
+    try {
+      this.removeCookie(res);
+      return { msg: "success" };
+    } catch (e) {
+      CatchError(e);
+    }
+  }
+
+  public getExpires() {
     const hour = 3600000;
 
     const now = Date.now();
@@ -80,18 +86,47 @@ export class AuthController {
     return { expires, expiresRefresh };
   }
 
-  private setCookie(res: Response, token: string, refreshToken?: string) {
+  private setCookie(res: Response,
+    token: string,
+    refreshToken?: string,
+    user?: { id: number; userRole: UserRole },
+  ) {
     const { expires, expiresRefresh } = this.getExpires();
 
     res.cookie('token', token, {
       httpOnly: true,
       expires: expires
     });
+    if (user) {
+      res.cookie('userId', String(user.id), {
+        expires: expiresRefresh
+      });
+      res.cookie('userRole', user.userRole, {
+        expires: expiresRefresh,
+      });
+    }
     if (refreshToken) {
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         expires: expiresRefresh
       });
     }
+  }
+
+  private removeCookie(res: Response) {
+    res.cookie('token', "", {
+      httpOnly: true,
+      expires: new Date(0),
+    });
+    res.cookie('userId', 0, {
+      expires: new Date(0),
+    });
+    res.cookie('userRole', "None", {
+      expires: new Date(0),
+    });
+    res.cookie('refreshToken', "", {
+      httpOnly: true,
+      expires: new Date(0),
+    });
   }
 }

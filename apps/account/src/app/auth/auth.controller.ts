@@ -23,7 +23,7 @@ export class AuthController {
   async login(@Body() dto: AccountLogin.Request): Promise<AccountLogin.Response> {
     try {
       const user = await this.authService.validateUser(dto);
-      return this.authService.login(user);
+      return await this.authService.login(user);
     } catch (e) {
       throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
     }
@@ -33,7 +33,7 @@ export class AuthController {
   @RMQRoute(AccountRefresh.topic)
   async refresh(@Body() dto: AccountRefresh.Request): Promise<AccountRefresh.Response> {
     try {
-      return this.authService.refresh(dto);
+      return await this.authService.refresh(dto);
     } catch (e) {
       throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
     }

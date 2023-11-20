@@ -50,6 +50,9 @@ import { RefreshStrategy } from './strategies/refresh.strategy';
       EventController,
       CommonController
     ],
-  providers: [SocketGateway, JwtStrategy, RefreshStrategy]
+  providers: [
+    SocketGateway, JwtStrategy, RefreshStrategy,
+    AuthController
+  ]
 })
 export class AppModule { }

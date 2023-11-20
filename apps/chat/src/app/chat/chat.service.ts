@@ -62,13 +62,22 @@ export class ChatService {
             }
             case UserRole.ManagementCompany: {
                 const { subscribers } = await getSubscribersByMCId(this.rmqService, dto.userId);
-                const receivers = subscribers.map(subscriber => {
-                    return {
-                        userId: subscriber.ownerId,
-                        userRole: UserRole.Owner,
-                        name: subscriber.ownerName
-                    };
-                });
+                const uniqueOwners = new Set();
+
+                const receivers = subscribers.reduce((accumulator, subscriber) => {
+                    const ownerId = subscriber.ownerId;
+                    if (!uniqueOwners.has(ownerId)) {
+                        uniqueOwners.add(ownerId);
+                        accumulator.push({
+                            userId: ownerId,
+                            userRole: UserRole.Owner,
+                            name: subscriber.ownerName
+                        });
+                    }
+
+                    return accumulator;
+                }, []);
+
                 return {
                     receivers: receivers.filter(receiver =>
                         !users.some(user =>

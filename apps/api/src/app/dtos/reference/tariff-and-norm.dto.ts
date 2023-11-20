@@ -1,5 +1,5 @@
-import { TariffAndNormType, TypeOfNorm } from "@myhome/interfaces";
-import { IsNumber, IsOptional, IsString } from "class-validator";
+import { TariffAndNormType, TypeOfNorm, UserRole } from "@myhome/interfaces";
+import { IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class AddTariffAndNormDto {
     @IsNumber()
@@ -43,9 +43,12 @@ export class AddTariffAndNormDto {
     typeOfNorm: TypeOfNorm;
 }
 
-export class GetTariffsAndNormsByMCIdDto {
+export class GetTariffsAndNormsByUserDto {
     @IsNumber()
-    managementCompanyId: number;
+    userId: number;
+
+    @IsEnum(UserRole)
+    userRole: UserRole;
 
     @IsString()
     type: TariffAndNormType;

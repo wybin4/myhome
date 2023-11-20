@@ -1,21 +1,26 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
 import { ReferenceAddApartment, ReferenceGetApartmentsByUser } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { AddApartmentDto, GetApartmentsByUserDto } from '../../dtos/reference/apartment.dto';
 import { CatchError } from '../../error.filter';
+import { JWTAuthGuard } from '../../guards/jwt.guard';
 
 @Controller('apartment')
 export class ApartmentController {
     constructor(private readonly rmqService: RMQService) { }
 
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-apartments-by-user')
-    async getApartmentsByUser(@Body() dto: GetApartmentsByUserDto) {
+    async getApartmentsByUser(
+        @Req() req,
+        @Body() dto: GetApartmentsByUserDto
+    ) {
         try {
             return await this.rmqService.send<
                 ReferenceGetApartmentsByUser.Request,
                 ReferenceGetApartmentsByUser.Response
-            >(ReferenceGetApartmentsByUser.topic, dto);
+            >(ReferenceGetApartmentsByUser.topic, { ...dto, ...req.user });
         } catch (e) {
             CatchError(e);
         }

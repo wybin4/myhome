@@ -92,8 +92,10 @@ export class AuthService {
     return { id: userEntity.id, userRole: dto.userRole };
   }
 
-  async login(user: IJWTPayload) {
+  async login(user: IJWTPayload): Promise<AccountLogin.Response> {
     return {
+      id: user.id,
+      userRole: user.userRole,
       token: await this.jwtService.signAsync(user),
       refreshToken: await this.jwtService.signAsync(user, { expiresIn: this.configService.get("EXPIRE_REFRESH") })
     };

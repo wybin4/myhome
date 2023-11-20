@@ -1,21 +1,26 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
 import { ReferenceAddMeter, ReferenceAddMeterReading, ReferenceUpdateMeter, ReferenceGetMetersByUser } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { AddMeterDto, UpdateMeterDto, AddMeterReadingDto, GetMetersByUserDto } from '../../dtos/reference/meter.dto';
 import { CatchError } from '../../error.filter';
+import { JWTAuthGuard } from '../../guards/jwt.guard';
 
 @Controller('meter')
 export class MeterController {
     constructor(private readonly rmqService: RMQService) { }
 
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-meters-by-user')
-    async getMetersByUser(@Body() dto: GetMetersByUserDto) {
+    async getMetersByUser(
+        @Req() req,
+        @Body() dto: GetMetersByUserDto
+    ) {
         try {
             return await this.rmqService.send<
                 ReferenceGetMetersByUser.Request,
                 ReferenceGetMetersByUser.Response
-            >(ReferenceGetMetersByUser.topic, dto);
+            >(ReferenceGetMetersByUser.topic, { ...dto, ...req.user });
         } catch (e) {
             CatchError(e);
         }

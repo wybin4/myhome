@@ -146,7 +146,7 @@ export class SubscriberService {
 			}
 			case UserRole.ManagementCompany: {
 				const subscribers = await this.subscriberRepository.findByUser(userId, userRole);
-				const ownerIds = subscribers.map(s => s.ownerId);
+				const ownerIds = Array.from(new Set(subscribers.map(s => s.ownerId)));
 				const { profiles: ownerItems } = await checkUsers(this.rmqService, ownerIds, UserRole.Owner);
 
 				return {

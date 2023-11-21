@@ -12,9 +12,9 @@ export class UserQueries {
 
 	@RMQValidate()
 	@RMQRoute(AccountUserInfo.topic)
-	async userInfo(@Body() { id, role }: AccountUserInfo.Request): Promise<AccountUserInfo.Response> {
+	async userInfo(@Body() { userId, userRole }: AccountUserInfo.Request): Promise<AccountUserInfo.Response> {
 		try {
-			return await this.userService.userInfo(id, role);
+			return await this.userService.userInfo(userId, userRole);
 		} catch (e) {
 			throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
 		}

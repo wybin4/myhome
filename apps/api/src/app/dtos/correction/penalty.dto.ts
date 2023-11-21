@@ -8,7 +8,6 @@ export class AddPenaltyCalculationRuleDto {
     typeOfServiceIds!: number[];
 
     @IsNumber()
-    @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
     managementCompanyId!: number;
 
     @IsString()

@@ -3,10 +3,10 @@ import { IsEnum, IsNumber } from 'class-validator';
 
 export class UserInfoDto {
     @IsNumber()
-    id: number;
+    userId: number;
 
     @IsEnum(UserRole)
-    role: UserRole;
+    userRole: UserRole;
 }
 
 export class GetUsersByAnotherRoleDto {

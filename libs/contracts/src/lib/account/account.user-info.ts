@@ -7,10 +7,10 @@ export namespace AccountUserInfo {
 
   export class Request {
     @IsNumber()
-    id!: number;
+    userId!: number;
 
     @Validate(IsValidEnumValue, [UserRole])
-    role!: UserRole;
+    userRole!: UserRole;
   }
 
   export class Response {

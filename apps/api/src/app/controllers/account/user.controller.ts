@@ -11,15 +11,15 @@ export class UserController {
     private readonly rmqService: RMQService
   ) { }
 
-  // @UseGuards(JWTAuthGuard)
+  @UseGuards(JWTAuthGuard)
   @HttpCode(200)
   @Post('info')
-  async info(@Body() dto: UserInfoDto) {
+  async info(@Req() req, @Body() dto: UserInfoDto) {
     try {
       return await this.rmqService.send<
         AccountUserInfo.Request,
         AccountUserInfo.Response
-      >(AccountUserInfo.topic, dto);
+      >(AccountUserInfo.topic, { ...dto, ...req.user });
     } catch (e) {
       CatchError(e);
     }

@@ -65,6 +65,10 @@ export class OwnerRepository extends UserRepository<OwnerEntity> {
         @InjectRepository(OwnerEntity)
         private readonly ownerRepository: Repository<OwnerEntity>,
     ) { super(ownerRepository); }
+
+    async findAll() {
+        return await this.ownerRepository.find();
+    }
 }
 
 @Injectable()

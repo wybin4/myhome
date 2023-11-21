@@ -130,7 +130,8 @@ export class MeterQueriesService {
             case (MeterType.General): {
                 const { houses } = await this.houseService.getHousesByUser({
                     userId: managementCompanyId,
-                    userRole: UserRole.ManagementCompany
+                    userRole: UserRole.ManagementCompany,
+                    isAllInfo: false
                 });
                 const houseIds = houses.map(obj => obj.id);
 

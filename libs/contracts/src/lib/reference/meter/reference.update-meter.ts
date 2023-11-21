@@ -6,10 +6,10 @@ export namespace ReferenceUpdateMeter {
     export const topic = 'reference.update-meter.command';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id счётчика должно быть числом" })
         id!: number;
 
-        @IsString()
+        @IsString({ message: "Неверная дата поверки" })
         verifiedAt!: string;
 
         @Validate(IsValidEnumValue, [MeterType])

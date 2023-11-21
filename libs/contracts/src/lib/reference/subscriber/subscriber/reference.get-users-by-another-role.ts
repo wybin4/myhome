@@ -20,10 +20,10 @@ export namespace ReferenceGetUsersByAnotherRole {
 
 export interface IGetUserAndSubscriber {
     anotherUserId: number;
-    subscriber: IGetSubscriber;
+    subscriber: IGetSubscriberInUser;
 }
 
-export interface IGetSubscriber {
+export interface IGetSubscriberInUser {
     id: number;
     address: string;
 }

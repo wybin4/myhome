@@ -1,44 +1,65 @@
+/* eslint-disable @typescript-eslint/no-empty-interface */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ValidationOptions, registerDecorator, ValidationArguments } from "class-validator";
 
 export interface IBaseTariffAndNorm {
   id?: number;
-  managementCompanyId: number;
   typeOfServiceId: number;
 }
 
+export interface IAddBaseTariffAndNorm {
+  id?: number;
+  typeOfServiceId: number;
+  data: TariffAndNormData;
+}
+
+export interface TariffAndNormData { }
+
 export enum TypeOfNorm { Individual = 'Individual', General = 'General' };
 
-export interface INorm extends IBaseTariffAndNorm {
+export interface NormData extends TariffAndNormData {
   unitId: number;
   norm: number;
   typeOfNorm: TypeOfNorm;
+  managementCompanyId: number;
 }
 
-export interface IMunicipalTariff extends IBaseTariffAndNorm {
+export interface MunicipalTariffData extends TariffAndNormData {
   unitId: number;
   norm: number;
   supernorm?: number;
   multiplyingFactor?: number;
+  managementCompanyId: number;
 }
 
-export interface ISocialNorm extends IBaseTariffAndNorm {
+export interface SocialNormData extends TariffAndNormData {
   unitId: number;
   norm: number;
   amount: number;
+  managementCompanyId: number;
 }
 
-export interface ISeasonalityFactor extends IBaseTariffAndNorm {
+export interface SeasonalityFactorData extends TariffAndNormData {
   monthName: string;
   coefficient: number;
+  managementCompanyId: number;
 }
 
-export interface ICommonHouseNeedTariff {
-  id?: number;
-  typeOfServiceId: number;
+export interface CommonHouseNeedTariffData extends TariffAndNormData {
   unitId: number;
   multiplier: number;
+  houseId: number;
 }
+
+export interface INorm extends IBaseTariffAndNorm, NormData { }
+
+export interface IMunicipalTariff extends IBaseTariffAndNorm, MunicipalTariffData { }
+
+export interface ISocialNorm extends IBaseTariffAndNorm, SocialNormData { }
+
+export interface ISeasonalityFactor extends IBaseTariffAndNorm, SeasonalityFactorData { }
+
+export interface ICommonHouseNeedTariff extends IBaseTariffAndNorm, CommonHouseNeedTariffData { }
 
 export enum TariffAndNormType {
   Norm = 'Norm',

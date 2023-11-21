@@ -27,6 +27,13 @@ export class ApartmentRepository {
         return await this.apartmentRepository.findOne({ where: { id } });
     }
 
+    async findByIdWithHouse(apartmentId: number) {
+        return await this.apartmentRepository.createQueryBuilder('apartment')
+            .innerJoinAndSelect('apartment.house', 'house')
+            .where('apartment.id = :apartmentId', { apartmentId })
+            .getOne();
+    }
+
     async findByNumber(apatNumber: number, houseId: number) {
         return await this.apartmentRepository
             .createQueryBuilder('apartment')

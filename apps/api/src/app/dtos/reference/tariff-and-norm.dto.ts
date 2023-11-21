@@ -10,7 +10,8 @@ export class AddTariffAndNormDto {
     multiplier?: number;
     multiplyingFactor?: number;
     type: TariffAndNormType;
-    typeOfNorm: TypeOfNorm;
+    typeOfNorm?: TypeOfNorm;
+    houseId?: number;
 }
 
 export class GetTariffsAndNormsByUserDto {

@@ -6,7 +6,7 @@ export namespace ReferenceGetMeters {
     export const topic = 'reference.get-meters.query';
 
     export class Request {
-        @IsArray()
+        @IsArray({message: "Id счётчиков должны быть массивом чисел"})
         ids!: number[];
 
         @Validate(IsValidEnumValue, [MeterType])

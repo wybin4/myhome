@@ -131,6 +131,9 @@ export class UserService {
         if (dto.userRole === UserRole.ManagementCompany && dto.requesterRole === UserRole.Admin) {
             const managementCompanies = await this.managementCompanyRepository.findAll();
             return { profiles: managementCompanies.map(mc => mc.getWithCheckingAccount()) };
+        } else if (dto.userRole === UserRole.Owner && dto.requesterRole === UserRole.ManagementCompany) {
+            const owners = await this.ownerRepository.findAll();
+            return { profiles: owners.map(mc => mc.getPublicProfile()) };
         } else {
             throw new RMQException(INCORRECT_ROLE_ACCESS.message, INCORRECT_ROLE_ACCESS.status);
         }

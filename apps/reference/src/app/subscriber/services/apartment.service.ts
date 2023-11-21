@@ -1,30 +1,42 @@
-import { RMQException, APART_ALREADY_EXIST, addGenericObject, checkUser, getGenericObjects, APARTS_NOT_EXIST } from "@myhome/constants";
+import { RMQException, APART_ALREADY_EXIST, addGenericObject, checkUser, getGenericObjects, APARTS_NOT_EXIST, HOUSE_NOT_EXIST } from "@myhome/constants";
 import { ReferenceAddApartment, ReferenceGetApartmentsByUser, ReferenceGetApartmentsBySubscribers, ReferenceGetApartments, IGetApartmentAllInfo } from "@myhome/contracts";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { ApartmentEntity } from "../entities/apartment.entity";
 import { ApartmentRepository } from "../repositories/apartment.repository";
 import { IApartment, UserRole } from "@myhome/interfaces";
 import { RMQService } from "nestjs-rmq";
+import { HouseRepository } from "../repositories/house.repository";
 
 @Injectable()
 export class ApartmentService {
 	constructor(
 		private readonly rmqService: RMQService,
-		private readonly apartmentRepository: ApartmentRepository
+		private readonly apartmentRepository: ApartmentRepository,
+		private readonly houseRepository: HouseRepository
 	) { }
 
-	async addApartment(dto: ReferenceAddApartment.Request) {
+	async addApartment(dto: ReferenceAddApartment.Request): Promise<ReferenceAddApartment.Response> {
 		const existedApartment = await this.apartmentRepository.findByNumber(dto.apartmentNumber, dto.houseId);
 		if (existedApartment) {
 			throw new RMQException(APART_ALREADY_EXIST, HttpStatus.CONFLICT);
 		}
+		const house = await this.houseRepository.findById(dto.houseId);
+		if (!house) {
+			throw new RMQException(HOUSE_NOT_EXIST.message(dto.houseId), HOUSE_NOT_EXIST.status);
+		}
+
+		const newApartment = await addGenericObject<ApartmentEntity>
+			(
+				this.apartmentRepository,
+				(item) => new ApartmentEntity(item),
+				dto as IApartment
+			);
+
 		return {
-			apartment: await addGenericObject<ApartmentEntity>
-				(
-					this.apartmentRepository,
-					(item) => new ApartmentEntity(item),
-					dto as IApartment
-				)
+			apartment: {
+				...newApartment,
+				name: house.getAddress()
+			}
 		};
 	}
 
@@ -91,7 +103,7 @@ export class ApartmentService {
 						case UserRole.ManagementCompany:
 							return {
 								...apartment.get(),
-								name: apartment.house.getAddress(),
+								name: apartment.getAddress(apartment.house),
 							};
 						case UserRole.Owner:
 							return {

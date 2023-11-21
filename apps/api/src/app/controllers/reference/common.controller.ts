@@ -1,6 +1,6 @@
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
-import { ReferenceGetAllTypesOfService } from '@myhome/contracts';
+import { ReferenceGetAllTypesOfService, ReferenceGetCommon } from '@myhome/contracts';
 import { Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
 
@@ -17,6 +17,20 @@ export class CommonController {
                 ReferenceGetAllTypesOfService.Request,
                 ReferenceGetAllTypesOfService.Response
             >(ReferenceGetAllTypesOfService.topic, new ReferenceGetAllTypesOfService.Request());
+        } catch (e) {
+            CatchError(e);
+        }
+    }
+
+    @UseGuards(JWTAuthGuard)
+    @HttpCode(200)
+    @Post('get-common')
+    async getCommon() {
+        try {
+            return await this.rmqService.send<
+                ReferenceGetCommon.Request,
+                ReferenceGetCommon.Response
+            >(ReferenceGetCommon.topic, new ReferenceGetCommon.Request());
         } catch (e) {
             CatchError(e);
         }

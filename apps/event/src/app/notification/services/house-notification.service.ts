@@ -95,7 +95,12 @@ export class HouseNotificationService {
             house.ownerIds
         );
 
-        return { notification: newHouseNotification };
+        return {
+            notification: {
+                name: `${house.city}, ${house.street} ${house.houseNumber}`,
+                ...newHouseNotification
+            }
+        };
     }
 
     private async sendNotifications(

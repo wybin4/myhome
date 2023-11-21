@@ -7,4 +7,6 @@ export class AddHouseDto {
     commonArea!: number;
 }
 
-export class GetHousesByUserDto { }
+export class GetHousesByUserDto {
+    isAllInfo!: boolean;
+}

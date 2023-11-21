@@ -22,7 +22,7 @@ export class HouseQueries {
 
     @RMQValidate()
     @RMQRoute(ReferenceGetHousesByUser.topic)
-    async getHousesByMCId(@Body() dto: ReferenceGetHousesByUser.Request) {
+    async getHousesByUser(@Body() dto: ReferenceGetHousesByUser.Request) {
         try {
             return await this.houseService.getHousesByUser(dto);
         } catch (e) {

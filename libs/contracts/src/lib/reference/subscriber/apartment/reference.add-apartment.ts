@@ -1,5 +1,5 @@
-import { IApartment } from '@myhome/interfaces';
 import { IsNumber } from 'class-validator';
+import { IGetApartment } from './reference.get-apartments-by-user';
 
 export namespace ReferenceAddApartment {
     export const topic = 'reference.add-apartment.command';
@@ -22,6 +22,6 @@ export namespace ReferenceAddApartment {
     }
 
     export class Response {
-        apartment!: IApartment;
+        apartment!: IGetApartment;
     }
 }

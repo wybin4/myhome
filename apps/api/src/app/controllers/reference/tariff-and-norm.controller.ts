@@ -34,10 +34,12 @@ export class TariffAndNormController {
     async addTariffAndNorm(@Req() req: { user: IJWTPayload }, @Body() dto: AddTariffAndNormDto) {
         try {
             const managementCompanyId = req.user.userId;
+            const { typeOfServiceId, type, ...rest } = dto;
+            const data = { ...rest, managementCompanyId };
             return await this.rmqService.send<
                 ReferenceAddTariffOrNorm.Request,
                 ReferenceAddTariffOrNorm.Response
-            >(ReferenceAddTariffOrNorm.topic, { ...dto, managementCompanyId });
+            >(ReferenceAddTariffOrNorm.topic, { typeOfServiceId, type, data });
         } catch (e) {
             CatchError(e);
         }

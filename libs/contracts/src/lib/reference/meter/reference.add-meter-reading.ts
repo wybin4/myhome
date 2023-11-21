@@ -6,16 +6,16 @@ export namespace ReferenceAddMeterReading {
     export const topic = 'reference.add-meter-reading.command';
 
     export class Request {
-        @IsNumber()
+        @IsNumber({}, { message: "Id счётчика должен быть числом" })
         meterId!: number;
 
         @Validate(IsValidEnumValue, [MeterType])
         meterType!: MeterType;
 
-        @IsNumber()
+        @IsNumber({}, { message: "Показание счётчика должно быть числом" })
         reading!: number;
 
-        @IsString()
+        @IsString({ message: "Неверная дата снятия показания" })
         readAt!: string;
     }
 

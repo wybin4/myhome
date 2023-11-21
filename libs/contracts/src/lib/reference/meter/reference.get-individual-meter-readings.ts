@@ -6,14 +6,15 @@ export namespace ReferenceGetIndividualMeterReadings {
 
     export class Request {
         @IsOptional()
-        @IsArray()
+        @IsArray({ message: "Id абонентов должны быть массивом чисел" })
         subscriberIds?: number[];
 
         @IsOptional()
-        @IsNumber()
+        @IsNumber({}, { message: "Id дома должно быть числом" })
         houseId?: number;
 
-        @IsNumber({}, { message: "Id управляющей компании должен быть числом" }) managementCompanyId!: number;
+        @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
+        managementCompanyId!: number;
     }
 
     export class Response {

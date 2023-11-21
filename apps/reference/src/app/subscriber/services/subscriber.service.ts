@@ -1,5 +1,5 @@
-import { SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, addGenericObject, getGenericObjects, checkUsers } from "@myhome/constants";
-import { SubscriberStatus, UserRole, ISubscriber } from "@myhome/interfaces";
+import { SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, getGenericObjects, checkUsers, APART_NOT_EXIST, checkUser, USER_NOT_EXIST } from "@myhome/constants";
+import { SubscriberStatus, UserRole } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { SubscriberEntity } from "../entities/subscriber.entity";
 import { ApartmentRepository } from "../repositories/apartment.repository";
@@ -24,18 +24,34 @@ export class SubscriberService {
 	) { }
 
 	async addSubscriber(dto: ReferenceAddSubscriber.Request): Promise<ReferenceAddSubscriber.Response> {
-		const existedSubscriber = await this.subscriberRepository.findByPersonalAccount(dto.personalAccount);
+		const existedSubscriber = await this.subscriberRepository.findByApartmentIdAndPersonalAccount(
+			dto.apartmentId,
+			dto.personalAccount
+		);
 		if (existedSubscriber) {
 			throw new RMQException(SUBSCRIBER_ALREADY_EXIST, HttpStatus.CONFLICT);
 		}
+		const apartment = await this.apartmentRepository.findByIdWithHouse(dto.apartmentId);
+		if (!apartment) {
+			throw new RMQException(APART_NOT_EXIST.message(dto.apartmentId), APART_NOT_EXIST.status);
+		}
+		const { profile } = await checkUser(this.rmqService, dto.ownerId, UserRole.Owner);
+		if (!profile) {
+			throw new RMQException(USER_NOT_EXIST.message(dto.ownerId), USER_NOT_EXIST.status);
+		}
+
+		const newSubscriber = new SubscriberEntity({
+			...dto,
+			status: SubscriberStatus.Active
+		});
+		const newSubscriberEntity = await this.subscriberRepository.create(newSubscriber);
 		return {
-			subscriber: await addGenericObject<SubscriberEntity>
-				(
-					this.subscriberRepository,
-					(item) => new SubscriberEntity(item),
-					dto as ISubscriber
-				)
-		};
+			subscriber: {
+				...newSubscriberEntity.get(),
+				apartmentName: apartment.getAddress(apartment.house),
+				ownerName: profile.name
+			}
+		}
 	}
 
 	async archieveSubscriber(id: number) {

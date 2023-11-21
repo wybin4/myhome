@@ -1,4 +1,4 @@
-import { IHouseNotification, HouseNotificationType } from '@myhome/interfaces';
+import { HouseNotificationType, IGetHouseNotification } from '@myhome/interfaces';
 import { IsNumber, IsString, MaxLength, Validate } from 'class-validator';
 import { IsValidEnumValue } from '../../../enum.validator';
 
@@ -22,7 +22,7 @@ export namespace EventAddHouseNotification {
     }
 
     export class Response {
-        notification!: IHouseNotification;
+        notification!: IGetHouseNotification;
     }
 }
 

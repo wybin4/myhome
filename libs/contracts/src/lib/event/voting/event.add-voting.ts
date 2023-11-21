@@ -13,9 +13,6 @@ export namespace EventAddVoting {
         title!: string;
 
         @IsString()
-        createdAt!: string;
-
-        @IsString()
         expiredAt!: string;
 
         @IsArray({ message: "Варианты ответа должны быть массивом строк" })

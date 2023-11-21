@@ -3,9 +3,9 @@ import { CommonHouseNeedTariffRepository, IGenericTariffAndNormRepository, Munic
 import { RMQService } from "nestjs-rmq";
 import { NormEntity, SeasonalityFactorEntity, MunicipalTariffEntity, SocialNormEntity, BaseTariffAndNormEntity } from "./entities/base-tariff-and-norm.entity";
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
-import { IBaseTariffAndNorm, ICommonHouseNeedTariff, IHouse, IUnit, TariffAndNormType, UserRole } from "@myhome/interfaces";
+import { CommonHouseNeedTariffData, IBaseTariffAndNorm, ICommonHouseNeedTariff, IHouse, ITypeOfService, IUnit, MunicipalTariffData, NormData, SeasonalityFactorData, SocialNormData, TariffAndNormType, UserRole } from "@myhome/interfaces";
 import { ReferenceAddTariffOrNorm, ReferenceGetAllTariffs, ReferenceUpdateTariffOrNorm } from "@myhome/contracts";
-import { TYPE_OF_SERVICE_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, RMQException, HOUSES_NOT_EXIST, TYPES_OF_SERVICE_NOT_EXIST, UNITS_NOT_EXIST } from "@myhome/constants";
+import { TYPE_OF_SERVICE_NOT_EXIST, UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, RMQException, HOUSES_NOT_EXIST, TYPES_OF_SERVICE_NOT_EXIST, UNITS_NOT_EXIST, HOUSE_NOT_EXIST } from "@myhome/constants";
 import { TypeOfServiceRepository } from "../common/repositories/type-of-service.repository";
 import { UnitRepository } from "../common/repositories/unit.repository";
 import { HouseService } from "../subscriber/services/house.service";
@@ -115,7 +115,8 @@ export class TariffAndNormService {
             case TariffAndNormType.CommonHouseNeedTariff:
                 ({ houses } = await this.houseService.getHousesByUser({
                     userId: managementCompanyId,
-                    userRole: UserRole.ManagementCompany
+                    userRole: UserRole.ManagementCompany,
+                    isAllInfo: false
                 }));
                 if (!houses && !houses.length) {
                     throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
@@ -183,68 +184,69 @@ export class TariffAndNormService {
         return { gettedTN };
     }
 
-    public async addTariffAndNorm(dto: ReferenceAddTariffOrNorm.Request) {
-        const typeOfService = await this.typeOfServiceRepository.findById(dto.typeOfServiceId);
+    public async addTariffAndNorm(dto: ReferenceAddTariffOrNorm.Request): Promise<ReferenceAddTariffOrNorm.Response> {
+        const typeOfServiceId = dto.typeOfServiceId;
+        const typeOfService = await this.typeOfServiceRepository.findById(typeOfServiceId);
         if (!typeOfService) {
-            throw new RMQException(TYPE_OF_SERVICE_NOT_EXIST.message(dto.typeOfServiceId), TYPE_OF_SERVICE_NOT_EXIST.status);
+            throw new RMQException(TYPE_OF_SERVICE_NOT_EXIST.message(typeOfServiceId), TYPE_OF_SERVICE_NOT_EXIST.status);
         }
-        let newTEntity: CommonHouseNeedTariffEntity, newT: ICommonHouseNeedTariff;
         switch (dto.type) {
-            case TariffAndNormType.Norm:
-                await this.checkUnit(dto.unitId);
-                if (!dto.norm) {
-                    throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
-                }
-                if (!dto.typeOfNorm) {
-                    throw new RMQException(INCORRECT_PARAM + 'typeOfNorm', HttpStatus.BAD_REQUEST);
-                }
-                return this.genericAddTariffAndNorm<NormEntity>(
+            case TariffAndNormType.Norm: {
+                const data = dto.data as NormData;
+                const unit = await this.checkUnit(data.unitId);
+                return await this.genericAddTariffAndNorm<NormEntity>(
                     this.normRepository,
-                    dto, NormEntity
+                    { typeOfServiceId, ...data }, NormEntity,
+                    typeOfService, unit
                 )
-            case TariffAndNormType.SeasonalityFactor:
-                if (!dto.monthName) {
-                    throw new RMQException(INCORRECT_PARAM + 'monthName', HttpStatus.BAD_REQUEST);
-                }
-                if (!dto.coefficient) {
-                    throw new RMQException(INCORRECT_PARAM + 'coefficient', HttpStatus.BAD_REQUEST);
-                }
-                return this.genericAddTariffAndNorm<SeasonalityFactorEntity>(
+            }
+            case TariffAndNormType.SeasonalityFactor: {
+                const data = dto.data as SeasonalityFactorData;
+                return await this.genericAddTariffAndNorm<SeasonalityFactorEntity>(
                     this.seasonalityFactorRepository,
-                    dto, SeasonalityFactorEntity
+                    { typeOfServiceId, ...data }, SeasonalityFactorEntity,
+                    typeOfService
                 )
-            case TariffAndNormType.MunicipalTariff:
-                await this.checkUnit(dto.unitId);
-                if (!dto.norm) {
-                    throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
-                }
-                if (!dto.supernorm) {
-                    throw new RMQException(INCORRECT_PARAM + 'supernorm', HttpStatus.BAD_REQUEST);
-                }
-                return this.genericAddTariffAndNorm<MunicipalTariffEntity>(
+            }
+            case TariffAndNormType.MunicipalTariff: {
+                const data = dto.data as MunicipalTariffData;
+                const unit = await this.checkUnit(data.unitId);
+                return await this.genericAddTariffAndNorm<MunicipalTariffEntity>(
                     this.municipalTariffRepository,
-                    dto, MunicipalTariffEntity
+                    { typeOfServiceId, ...data },
+                    MunicipalTariffEntity,
+                    typeOfService, unit
                 )
-            case TariffAndNormType.SocialNorm:
-                await this.checkUnit(dto.unitId);
-                if (!dto.norm) {
-                    throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
-                }
-                if (!dto.amount) {
-                    throw new RMQException(INCORRECT_PARAM + 'amount', HttpStatus.BAD_REQUEST);
-                }
-                return this.genericAddTariffAndNorm<SocialNormEntity>(
+            }
+            case TariffAndNormType.SocialNorm: {
+                const data = dto.data as SocialNormData;
+                const unit = await this.checkUnit(data.unitId);
+                return await this.genericAddTariffAndNorm<SocialNormEntity>(
                     this.socialNormRepository,
-                    dto, SocialNormEntity
+                    { typeOfServiceId, ...data },
+                    SocialNormEntity,
+                    typeOfService, unit
                 )
-            case TariffAndNormType.CommonHouseNeedTariff:
-                await this.checkUnit(dto.unitId);
-                if (!dto.multiplier) {
-                    throw new RMQException(INCORRECT_PARAM + 'multiplier', HttpStatus.BAD_REQUEST);
+            }
+            case TariffAndNormType.CommonHouseNeedTariff: {
+                const data = dto.data as CommonHouseNeedTariffData;
+                const unit = await this.checkUnit(data.unitId);
+                const { houses } = await this.houseService.getHouses({ houseIds: [data.houseId], isAllInfo: false });
+                if (!houses && !houses[0]) {
+                    throw new RMQException(HOUSE_NOT_EXIST.message(data.houseId), HOUSE_NOT_EXIST.status);
                 }
-                newTEntity = new CommonHouseNeedTariffEntity(dto);
-                newT = await this.commonHouseNeedTariffRepository.create(newTEntity);
-                return { newT };
+                const currentHouse = houses[0];
+                const newTEntity = new CommonHouseNeedTariffEntity({ typeOfServiceId, ...data });
+                const newT = await this.commonHouseNeedTariffRepository.create(newTEntity);
+                return {
+                    tariffAndNorm: {
+                        ...newT,
+                        typeOfServiceName: typeOfService.name,
+                        unitName: unit.name,
+                        houseName: `${currentHouse.city}, ${currentHouse.street}, д. ${currentHouse.houseNumber}`
+                    }
+                };
+            }
             default:
                 throw new RMQException(INCORRECT_TARIFF_AND_NORM_TYPE, HttpStatus.CONFLICT);
         }
@@ -256,17 +258,25 @@ export class TariffAndNormService {
         if (!unit) {
             throw new RMQException(UNIT_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
-        return;
+        return unit;
     }
 
     private async genericAddTariffAndNorm<T extends BaseTariffAndNormEntity>(
         repository: IGenericTariffAndNormRepository<T>,
-        dto: ReferenceAddTariffOrNorm.Request,
-        createInstance: new (dto: ReferenceAddTariffOrNorm.Request) => T,
+        dto: IBaseTariffAndNorm,
+        createInstance: new (dto: IBaseTariffAndNorm) => T,
+        typeOfService: ITypeOfService,
+        unit?: IUnit
     ) {
         const newTEntity = new createInstance(dto);
         const newT = await repository.create(newTEntity);
-        return { newT };
+        return {
+            tariffAndNorm: {
+                ...newT,
+                typeOfServiceName: typeOfService.name,
+                unitName: unit ? unit.name : undefined
+            }
+        };
     }
 
     public async updateTariffAndNorm(dto: ReferenceUpdateTariffOrNorm.Request) {

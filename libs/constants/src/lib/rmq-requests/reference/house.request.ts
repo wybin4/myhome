@@ -11,7 +11,7 @@ export async function getHousesByOId(rmqService: RMQService, ownerId: number) {
                 ReferenceGetHousesByUser.Request,
                 ReferenceGetHousesByUser.Response
             >
-            (ReferenceGetHousesByUser.topic, { userId: ownerId, userRole: UserRole.Owner });
+            (ReferenceGetHousesByUser.topic, { userId: ownerId, userRole: UserRole.Owner, isAllInfo: false });
     } catch (e: any) {
         throw new RMQException(e.message, e.status);
     }
@@ -24,7 +24,7 @@ export async function getHousesByMCId(rmqService: RMQService, managementCompanyI
                 ReferenceGetHousesByUser.Request,
                 ReferenceGetHousesByUser.Response
             >
-            (ReferenceGetHousesByUser.topic, { userId: managementCompanyId, userRole: UserRole.ManagementCompany });
+            (ReferenceGetHousesByUser.topic, { userId: managementCompanyId, userRole: UserRole.ManagementCompany, isAllInfo: false });
     } catch (e: any) {
         throw new RMQException(e.message, e.status);
     }

@@ -23,7 +23,7 @@ export class VotingService {
         await getHouseAllInfo(this.rmqService, dto.houseId);
         const newVotingEntity = new VotingEntity({
             ...dto,
-            createdAt: new Date(dto.createdAt),
+            createdAt: new Date(),
             expiredAt: new Date(dto.expiredAt),
         });
         const newVoting = await this.votingRepository.create(newVotingEntity);

@@ -1,7 +1,7 @@
 import { IsNumber, Validate } from 'class-validator';
 import { IGetUser, UserRole } from '@myhome/interfaces';
 import { IsValidEnumValue } from '../enum.validator';
-import { IGetSubscriber } from '../reference/subscriber/subscriber/reference.get-users-by-another-role';
+import { IGetSubscriberInUser } from '../reference/subscriber/subscriber/reference.get-users-by-another-role';
 
 export namespace AccountGetUsersByAnotherRole {
   export const topic = 'account.get-users-by-another-role.query';
@@ -21,5 +21,5 @@ export namespace AccountGetUsersByAnotherRole {
 
 export interface IGetProfileWithSubscriber {
   user: IGetUser;
-  subscribers: IGetSubscriber[];
+  subscribers: IGetSubscriberInUser[];
 }

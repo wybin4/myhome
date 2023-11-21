@@ -94,8 +94,17 @@ export class SubscriberRepository {
             .getMany();
     }
 
-    async findByPersonalAccount(personalAccount: string) {
-        return await this.subscriberRepository.findOne({ where: { personalAccount } });
+
+    async findByApartmentIdAndPersonalAccount(apartmentId: number, personalAccount: string) {
+        const options = {
+            where: [
+                { apartmentId },
+                { personalAccount }
+            ],
+            or: true,
+        };
+
+        return await this.subscriberRepository.findOne(options);
     }
 
     async update(subscriber: SubscriberEntity) {

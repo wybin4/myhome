@@ -1,6 +1,5 @@
-import { ISubscriber, SubscriberStatus } from '@myhome/interfaces';
-import { IsNumber, IsString, Validate } from 'class-validator';
-import { IsValidEnumValue } from '../../../enum.validator';
+import { ISubscriber } from '@myhome/interfaces';
+import { IsNumber, IsString } from 'class-validator';
 
 export namespace ReferenceAddSubscriber {
     export const topic = 'reference.add-subscriber.command';
@@ -14,12 +13,14 @@ export namespace ReferenceAddSubscriber {
 
         @IsString({ message: "Лицевой счёт должен быть строкой" })
         personalAccount!: string;
-
-        @Validate(IsValidEnumValue, [SubscriberStatus])
-        status!: SubscriberStatus;
     }
 
     export class Response {
-        subscriber!: ISubscriber;
+        subscriber!: IGetSubscriber;
     }
+}
+
+export interface IGetSubscriber extends ISubscriber {
+    apartmentName: string;
+    ownerName: string;
 }

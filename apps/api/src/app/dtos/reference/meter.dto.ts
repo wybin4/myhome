@@ -8,6 +8,8 @@ export class AddMeterDto {
     verifiedAt: string;
     issuedAt: string;
     meterType: MeterType;
+    previousReading: number;
+    previousReadAt: string;
 }
 
 export class GetMetersByUserDto {

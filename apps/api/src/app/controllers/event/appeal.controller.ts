@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, HttpCode, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, HttpCode, Post, SetMetadata, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { EventAddAppeal, EventUpdateAppeal } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
@@ -8,21 +8,18 @@ import { Multer } from 'multer';
 import { AddIndividualMeterData, AppealType, UserRole, VerifyIndividualMeterData } from '@myhome/interfaces';
 import { AddAppealDto, UpdateAppealDto } from '../../dtos/event/appeal.dto';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
-import { INCORRECT_USER_ROLE } from '@myhome/constants';
+import { RoleGuard } from '../../guards/role.guard';
 
 @Controller('appeal')
 export class AppealController {
     constructor(private readonly rmqService: RMQService) { }
 
-    @UseGuards(JWTAuthGuard)
+    @SetMetadata('role', UserRole.Owner)
+    @UseGuards(JWTAuthGuard, RoleGuard)
     @UseInterceptors(FileInterceptor("file"))
     @HttpCode(201)
     @Post('add-appeal')
-    async addAppeal(@Req() req, @UploadedFile() file: Express.Multer.File, @Body() dto: AddAppealDto) {
-        if (req.user.userRole !== UserRole.Owner) {
-            throw new BadRequestException(INCORRECT_USER_ROLE);
-        }
-
+    async addAppeal(@UploadedFile() file: Express.Multer.File, @Body() dto: AddAppealDto) {
         if (
             dto.typeOfAppeal === AppealType.AddIndividualMeter ||
             dto.typeOfAppeal === AppealType.VerifyIndividualMeter
@@ -61,19 +58,16 @@ export class AppealController {
         }
     }
 
-    @UseGuards(JWTAuthGuard)
+    @SetMetadata('role', UserRole.ManagementCompany)
+    @UseGuards(JWTAuthGuard, RoleGuard)
     @HttpCode(200)
     @Post('update-appeal')
-    async updateAppeal(@Req() req, @Body() dto: UpdateAppealDto) {
+    async updateAppeal(@Body() dto: UpdateAppealDto) {
         try {
-            if (req.user.userRole === UserRole.ManagementCompany) {
-                return await this.rmqService.send<
-                    EventUpdateAppeal.Request,
-                    EventUpdateAppeal.Response
-                >(EventUpdateAppeal.topic, dto);
-            } else {
-                throw new BadRequestException(INCORRECT_USER_ROLE);
-            }
+            return await this.rmqService.send<
+                EventUpdateAppeal.Request,
+                EventUpdateAppeal.Response
+            >(EventUpdateAppeal.topic, dto);
         } catch (e) {
             CatchError(e);
         }

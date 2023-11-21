@@ -7,7 +7,7 @@ import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { RefreshAuthGuard } from '../../guards/refresh.guard';
 import { RegisterDto, LoginDto } from '../../dtos/account/account.dto';
-import { UserRole } from '@myhome/interfaces';
+import { IJWTPayload, UserRole } from '@myhome/interfaces';
 
 @Controller('auth')
 export class AuthController {
@@ -34,12 +34,12 @@ export class AuthController {
   @Post('login')
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     try {
-      const { token, refreshToken, id, userRole } = await this.rmqService.send<
+      const { token, refreshToken, userId, userRole } = await this.rmqService.send<
         AccountLogin.Request,
         AccountLogin.Response
       >(AccountLogin.topic, dto);
 
-      this.setCookie(res, token, refreshToken, { id, userRole });
+      this.setCookie(res, token, refreshToken, { userId, userRole });
 
       return { msg: "success" };
     } catch (e) {
@@ -50,7 +50,7 @@ export class AuthController {
   @HttpCode(200)
   @Get('refresh')
   @UseGuards(RefreshAuthGuard)
-  async regenerateTokens(@Req() req, @Res({ passthrough: true }) res: Response) {
+  async regenerateTokens(@Req() req: { user: IJWTPayload }, @Res({ passthrough: true }) res: Response) {
     try {
       const { token } = await this.rmqService.send<
         AccountRefresh.Request,
@@ -89,7 +89,7 @@ export class AuthController {
   private setCookie(res: Response,
     token: string,
     refreshToken?: string,
-    user?: { id: number; userRole: UserRole },
+    user?: { userId: number; userRole: UserRole },
   ) {
     const { expires, expiresRefresh } = this.getExpires();
 
@@ -98,7 +98,7 @@ export class AuthController {
       expires: expires
     });
     if (user) {
-      res.cookie('userId', String(user.id), {
+      res.cookie('userId', String(user.userId), {
         expires: expiresRefresh
       });
       res.cookie('userRole', user.userRole, {

@@ -26,14 +26,9 @@ export class TariffAndNormService {
     ) { }
 
     public async getTariffsAndNormsByUser(
-        userId: number, userRole: UserRole,
+        managementCompanyId: number,
         type: TariffAndNormType
     ) {
-        if (userRole !== UserRole.ManagementCompany) {
-            throw new RMQException("Тарифы и нормы может получить только управляющая компания", HttpStatus.BAD_REQUEST);
-        }
-        const managementCompanyId = userId;
-
         let tItems: CommonHouseNeedTariffEntity[], gettedTNs: ICommonHouseNeedTariff[];
         let houses: IHouse[], houseIds: number[], units: IUnit[];
 

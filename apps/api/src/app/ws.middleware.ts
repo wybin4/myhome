@@ -30,11 +30,11 @@ export const WSAuthMiddleware = (
                         refresh ?? '',
                     );
 
-                    const { id, userRole } = jwtRefreshPayload;
+                    const { userId, userRole } = jwtRefreshPayload;
                     const { token: newJWT } = await rmqService.send<
                         AccountRefresh.Request,
                         AccountRefresh.Response
-                    >(AccountRefresh.topic, { id, userRole });
+                    >(AccountRefresh.topic, { userId, userRole });
 
                     setKey(jwtRefreshPayload, socket);
 
@@ -64,9 +64,9 @@ export const WSAuthMiddleware = (
     }
 
     function setKey(user: IJWTPayload, socket: Socket) {
-        const { id, userRole } = user;
-        socket.data.user = { userId: id, userRole };
-        const key = `${id}_${userRole}`;
+        const { userId, userRole } = user;
+        socket.data.user = { userId, userRole };
+        const key = `${userId}_${userRole}`;
         clients.set(key, socket);
     }
 

@@ -5,6 +5,7 @@ import { SocketGateway } from '../../socket.gateway';
 import { AddChat, AddMessage, ReadMessages, GetReceivers } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
+import { IJWTPayload } from '@myhome/interfaces';
 
 @Controller('chat')
 export class ChatController {
@@ -16,12 +17,12 @@ export class ChatController {
     @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-receivers')
-    async getReceivers(@Req() req, @Body() dto: GetReceiversDto) {
+    async getReceivers(@Req() req: { user: IJWTPayload }, @Body() dto: GetReceiversDto) {
         try {
             return await this.rmqService.send<
                 GetReceivers.Request,
                 GetReceivers.Response
-                >(GetReceivers.topic, { ...dto, ...req.user });
+            >(GetReceivers.topic, { ...dto, ...req.user });
         } catch (e) {
             CatchError(e);
         }
@@ -46,7 +47,7 @@ export class ChatController {
     @UseGuards(JWTAuthGuard)
     @HttpCode(201)
     @Post('add-message')
-    async addMessage(@Req() req, @Body() dto: AddMessageDto) {
+    async addMessage(@Req() req: { user: IJWTPayload }, @Body() dto: AddMessageDto) {
         try {
             const { userId: senderId, userRole: senderRole } = req.user;
             const newDto = await this.rmqService.send<
@@ -62,7 +63,7 @@ export class ChatController {
     @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('read-messages')
-    async readMessages(@Req() req, @Body() dto: ReadMessagesDto) {
+    async readMessages(@Req() req: { user: IJWTPayload }, @Body() dto: ReadMessagesDto) {
         try {
             const newDto = await this.rmqService.send<
                 ReadMessages.Request,

@@ -12,9 +12,9 @@ export class TariffAndNormController {
 
     @RMQValidate()
     @RMQRoute(ReferenceGetTariffsOrNormsByUser.topic)
-    async getTariffsAndNormsByUser(@Body() { userId, userRole, type }: ReferenceGetTariffsOrNormsByUser.Request) {
+    async getTariffsAndNormsByUser(@Body() { managementCompanyId, type }: ReferenceGetTariffsOrNormsByUser.Request) {
         try {
-            return this.tariffAndNormService.getTariffsAndNormsByUser(userId, userRole, type);
+            return this.tariffAndNormService.getTariffsAndNormsByUser(managementCompanyId, type);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

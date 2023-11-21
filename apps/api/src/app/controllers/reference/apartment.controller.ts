@@ -1,9 +1,11 @@
-import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, SetMetadata, UseGuards } from '@nestjs/common';
 import { ReferenceAddApartment, ReferenceGetApartmentsByUser } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { AddApartmentDto, GetApartmentsByUserDto } from '../../dtos/reference/apartment.dto';
 import { CatchError } from '../../error.filter';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
+import { IJWTPayload, UserRole } from '@myhome/interfaces';
+import { RoleGuard } from '../../guards/role.guard';
 
 @Controller('apartment')
 export class ApartmentController {
@@ -13,7 +15,7 @@ export class ApartmentController {
     @HttpCode(200)
     @Post('get-apartments-by-user')
     async getApartmentsByUser(
-        @Req() req,
+        @Req() req: { user: IJWTPayload },
         @Body() dto: GetApartmentsByUserDto
     ) {
         try {
@@ -26,6 +28,8 @@ export class ApartmentController {
         }
     }
 
+    @SetMetadata('role', UserRole.ManagementCompany)
+    @UseGuards(JWTAuthGuard, RoleGuard)
     @HttpCode(201)
     @Post('add-apartment')
     async addApartment(@Body() dto: AddApartmentDto) {

@@ -70,8 +70,7 @@ export * from './lib/document-detail/document-detail.delete-document-details';
 export * from './lib/document-detail/document-detail.add-document-details';
 
 export * from './lib/single-payment-document/get-single-payment-document';
-export * from './lib/single-payment-document/get-single-payment-documents-by-mcid';
-export * from './lib/single-payment-document/get-single-payment-documents-by-sid';
+export * from './lib/single-payment-document/get-single-payment-documents-by-user';
 export * from './lib/single-payment-document/check-single-payment-document';
 
 export * from './lib/correction/debt/correction.get-debt';

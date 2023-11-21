@@ -89,12 +89,12 @@ export class AuthService {
       throw new RMQException(INCORRECT_PASSWORD.message, INCORRECT_PASSWORD.status);
     }
 
-    return { id: userEntity.id, userRole: dto.userRole };
+    return { userId: userEntity.id, userRole: dto.userRole };
   }
 
   async login(user: IJWTPayload): Promise<AccountLogin.Response> {
     return {
-      id: user.id,
+      userId: user.userId,
       userRole: user.userRole,
       token: await this.jwtService.signAsync(user),
       refreshToken: await this.jwtService.signAsync(user, { expiresIn: this.configService.get("EXPIRE_REFRESH") })

@@ -1,4 +1,4 @@
-import { CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByMCId, GetSinglePaymentDocumentsBySId, ISubscriberAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
+import { CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByUser, GetSinglePaymentDocumentsBySId, ISubscriberAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
@@ -22,8 +22,8 @@ export class SinglePaymentDocumentService {
         private readonly pdfService: PdfService
     ) { }
 
-    async getSinglePaymentDocumentsByMCId(dto: GetSinglePaymentDocumentsByMCId.Request):
-        Promise<GetSinglePaymentDocumentsByMCId.Response> {
+    async getSinglePaymentDocumentsByMCId(dto: GetSinglePaymentDocumentsByUser.Request):
+        Promise<GetSinglePaymentDocumentsByUser.Response> {
         const { houses } = await getHousesByMCId(this.rmqService, dto.managementCompanyId);
         const spds = await this.totalRepository.findByMCId(dto.managementCompanyId);
         if (!spds) {

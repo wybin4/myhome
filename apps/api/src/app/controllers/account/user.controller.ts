@@ -4,6 +4,7 @@ import { AccountGetAllUsers, AccountGetUsersByAnotherRole, AccountUserInfo } fro
 import { GetAllUsersDto, GetUsersByAnotherRoleDto, UserInfoDto } from '../../dtos/account/user.dto';
 import { CatchError } from '../../error.filter';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
+import { IJWTPayload } from '@myhome/interfaces';
 
 @Controller('user')
 export class UserController {
@@ -14,7 +15,7 @@ export class UserController {
   @UseGuards(JWTAuthGuard)
   @HttpCode(200)
   @Post('info')
-  async info(@Req() req, @Body() dto: UserInfoDto) {
+  async info(@Req() req: { user: IJWTPayload }, @Body() dto: UserInfoDto) {
     try {
       return await this.rmqService.send<
         AccountUserInfo.Request,
@@ -29,7 +30,7 @@ export class UserController {
   @HttpCode(200)
   @Post('get-all-users')
   async getAllUsers(
-    @Req() req,
+    @Req() req: { user: IJWTPayload },
     @Body() dto: GetAllUsersDto
   ) {
     try {
@@ -49,7 +50,7 @@ export class UserController {
   @HttpCode(200)
   @Post('get-users-by-another-role')
   async getOwnersByMCId(
-    @Req() req,
+    @Req() req: { user: IJWTPayload },
     @Body() dto: GetUsersByAnotherRoleDto
   ) {
     try {

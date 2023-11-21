@@ -7,7 +7,7 @@ export namespace AccountRefresh {
 
   export class Request {
     @IsNumber({}, { message: "Id пользователя должен быть числом" })
-    id!: string;
+    userId!: number;
 
     @Validate(IsValidEnumValue, [UserRole])
     userRole!: UserRole;

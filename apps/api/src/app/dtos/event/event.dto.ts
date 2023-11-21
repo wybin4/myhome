@@ -1,13 +1,5 @@
-import { EventType, UserRole } from "@myhome/interfaces";
-import { IsArray, IsEnum, IsNumber } from "class-validator";
+import { EventType } from "@myhome/interfaces";
 
 export class GetEventsDto {
-    @IsNumber()
-    userId!: number;
-
-    @IsEnum(UserRole)
-    userRole!: UserRole;
-
-    @IsArray()
     events!: EventType[];
 }

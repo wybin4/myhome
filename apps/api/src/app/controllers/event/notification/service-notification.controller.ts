@@ -5,6 +5,7 @@ import { CatchError } from '../../../error.filter';
 import { UpdateServiceNotificationDto, GetServiceNotificationsDto, UpdateAllServiceNotificationsDto } from '../../../dtos/event/notification/service-notification.dto';
 import { SocketGateway } from '../../../socket.gateway';
 import { JWTAuthGuard } from '../../../guards/jwt.guard';
+import { IJWTPayload } from '@myhome/interfaces';
 
 @Controller('service-notification')
 export class ServiceNotificationController {
@@ -16,7 +17,7 @@ export class ServiceNotificationController {
     @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-service-notifications')
-    async getNotifications(@Req() req, @Body() dto: GetServiceNotificationsDto) {
+    async getNotifications(@Req() req: { user: IJWTPayload }, @Body() dto: GetServiceNotificationsDto) {
         try {
             return await this.rmqService.send<
                 EventGetServiceNotifications.Request,
@@ -45,7 +46,7 @@ export class ServiceNotificationController {
     @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('update-all-service-notifications')
-    async updateAllNotifications(@Req() req, @Body() dto: UpdateAllServiceNotificationsDto) {
+    async updateAllNotifications(@Req() req: { user: IJWTPayload }, @Body() dto: UpdateAllServiceNotificationsDto) {
         try {
             const newDto = await this.rmqService.send<
                 EventUpdateAllServiceNotifications.Request,

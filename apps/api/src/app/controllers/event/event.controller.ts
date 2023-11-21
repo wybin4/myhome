@@ -4,6 +4,7 @@ import { CatchError } from '../../error.filter';
 import { GetEventsDto } from '../../dtos/event/event.dto';
 import { EventGetEvents } from '@myhome/contracts';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
+import { IJWTPayload } from '@myhome/interfaces';
 
 @Controller('event')
 export class EventController {
@@ -13,7 +14,7 @@ export class EventController {
     @HttpCode(200)
     @Post('get-events')
     async getEvents(
-        @Req() req,
+        @Req() req: { user: IJWTPayload },
         @Body() dto: GetEventsDto
     ) {
         try {

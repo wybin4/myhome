@@ -34,6 +34,7 @@ export class SinglePaymentDocumentController {
         }
     }
 
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-single-payment-documents-by-user')
     async getSinglePaymentDocumentsByUser(@Req() req: { user: IJWTPayload }, @Body() dto: GetSinglePaymentDocumentsByUserDto) {

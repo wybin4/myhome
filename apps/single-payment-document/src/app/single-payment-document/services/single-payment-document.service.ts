@@ -1,9 +1,9 @@
-import { CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByUser, GetSinglePaymentDocumentsBySId, ISubscriberAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
+import { CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByUser, ISubscriberAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
 import { CalculationState, ITypeOfService, IUnit, UserRole } from "@myhome/interfaces";
-import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, CANT_GET_SPDS, RMQException, SUBSCRIBERS_NOT_EXIST, checkUser, getApartmentsAllInfo, getCommon, getHouses, getHousesByMCId, getSubscribersAllInfo } from "@myhome/constants";
+import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, CANT_GET_SPDS, INCORRECT_USER_ROLE, RMQException, SUBSCRIBERS_NOT_EXIST, checkUser, getApartmentsAllInfoByUser, getCommon, getHouses, getHousesByMCId, getSubscribersAllInfo } from "@myhome/constants";
 import { GetSinglePaymentDocumentSaga } from "../sagas/get-single-payment-document.saga";
 import { PdfService } from "./pdf.service";
 import { ISpdHouse, ISpdManagementCompany, ISpdSubscriber } from "../interfaces/subscriber.interface";
@@ -22,72 +22,77 @@ export class SinglePaymentDocumentService {
         private readonly pdfService: PdfService
     ) { }
 
-    async getSinglePaymentDocumentsByMCId(dto: GetSinglePaymentDocumentsByUser.Request):
+    async getSinglePaymentDocumentsByUser(dto: GetSinglePaymentDocumentsByUser.Request):
         Promise<GetSinglePaymentDocumentsByUser.Response> {
-        const { houses } = await getHousesByMCId(this.rmqService, dto.managementCompanyId);
-        const spds = await this.totalRepository.findByMCId(dto.managementCompanyId);
-        if (!spds) {
-            throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
-        }
+        switch (dto.userRole) {
+            case UserRole.Owner: {
+                const { apartments } = await getApartmentsAllInfoByUser(this.rmqService, dto.userId, dto.userRole);
+                const subscriberIds = apartments.map(apartment => apartment.subscriberId);
+                const spds = await this.singlePaymentDocumentRepository.findBySIds(subscriberIds);
+                if (!spds) {
+                    throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
+                }
+                const files = spds.map(s => {
+                    return {
+                        id: s.id,
+                        fileName: s.path
+                    };
+                });
 
-        const files = spds.map(s => {
-            return {
-                id: s.id,
-                fileName: s.path
-            };
-        });
-
-        const readFiles = await this.pdfService.readFileToBuffer(files);
-
-        return {
-            singlePaymentDocuments: readFiles.map(file => {
-                const currentSPD = spds.find(s => s.id === file.id);
-                const currentHouse = houses.find(h => h.managementCompanyId === currentSPD.managementCompanyId);
+                const readFiles = await this.pdfService.readFileToBuffer(files);
 
                 return {
-                    id: currentSPD.id,
-                    houseId: currentHouse.id,
-                    city: currentHouse.city,
-                    street: currentHouse.street,
-                    houseName: currentHouse.houseNumber,
-                    fileSize: file.size,
-                    pdfBuffer: (file.buffer).toString('base64'),
-                    createdAt: currentSPD.createdAt
+                    singlePaymentDocuments: readFiles.map(file => {
+                        const currentSPD = spds.find(s => s.id === file.id);
+                        const currentApartment = apartments.find(s => s.subscriberId === currentSPD.subscriberId);
+
+                        return {
+                            id: currentSPD.id,
+                            apartmentName: currentApartment.address,
+                            fileSize: file.size,
+                            pdfBuffer: (file.buffer).toString('base64'),
+                            createdAt: currentSPD.createdAt
+                        };
+                    })
                 };
-            })
-        };
-    }
+            }
+            case UserRole.ManagementCompany: {
+                const { houses } = await getHousesByMCId(this.rmqService, dto.userId);
+                const spds = await this.totalRepository.findByMCId(dto.userId);
+                if (!spds) {
+                    throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
+                }
 
-    async getSinglePaymentDocumentsBySId(dto: GetSinglePaymentDocumentsBySId.Request):
-        Promise<GetSinglePaymentDocumentsBySId.Response> {
-        const { apartments } = await getApartmentsAllInfo(this.rmqService, dto.subscriberIds);
-        const spds = await this.singlePaymentDocumentRepository.findBySIds(dto.subscriberIds);
-        if (!spds) {
-            throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
-        }
-        const files = spds.map(s => {
-            return {
-                id: s.id,
-                fileName: s.path
-            };
-        });
+                const files = spds.map(s => {
+                    return {
+                        id: s.id,
+                        fileName: s.path
+                    };
+                });
 
-        const readFiles = await this.pdfService.readFileToBuffer(files);
-
-        return {
-            singlePaymentDocuments: readFiles.map(file => {
-                const currentSPD = spds.find(s => s.id === file.id);
-                const currentSubscriber = apartments.find(s => s.subscriberId === currentSPD.subscriberId);
+                const readFiles = await this.pdfService.readFileToBuffer(files);
 
                 return {
-                    id: currentSPD.id,
-                    apartmentName: currentSubscriber.address,
-                    fileSize: file.size,
-                    pdfBuffer: (file.buffer).toString('base64'),
-                    createdAt: currentSPD.createdAt
+                    singlePaymentDocuments: readFiles.map(file => {
+                        const currentSPD = spds.find(s => s.id === file.id);
+                        const currentHouse = houses.find(h => h.managementCompanyId === currentSPD.managementCompanyId);
+
+                        return {
+                            id: currentSPD.id,
+                            houseId: currentHouse.id,
+                            city: currentHouse.city,
+                            street: currentHouse.street,
+                            houseName: currentHouse.houseNumber,
+                            fileSize: file.size,
+                            pdfBuffer: (file.buffer).toString('base64'),
+                            createdAt: currentSPD.createdAt
+                        };
+                    })
                 };
-            })
-        };
+            }
+            default:
+                throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
+        }
     }
 
     async checkSinglePaymentDocument({ id }: CheckSinglePaymentDocument.Request) {

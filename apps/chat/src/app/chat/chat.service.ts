@@ -248,7 +248,7 @@ export class ChatService {
             }
         });
         await chat.save();
-
+   
         return {
             chatId: chat._id,
             users: chat.users,

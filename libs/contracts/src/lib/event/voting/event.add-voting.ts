@@ -1,4 +1,4 @@
-import { IOption, IVoting } from "@myhome/interfaces";
+import { IGetVoting, IOption, IVoting } from "@myhome/interfaces";
 import { IsArray, IsNumber, IsString, MaxLength } from "class-validator";
 
 export namespace EventAddVoting {
@@ -20,7 +20,11 @@ export namespace EventAddVoting {
     }
 
     export class Response {
-        voting!: IVoting;
-        options!: IOption[]
+        voting!: IAddVoting;
     }
+}
+
+export interface IAddVoting extends IVoting {
+    options: IOption[];
+    name: string;
 }

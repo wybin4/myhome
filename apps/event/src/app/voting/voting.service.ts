@@ -20,7 +20,7 @@ export class VotingService {
     ) { }
 
     public async addVoting(dto: EventAddVoting.Request): Promise<EventAddVoting.Response> {
-        await getHouseAllInfo(this.rmqService, dto.houseId);
+        const { house } = await getHouseAllInfo(this.rmqService, dto.houseId);
         const newVotingEntity = new VotingEntity({
             ...dto,
             createdAt: new Date(),
@@ -37,7 +37,13 @@ export class VotingService {
         });
         const newOptions = await this.optionRepository.createMany(options);
 
-        return { voting: newVoting, options: newOptions };
+        return {
+            voting: {
+                ...newVoting,
+                name: `${house.city}, ${house.street} ${house.houseNumber}`,
+                options: newOptions
+            }
+        };
     }
 
     public async updateVoting(dto: EventUpdateVoting.Request): Promise<EventUpdateVoting.Response> {

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IGetApartmentAllInfo, IGetApartmentsWithSubscriber, ReferenceGetApartments, ReferenceGetApartmentsBySubscribers } from "@myhome/contracts";
+import { IGetApartmentAllInfo, IGetApartmentWithInfo, IGetApartmentsWithSubscriber, ReferenceGetApartments, ReferenceGetApartmentsBySubscribers, ReferenceGetApartmentsByUser } from "@myhome/contracts";
 import { RMQException } from "../../exception";
 import { RMQService } from 'nestjs-rmq';
+import { UserRole } from "@myhome/interfaces";
 
 export async function getApartmentsAllInfo(rmqService: RMQService, subscriberIds: number[]) {
     try {
@@ -11,6 +12,19 @@ export async function getApartmentsAllInfo(rmqService: RMQService, subscriberIds
         >(ReferenceGetApartmentsBySubscribers.topic,
             { subscriberIds, isAllInfo: true });
         return { apartments: apartments as IGetApartmentAllInfo[] };
+    } catch (e: any) {
+        throw new RMQException(e.message, e.status);
+    }
+}
+
+export async function getApartmentsAllInfoByUser(rmqService: RMQService, userId: number, userRole: UserRole) {
+    try {
+        const { apartments } = await rmqService.send<
+            ReferenceGetApartmentsByUser.Request,
+            ReferenceGetApartmentsByUser.Response
+        >(ReferenceGetApartmentsByUser.topic,
+            { userId, userRole, isAllInfo: true });
+        return { apartments: apartments as IGetApartmentWithInfo[] };
     } catch (e: any) {
         throw new RMQException(e.message, e.status);
     }

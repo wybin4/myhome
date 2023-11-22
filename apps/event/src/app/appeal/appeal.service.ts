@@ -205,7 +205,9 @@ export class AppealService {
                             ...data,
                             verifiedAt: String(data.verifiedAt),
                             issuedAt: String(data.issuedAt),
-                            meterType: MeterType.Individual
+                            meterType: MeterType.Individual,
+                            previousReading: 0,
+                            previousReadAt: "" // ИСПРАВИТЬ
                         }
                     );
                     break;

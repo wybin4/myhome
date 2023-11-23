@@ -10,7 +10,6 @@ export class CBRController {
         private readonly cbrService: CBRService,
     ) { }
 
-    @Post('cbr')
     @RMQValidate()
     @RMQRoute(CorrectionGetKeyRate.topic)
     async getKeyRate(@Body() dto: CorrectionGetKeyRate.Request) {

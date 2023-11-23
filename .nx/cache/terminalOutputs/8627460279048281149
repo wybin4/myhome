@@ -1,0 +1,203 @@
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 255 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./src/app/single-payment-document/services/pdf.service.ts[39m[22m [1m[32m8:41-58[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve 'qrcode' in 'C:\11\myhome-new\myhome-new\apps\single-payment-document\src\app\single-payment-document\services'[39m[22m
+
+[1m[31mERROR[39m[22m in [1m./src/app/single-payment-document/services/pdf.service.ts[39m[22m [1m[32m10:42-60[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve 'bwip-js' in 'C:\11\myhome-new\myhome-new\apps\single-payment-document\src\app\single-payment-document\services'[39m[22m
+
+[1m[31mERROR[39m[22m in [1m./src/app/single-payment-document/services/pdf.service.ts[39m[22m [1m[32m11:41-58[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve 'pdfkit' in 'C:\11\myhome-new\myhome-new\apps\single-payment-document\src\app\single-payment-document\services'[39m[22m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m7:20[22m[39m[1m[39m[22m
+[90mTS2307: [39mCannot find module 'qrcode' or its corresponding type declarations.
+  [0m [90m  5 |[39m [36mimport[39m { [33mISpdSubscriber[39m[33m,[39m [33mISpdManagementCompany[39m[33m,[39m [33mISpdHouse[39m } [36mfrom[39m [32m'../interfaces/subscriber.interface'[39m[33m;[39m[0m
+  [0m [90m  6 |[39m [36mimport[39m { [33mRMQException[39m } [36mfrom[39m [32m'@myhome/constants'[39m[33m;[39m[0m
+  [0m[31m[1m>[22m[39m[90m  7 |[39m [36mimport[39m qrcode [36mfrom[39m [32m'qrcode'[39m[33m;[39m[0m
+  [0m [90m    |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m  8 |[39m [36mimport[39m { join } [36mfrom[39m [32m'path'[39m[33m;[39m[0m
+  [0m [90m  9 |[39m [36mimport[39m bwipjs [36mfrom[39m [32m'bwip-js'[39m[33m;[39m[0m
+  [0m [90m 10 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mPDFDocument[39m [36mfrom[39m [32m'pdfkit'[39m[33m;[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m9:20[22m[39m[1m[39m[22m
+[90mTS2307: [39mCannot find module 'bwip-js' or its corresponding type declarations.
+  [0m [90m  7 |[39m [36mimport[39m qrcode [36mfrom[39m [32m'qrcode'[39m[33m;[39m[0m
+  [0m [90m  8 |[39m [36mimport[39m { join } [36mfrom[39m [32m'path'[39m[33m;[39m[0m
+  [0m[31m[1m>[22m[39m[90m  9 |[39m [36mimport[39m bwipjs [36mfrom[39m [32m'bwip-js'[39m[33m;[39m[0m
+  [0m [90m    |[39m                    [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 10 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mPDFDocument[39m [36mfrom[39m [32m'pdfkit'[39m[33m;[39m[0m
+  [0m [90m 11 |[39m [36mimport[39m { [33mISpdService[39m[33m,[39m [33mISpdServiceColumn[39m } [36mfrom[39m [32m'../interfaces/service-table.interface'[39m[33m;[39m[0m
+  [0m [90m 12 |[39m [36mimport[39m { [33mISpdMeterReadings[39m[33m,[39m [33mISpdReading[39m[33m,[39m [33mISpdReadingColumn[39m[33m,[39m [33mISpdReadings[39m } [36mfrom[39m [32m'../interfaces/reading-table.interface'[39m[33m;[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m10:30[22m[39m[1m[39m[22m
+[90mTS2307: [39mCannot find module 'pdfkit' or its corresponding type declarations.
+  [0m [90m  8 |[39m [36mimport[39m { join } [36mfrom[39m [32m'path'[39m[33m;[39m[0m
+  [0m [90m  9 |[39m [36mimport[39m bwipjs [36mfrom[39m [32m'bwip-js'[39m[33m;[39m[0m
+  [0m[31m[1m>[22m[39m[90m 10 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mPDFDocument[39m [36mfrom[39m [32m'pdfkit'[39m[33m;[39m[0m
+  [0m [90m    |[39m                              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 11 |[39m [36mimport[39m { [33mISpdService[39m[33m,[39m [33mISpdServiceColumn[39m } [36mfrom[39m [32m'../interfaces/service-table.interface'[39m[33m;[39m[0m
+  [0m [90m 12 |[39m [36mimport[39m { [33mISpdMeterReadings[39m[33m,[39m [33mISpdReading[39m[33m,[39m [33mISpdReadingColumn[39m[33m,[39m [33mISpdReadings[39m } [36mfrom[39m [32m'../interfaces/reading-table.interface'[39m[33m;[39m[0m
+  [0m [90m 13 |[39m [36mimport[39m { isNumber } [36mfrom[39m [32m'class-validator'[39m[33m;[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m256:14[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 254 |[39m         services[33m:[39m [33mISpdService[39m[][33m,[39m readings[33m:[39m [33mISpdReading[39m[][33m,[39m house[33m:[39m [33mISpdHouse[39m[33m,[39m[0m
+  [0m [90m 255 |[39m         payment[33m:[39m [33mISpdPayment[39m[33m,[39m managementC[33m:[39m [33mISpdManagementCompany[39m[33m,[39m[0m
+  [0m[31m[1m>[22m[39m[90m 256 |[39m         doc[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m[0m
+  [0m [90m     |[39m              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 257 |[39m     ) {[0m
+  [0m [90m 258 |[39m         [36mconst[39m top [33m=[39m [36mnew[39m [33mTop[39m([36mthis[39m[33m.[39marial[33m,[39m [36mthis[39m[33m.[39marialBold[33m,[39m doc)[33m;[39m[0m
+  [0m [90m 259 |[39m         top[33m.[39mgetTop(qr[33m,[39m barcode[33m,[39m operator[33m,[39m subscriber[33m,[39m managementC[33m,[39m spd)[33m;[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m444:98[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 442 |[39m[0m
+  [0m [90m 443 |[39m [36mclass[39m [33mTop[39m {[0m
+  [0m[31m[1m>[22m[39m[90m 444 |[39m     constructor([36mprivate[39m readonly arial[33m:[39m string[33m,[39m [36mprivate[39m readonly arialBold[33m:[39m string[33m,[39m [36mprivate[39m doc[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m) {[0m
+  [0m [90m     |[39m                                                                                                  [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 445 |[39m         [36mthis[39m[33m.[39marial [33m=[39m arial[33m;[39m[0m
+  [0m [90m 446 |[39m         [36mthis[39m[33m.[39marialBold [33m=[39m arialBold[33m;[39m[0m
+  [0m [90m 447 |[39m         [36mthis[39m[33m.[39mdoc [33m=[39m doc[33m;[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m459:8[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 457 |[39m         managementC[33m:[39m [33mISpdManagementCompany[39m[33m,[39m[0m
+  [0m [90m 458 |[39m         spd[33m:[39m [33mISpd[39m[0m
+  [0m[31m[1m>[22m[39m[90m 459 |[39m     )[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m     |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 460 |[39m         [36mthis[39m[33m.[39mdoc[0m
+  [0m [90m 461 |[39m             [33m.[39mfont([36mthis[39m[33m.[39marialBold)[0m
+  [0m [90m 462 |[39m             [33m.[39mfontSize([35m17[39m)[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m486:32[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 484 |[39m     }[0m
+  [0m [90m 485 |[39m[0m
+  [0m[31m[1m>[22m[39m[90m 486 |[39m     [36mprivate[39m getFirstTopZone()[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m     |[39m                                [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 487 |[39m         [36mthis[39m[33m.[39mdoc[33m.[39mrect([36mthis[39m[33m.[39mstartX[33m,[39m [35m100[39m[33m,[39m [35m234[39m[33m,[39m [35m78[39m)[0m
+  [0m [90m 488 |[39m             [33m.[39mstroke()[33m;[39m [90m// Прямоугольник для 'Счёт-извещение'[39m[0m
+  [0m [90m 489 |[39m         [36mthis[39m[33m.[39mdoc[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m498:8[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 496 |[39m     [36mprivate[39m getSecondTopZone([0m
+  [0m [90m 497 |[39m         qr[33m:[39m [33mISpdQR[39m[0m
+  [0m[31m[1m>[22m[39m[90m 498 |[39m     )[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m     |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 499 |[39m         [36mconst[39m x [33m=[39m [36mthis[39m[33m.[39mstartX[33m;[39m[0m
+  [0m [90m 500 |[39m         [36mconst[39m y [33m=[39m [35m178[39m[33m;[39m[0m
+  [0m [90m 501 |[39m         [36mconst[39m height [33m=[39m [35m255[39m[33m;[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m517:8[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 515 |[39m         month[33m:[39m string[33m,[39m[0m
+  [0m [90m 516 |[39m         barcode[33m:[39m [33mISpdBarcode[39m[0m
+  [0m[31m[1m>[22m[39m[90m 517 |[39m     )[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m     |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 518 |[39m         [36mthis[39m[33m.[39mdoc[33m.[39mrect([35m277[39m[33m,[39m [35m100[39m[33m,[39m [35m788[39m[33m,[39m [35m78[39m)[0m
+  [0m [90m 519 |[39m             [33m.[39mstroke()[33m;[39m [90m// Прямоугольник для лицевого счёта и тд[39m[0m
+  [0m [90m 520 |[39m         [36mthis[39m[33m.[39mdoc[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m563:8[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 561 |[39m         [33mMCName[39m[33m:[39m string[33m,[39m [33mMCAdress[39m[33m:[39m string[33m,[39m [33mMCPhone[39m[33m:[39m string[33m,[39m [33mMCEmail[39m[33m:[39m string[33m,[39m[0m
+  [0m [90m 562 |[39m         amount[33m:[39m number[0m
+  [0m[31m[1m>[22m[39m[90m 563 |[39m     )[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m     |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 564 |[39m         [36mthis[39m[33m.[39mdoc[33m.[39mrect([35m277[39m[33m,[39m [35m178[39m[33m,[39m [35m668[39m[33m,[39m [35m41[39m)[0m
+  [0m [90m 565 |[39m             [33m.[39mstroke()[33m;[39m [90m// Прямоугольник для данных об управляющей компании[39m[0m
+  [0m [90m 566 |[39m         [36mthis[39m[33m.[39mdoc[33m.[39mrect([35m945[39m[33m,[39m [35m178[39m[33m,[39m [35m120[39m[33m,[39m [35m41[39m)[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m588:8[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 586 |[39m     [36mprivate[39m getFifthTopZone([0m
+  [0m [90m 587 |[39m         totalAmount[33m:[39m number[33m,[39m debt[33m:[39m number[33m,[39m penalty[33m:[39m number[33m,[39m deposit[33m:[39m number[0m
+  [0m[31m[1m>[22m[39m[90m 588 |[39m     )[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m     |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 589 |[39m         [36mconst[39m xGen [33m=[39m [35m277[39m[33m;[39m[0m
+  [0m [90m 590 |[39m         [36mconst[39m yGen [33m=[39m [35m219[39m[33m;[39m[0m
+  [0m [90m 591 |[39m         [36mconst[39m heightGen [33m=[39m [35m214[39m[33m;[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m694:22[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 692 |[39m     constructor([0m
+  [0m [90m 693 |[39m         [36mprivate[39m readonly arial[33m:[39m string[33m,[39m [36mprivate[39m readonly arialBold[33m:[39m string[33m,[39m[0m
+  [0m[31m[1m>[22m[39m[90m 694 |[39m         [36mprivate[39m doc[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m[33m,[39m[0m
+  [0m [90m     |[39m                      [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 695 |[39m         [36mprivate[39m readonly services[33m:[39m [33mISpdService[39m[][33m,[39m[0m
+  [0m [90m 696 |[39m         [36mprivate[39m readonly readings[33m:[39m [33mISpdReading[39m[][0m
+  [0m [90m 697 |[39m     ) {[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m878:8[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 876 |[39m         house[33m:[39m [33mISpdHouse[39m[33m,[39m[0m
+  [0m [90m 877 |[39m         payment[33m:[39m [33mISpdPayment[39m[0m
+  [0m[31m[1m>[22m[39m[90m 878 |[39m     )[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m     |[39m        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 879 |[39m[0m
+  [0m [90m 880 |[39m         [36mthis[39m[33m.[39mgetFirstBottomZone(operator[33m,[39m barcodeText)[33m;[39m [90m// 1 сегмент[39m[0m
+  [0m [90m 881 |[39m         [36mthis[39m[33m.[39mgetSubscriberData(subscriber[33m,[39m spd[33m.[39mmonth[33m,[39m house)[33m;[39m [90m// 2 сегмент[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m922:78[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 920 |[39m     }[0m
+  [0m [90m 921 |[39m[0m
+  [0m[31m[1m>[22m[39m[90m 922 |[39m     [36mprivate[39m getFirstBottomZone(operator[33m:[39m [33mISpdOperator[39m[33m,[39m barcodeText[33m:[39m string)[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m     |[39m                                                                              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 923 |[39m         [36mthis[39m[33m.[39mdoc[0m
+  [0m [90m 924 |[39m             [33m.[39mfont([36mthis[39m[33m.[39marialBold)[0m
+  [0m [90m 925 |[39m             [33m.[39mfontSize([35m14[39m)[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m954:93[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 952 |[39m     }[0m
+  [0m [90m 953 |[39m[0m
+  [0m[31m[1m>[22m[39m[90m 954 |[39m     [36mprivate[39m getSubscriberData(subscriber[33m:[39m [33mISpdSubscriber[39m[33m,[39m month[33m:[39m string[33m,[39m house[33m:[39m [33mISpdHouse[39m)[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m     |[39m                                                                                             [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 955 |[39m         [36mthis[39m[33m.[39mdoc[0m
+  [0m [90m 956 |[39m             [33m.[39mfont([36mthis[39m[33m.[39marialBold)[0m
+  [0m [90m 957 |[39m             [33m.[39mfontSize([35m13[39m)[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m985:31[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 983 |[39m     }[0m
+  [0m [90m 984 |[39m[0m
+  [0m[31m[1m>[22m[39m[90m 985 |[39m     [36mprivate[39m getSPDTableCap()[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m     |[39m                               [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 986 |[39m         [36mfor[39m ([36mconst[39m col [36mof[39m [36mthis[39m[33m.[39mserviceCols) {[0m
+  [0m [90m 987 |[39m             [36mif[39m ([33m![39mcol[33m.[39mparts) {[0m
+  [0m [90m 988 |[39m                 [36mthis[39m[33m.[39mdoc[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m1019:44[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 1017 |[39m     }[0m
+  [0m [90m 1018 |[39m[0m
+  [0m[31m[1m>[22m[39m[90m 1019 |[39m     [36mprivate[39m getReadingTableCap(y[33m:[39m number)[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m      |[39m                                            [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 1020 |[39m         [36mthis[39m[33m.[39mdoc[33m.[39mfontSize([35m12[39m)[33m.[39mfont([36mthis[39m[33m.[39marial)[33m;[39m[0m
+  [0m [90m 1021 |[39m         [36mlet[39m x [33m=[39m [36mthis[39m[33m.[39mstartX[33m;[39m[0m
+  [0m [90m 1022 |[39m         [36mfor[39m ([36mconst[39m col [36mof[39m [36mthis[39m[33m.[39mreadingCols) {[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m1057:61[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 1055 |[39m     }[0m
+  [0m [90m 1056 |[39m[0m
+  [0m[31m[1m>[22m[39m[90m 1057 |[39m     [36mprivate[39m getServiceRow(y[33m:[39m number[33m,[39m service[33m:[39m [33mISpdService[39m)[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m      |[39m                                                             [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 1058 |[39m         [36mconst[39m textHeight [33m=[39m [35m6[39m[33m;[39m[0m
+  [0m [90m 1059 |[39m         [36mconst[39m widthOfFirstCol [33m=[39m [36mthis[39m[33m.[39mserviceCols[33m.[39mslice([35m0[39m[33m,[39m service[33m.[39mtitleColSpan)[33m.[39mmap(obj [33m=>[39m obj[33m.[39mwidth)[33m.[39mreduce((a[33m,[39m b) [33m=>[39m a [33m+[39m b[33m,[39m [35m0[39m)[33m;[39m[0m
+  [0m [90m 1060 |[39m         [36mconst[39m spanFromEdge [33m=[39m service[33m.[39mtitleAlign [33m===[39m [32m'right'[39m [33m?[39m [33m-[39m[35m6[39m [33m:[39m service[33m.[39mtitleAlign [33m===[39m [32m'left'[39m [33m?[39m [35m6[39m [33m:[39m [35m0[39m[33m;[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/single-payment-document/src/app/single-payment-document/services/pdf.service.ts:[32m[1m1120:65[22m[39m[1m[39m[22m
+[90mTS2503: [39mCannot find namespace 'PDFKit'.
+  [0m [90m 1118 |[39m     }[0m
+  [0m [90m 1119 |[39m[0m
+  [0m[31m[1m>[22m[39m[90m 1120 |[39m     [36mprivate[39m getReadingRows(y[33m:[39m number[33m,[39m readings[33m:[39m [33mISpdReading[39m[])[33m:[39m [33mPDFKit[39m[33m.[39m[33mPDFDocument[39m {[0m
+  [0m [90m      |[39m                                                                 [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 1121 |[39m         [36mlet[39m currentX [33m=[39m [36mthis[39m[33m.[39mstartX[33m;[39m[0m
+  [0m [90m 1122 |[39m         [36mlet[39m numberOfInserted [33m=[39m [35m0[39m[33m;[39m[0m
+  [0m [90m 1123 |[39m         [36mconst[39m ySpan [33m=[39m [35m3[39m[33m;[39m[0m
+
+webpack compiled with [1m[31m22 errors[39m[22m (69ae8c07dca9baa8)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m

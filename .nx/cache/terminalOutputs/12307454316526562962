@@ -1,0 +1,46 @@
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 389 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./src/app/meter/commands/services/meter.commands.service.ts[39m[22m [1m[32m9:19-46[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve '@nestjs/schedule' in 'C:\11\myhome-new\myhome-new\apps\reference\src\app\meter\commands\services'[39m[22m
+
+[1m[31mERROR[39m[22m in [1m./src/app/meter/meter.module.ts[39m[22m [1m[32m17:19-46[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve '@nestjs/schedule' in 'C:\11\myhome-new\myhome-new\apps\reference\src\app\meter'[39m[22m
+
+[1m[31mERROR[39m[22m in [1m./apps/reference/src/app/meter/commands/services/meter.commands.service.ts:[32m[1m10:22[22m[39m[1m[39m[22m
+[90mTS2307: [39mCannot find module '@nestjs/schedule' or its corresponding type declarations.
+  [0m [90m  8 |[39m [36mimport[39m { [33mInjectable[39m[33m,[39m [33mHttpStatus[39m } [36mfrom[39m [32m"@nestjs/common"[39m[33m;[39m[0m
+  [0m [90m  9 |[39m[0m
+  [0m[31m[1m>[22m[39m[90m 10 |[39m [36mimport[39m { [33mCron[39m } [36mfrom[39m [32m"@nestjs/schedule"[39m[33m;[39m[0m
+  [0m [90m    |[39m                      [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 11 |[39m [36mimport[39m { [33mGeneralMeterEntity[39m } [36mfrom[39m [32m"../../entities/general-meter.entity"[39m[33m;[39m[0m
+  [0m [90m 12 |[39m [36mimport[39m { [33mIndividualMeterEntity[39m } [36mfrom[39m [32m"../../entities/individual-meter.entity"[39m[33m;[39m[0m
+  [0m [90m 13 |[39m [36mimport[39m { [33mMeterEventEmitter[39m } [36mfrom[39m [32m"../../meter.event-emitter"[39m[33m;[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/reference/src/app/meter/meter.module.ts:[32m[1m13:32[22m[39m[1m[39m[22m
+[90mTS2307: [39mCannot find module '@nestjs/schedule' or its corresponding type declarations.
+  [0m [90m 11 |[39m [36mimport[39m { [33mSubscriberModule[39m } [36mfrom[39m [32m"../subscriber/subscriber.module"[39m[33m;[39m[0m
+  [0m [90m 12 |[39m [36mimport[39m { [33mMeterEventEmitter[39m } [36mfrom[39m [32m"./meter.event-emitter"[39m[33m;[39m[0m
+  [0m[31m[1m>[22m[39m[90m 13 |[39m [36mimport[39m { [33mScheduleModule[39m } [36mfrom[39m [32m"@nestjs/schedule"[39m[33m;[39m[0m
+  [0m [90m    |[39m                                [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 14 |[39m [36mimport[39m { [33mCommonModule[39m } [36mfrom[39m [32m"../common/common.module"[39m[33m;[39m[0m
+  [0m [90m 15 |[39m [36mimport[39m { [33mTariffAndNormModule[39m } [36mfrom[39m [32m"../tariff-and-norm/tariff-and-norm.module"[39m[33m;[39m[0m
+  [0m [90m 16 |[39m [36mimport[39m { [33mMeterReadingCommandsService[39m } [36mfrom[39m [32m"./commands/services/meter-reading.commands.service"[39m[33m;[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./libs/interfaces/src/lib/chat.interface.ts:[32m[1m1:23[22m[39m[1m[39m[22m
+[90mTS2307: [39mCannot find module 'mongoose' or its corresponding type declarations.
+  [0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { [33mTypes[39m } [36mfrom[39m [32m"mongoose"[39m[33m;[39m[0m
+  [0m [90m   |[39m                       [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 2 |[39m [36mimport[39m { [33mUserRole[39m } [36mfrom[39m [32m"./account/user.interface"[39m[33m;[39m[0m
+  [0m [90m 3 |[39m[0m
+  [0m [90m 4 |[39m [36mexport[39m [36minterface[39m [33mIChat[39m {[0m
+
+[1m[31mERROR[39m[22m in [1m./libs/interfaces/src/lib/correction/debt.interface.ts:[32m[1m1:23[22m[39m[1m[39m[22m
+[90mTS2307: [39mCannot find module 'mongoose' or its corresponding type declarations.
+  [0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { [33mTypes[39m } [36mfrom[39m [32m'mongoose'[39m[33m;[39m[0m
+  [0m [90m   |[39m                       [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 2 |[39m[0m
+  [0m [90m 3 |[39m [36mexport[39m [36minterface[39m [33mIDebt[39m {[0m
+  [0m [90m 4 |[39m     _id[33m?[39m[33m:[39m [33mTypes[39m[33m.[39m[33mObjectId[39m[33m;[39m[0m
+
+webpack compiled with [1m[31m6 errors[39m[22m (e2d6b93c5c65ff16)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m

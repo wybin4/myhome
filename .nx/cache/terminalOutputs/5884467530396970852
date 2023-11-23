@@ -1,0 +1,45 @@
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 389 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (64b4dd62e7699986)
+[1m[31mDebugger listening on ws://localhost:9229/e6a9cc72-8a99-4da3-a217-3e4f546748d1[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/e6a9cc72-8a99-4da3-a217-3e4f546748d1[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+[1m[31m[31m[Nest] 6400  - [39m[31m23.11.2023, 18:18:19 [31m  ERROR[39m[31m [38;5;3m[TypeOrmModule] [39m[31m[31mUnable to connect to the database. Retrying (1)...[39m[31m[39m[22m
+[1m[31mDriverPackageNotInstalledError: Mysql package has not been found installed. Try to install it: npm install mysql --save[39m[22m
+[1m[31m    at MysqlDriver.loadDependencies (C:\11\myhome-new\myhome-new\src\driver\mysql\MysqlDriver.ts:1197:23)[39m[22m
+[1m[31m    at new MysqlDriver (C:\11\myhome-new\myhome-new\src\driver\mysql\MysqlDriver.ts:354:14)[39m[22m
+[1m[31m    at DriverFactory.create (C:\11\myhome-new\myhome-new\src\driver\DriverFactory.ts:34:24)[39m[22m
+[1m[31m    at new DataSource (C:\11\myhome-new\myhome-new\src\data-source\DataSource.ts:145:43)[39m[22m
+[1m[31m    at createTypeormDataSource (C:\11\myhome-new\myhome-new\node_modules\@nestjs\typeorm\dist\typeorm-core.module.js:164:23)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\typeorm\dist\typeorm-core.module.js:180:36[39m[22m
+[1m[31m    at Observable._subscribe (C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\observable\defer.ts:55:15)[39m[22m
+[1m[31m    at Observable._trySubscribe (C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\Observable.ts:244:19)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\Observable.ts:234:18[39m[22m
+[1m[31m    at Object.errorContext (C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\util\errorContext.ts:29:5)[39m[22m
+[1m[31m[39m[22m
+[1m[31m[31m[Nest] 6400  - [39m[31m23.11.2023, 18:18:22 [31m  ERROR[39m[31m [38;5;3m[TypeOrmModule] [39m[31m[31mUnable to connect to the database. Retrying (2)...[39m[31m[39m[22m
+[1m[31mDriverPackageNotInstalledError: Mysql package has not been found installed. Try to install it: npm install mysql --save[39m[22m
+[1m[31m    at MysqlDriver.loadDependencies (C:\11\myhome-new\myhome-new\src\driver\mysql\MysqlDriver.ts:1197:23)[39m[22m
+[1m[31m    at new MysqlDriver (C:\11\myhome-new\myhome-new\src\driver\mysql\MysqlDriver.ts:354:14)[39m[22m
+[1m[31m    at DriverFactory.create (C:\11\myhome-new\myhome-new\src\driver\DriverFactory.ts:34:24)[39m[22m
+[1m[31m    at new DataSource (C:\11\myhome-new\myhome-new\src\data-source\DataSource.ts:145:43)[39m[22m
+[1m[31m    at createTypeormDataSource (C:\11\myhome-new\myhome-new\node_modules\@nestjs\typeorm\dist\typeorm-core.module.js:164:23)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\typeorm\dist\typeorm-core.module.js:180:36[39m[22m
+[1m[31m    at Observable._subscribe (C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\observable\defer.ts:55:15)[39m[22m
+[1m[31m    at Observable._trySubscribe (C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\Observable.ts:244:19)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\Observable.ts:234:18[39m[22m
+[1m[31m    at Object.errorContext (C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\util\errorContext.ts:29:5)[39m[22m
+[1m[31m[39m[22m
+[1m[31m[31m[Nest] 6400  - [39m[31m23.11.2023, 18:18:25 [31m  ERROR[39m[31m [38;5;3m[TypeOrmModule] [39m[31m[31mUnable to connect to the database. Retrying (3)...[39m[31m[39m[22m
+[1m[31mDriverPackageNotInstalledError: Mysql package has not been found installed. Try to install it: npm install mysql --save[39m[22m
+[1m[31m    at MysqlDriver.loadDependencies (C:\11\myhome-new\myhome-new\src\driver\mysql\MysqlDriver.ts:1197:23)[39m[22m
+[1m[31m    at new MysqlDriver (C:\11\myhome-new\myhome-new\src\driver\mysql\MysqlDriver.ts:354:14)[39m[22m
+[1m[31m    at DriverFactory.create (C:\11\myhome-new\myhome-new\src\driver\DriverFactory.ts:34:24)[39m[22m
+[1m[31m    at new DataSource (C:\11\myhome-new\myhome-new\src\data-source\DataSource.ts:145:43)[39m[22m
+[1m[31m    at createTypeormDataSource (C:\11\myhome-new\myhome-new\node_modules\@nestjs\typeorm\dist\typeorm-core.module.js:164:23)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\typeorm\dist\typeorm-core.module.js:180:36[39m[22m
+[1m[31m    at Observable._subscribe (C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\observable\defer.ts:55:15)[39m[22m
+[1m[31m    at Observable._trySubscribe (C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\Observable.ts:244:19)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\Observable.ts:234:18[39m[22m
+[1m[31m    at Object.errorContext (C:\11\myhome-new\myhome-new\node_modules\rxjs\src\internal\util\errorContext.ts:29:5)[39m[22m
+[1m[31m[39m[22m

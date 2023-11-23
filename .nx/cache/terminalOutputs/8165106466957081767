@@ -1,0 +1,14 @@
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 211 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./apps/api/src/app/controllers/event/appeal.controller.ts:[32m[1m22:51[22m[39m[1m[39m[22m
+[90mTS2694: [39mNamespace 'global.Express' has no exported member 'Multer'.
+  [0m [90m 20 |[39m     [33m@[39m[33mHttpCode[39m([35m201[39m)[0m
+  [0m [90m 21 |[39m     [33m@[39m[33mPost[39m([32m'add-appeal'[39m)[0m
+  [0m[31m[1m>[22m[39m[90m 22 |[39m     [36masync[39m addAppeal([33m@[39m[33mUploadedFile[39m() file[33m:[39m [33mExpress[39m[33m.[39m[33mMulter[39m[33m.[39m[33mFile[39m[33m,[39m [33m@[39m[33mBody[39m() dto[33m:[39m [33mAddAppealDto[39m) {[0m
+  [0m [90m    |[39m                                                   [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 23 |[39m         [36mif[39m ([0m
+  [0m [90m 24 |[39m             dto[33m.[39mtypeOfAppeal [33m===[39m [33mAppealType[39m[33m.[39m[33mAddIndividualMeter[39m [33m||[39m[0m
+  [0m [90m 25 |[39m             dto[33m.[39mtypeOfAppeal [33m===[39m [33mAppealType[39m[33m.[39m[33mVerifyIndividualMeter[39m[0m
+
+webpack compiled with [1m[31m1 error[39m[22m (1d73f9ba50aed77c)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m

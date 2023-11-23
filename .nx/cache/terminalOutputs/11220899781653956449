@@ -1,0 +1,16 @@
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 198 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./src/app/user/user.entity.ts[39m[22m [1m[32m5:19-38[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve 'bcryptjs' in 'C:\11\myhome-new\myhome-new\apps\account\src\app\user'[39m[22m
+
+[1m[31mERROR[39m[22m in [1m./apps/account/src/app/user/user.entity.ts:[32m[1m2:40[22m[39m[1m[39m[22m
+[90mTS2307: [39mCannot find module 'bcryptjs' or its corresponding type declarations.
+  [0m [90m 1 |[39m [36mimport[39m { [33mIUser[39m } [36mfrom[39m [32m'@myhome/interfaces'[39m[33m;[39m[0m
+  [0m[31m[1m>[22m[39m[90m 2 |[39m [36mimport[39m { compare[33m,[39m genSalt[33m,[39m hash } [36mfrom[39m [32m'bcryptjs'[39m[33m;[39m[0m
+  [0m [90m   |[39m                                        [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 3 |[39m [36mimport[39m { [33mEntity[39m[33m,[39m [33mPrimaryGeneratedColumn[39m[33m,[39m [33mColumn[39m } [36mfrom[39m [32m'typeorm'[39m[33m;[39m[0m
+  [0m [90m 4 |[39m[0m
+  [0m [90m 5 |[39m [36mexport[39m [36mclass[39m [33mUserEntity[39m [36mimplements[39m [33mIUser[39m {[0m
+
+webpack compiled with [1m[31m2 errors[39m[22m (65af55ab66a23f7e)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m

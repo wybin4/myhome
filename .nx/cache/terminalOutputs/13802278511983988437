@@ -1,0 +1,179 @@
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (8354c7b503c9288d)
+[1m[31mDebugger listening on ws://localhost:9229/a54f4503-1633-45b6-ade0-61bae4ddc3c7[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/a54f4503-1633-45b6-ade0-61bae4ddc3c7[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+[1m[31m[31m[Nest] 16864  - [39m[31m23.11.2023, 18:57:50 [31m  ERROR[39m[31m [38;5;3m[ExceptionsHandler] [39m[31m[31mНевозможно получить данные о ключевой ставке[39m[31m[39m[22m
+[1m[31mError: Невозможно получить данные о ключевой ставке[39m[22m
+[1m[31m    at CBRController.getKeyRate (C:\11\myhome-new\myhome-new\dist\apps\correction\webpack:\src\app\debt\controllers\cbr.controller.ts:21:19)[39m[22m
+[1m[31m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-execution-context.js:46:28[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-proxy.js:9:17[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./apps/correction/src/app/debt/services/cbr.service.ts:[32m[1m24:25[22m[39m[1m[39m[22m
+[90mTS2304: [39mCannot find name 'гкд'.
+  [0m [90m 22 |[39m         [36mconst[39m headers [33m=[39m {[0m
+  [0m [90m 23 |[39m             [32m'Content-Type'[39m[33m:[39m [32m'text/xml'[39m[33m,[39m[0m
+  [0m[31m[1m>[22m[39m[90m 24 |[39m             [33mSOAPAction[39m[33m:[39m гкд[33m,[39m[0m
+  [0m [90m    |[39m                         [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 25 |[39m         }[33m;[39m[0m
+  [0m [90m 26 |[39m[0m
+  [0m [90m 27 |[39m         [36mconst[39m timeout [33m=[39m [35m5000[39m[33m;[39m[0m
+
+webpack compiled with [1m[31m1 error[39m[22m (d5d5df9c60475908)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (1d9ae296bb4ebd90)
+[1m[31mDebugger listening on ws://localhost:9229/44580793-a209-4369-810d-772b9a61cc39[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/44580793-a209-4369-810d-772b9a61cc39[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (3d48c9e3f6667d3e)
+[1m[31mDebugger listening on ws://localhost:9229/be9b746d-61d1-467b-83bd-dc2578c1f2c1[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/be9b746d-61d1-467b-83bd-dc2578c1f2c1[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+[1m[31m[31m[Nest] 10704  - [39m[31m23.11.2023, 18:58:15 [31m  ERROR[39m[31m [38;5;3m[ExceptionsHandler] [39m[31m[31mНевозможно получить данные о ключевой ставке[39m[31m[39m[22m
+[1m[31m[39m[22m
+[1m[31mError: Невозможно получить данные о ключевой ставке[39m[22m
+[1m[31m    at CBRController.getKeyRate (C:\11\myhome-new\myhome-new\dist\apps\correction\webpack:\src\app\debt\controllers\cbr.controller.ts:21:19)[39m[22m
+[1m[31m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-execution-context.js:46:28[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-proxy.js:9:17[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./apps/correction/src/app/debt/services/cbr.service.ts:[32m[1m37:25[22m[39m[1m[39m[22m
+[90mTS2304: [39mCannot find name 'e'.
+  [0m [90m 35 |[39m             [36mreturn[39m result[33m.[39mdata[33m;[39m [90m// Adjust the return as per your requirement[39m[0m
+  [0m [90m 36 |[39m         } [36mcatch[39m (error) {[0m
+  [0m[31m[1m>[22m[39m[90m 37 |[39m             console[33m.[39mlog(e)[0m
+  [0m [90m    |[39m                         [31m[1m^[22m[39m[0m
+  [0m [90m 38 |[39m             [36mthrow[39m [36mnew[39m [33mRMQException[39m([33mCANT_GET_KEY_RATE[39m[33m.[39mmessage[33m,[39m [33mCANT_GET_KEY_RATE[39m[33m.[39mstatus)[33m;[39m[0m
+  [0m [90m 39 |[39m         }[0m
+  [0m [90m 40 |[39m     }[0m
+
+webpack compiled with [1m[31m1 error[39m[22m (45651148ec4b7003)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (5a3b58cbfeb09b20)
+[1m[31mDebugger listening on ws://localhost:9229/99d10599-5005-49bb-b041-572cff0fc404[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/99d10599-5005-49bb-b041-572cff0fc404[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+[1m[31m[31m[Nest] 10792  - [39m[31m23.11.2023, 18:58:44 [31m  ERROR[39m[31m [38;5;3m[ExceptionsHandler] [39m[31m[31mНевозможно получить данные о ключевой ставке[39m[31m[39m[22m
+[1m[31m[39m[22m
+[1m[31mError: Невозможно получить данные о ключевой ставке[39m[22m
+[1m[31m    at CBRController.getKeyRate (C:\11\myhome-new\myhome-new\dist\apps\correction\webpack:\src\app\debt\controllers\cbr.controller.ts:21:19)[39m[22m
+[1m[31m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-execution-context.js:46:28[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-proxy.js:9:17[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (3864f410ba9c34a7)
+[1m[31mDebugger listening on ws://localhost:9229/29cedce8-e5aa-492a-aad0-07b905824c37[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/29cedce8-e5aa-492a-aad0-07b905824c37[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (df491e8ebb71766c)
+[1m[31mDebugger listening on ws://localhost:9229/b86b38bb-200b-4994-8aee-b2d48db7ef8a[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/b86b38bb-200b-4994-8aee-b2d48db7ef8a[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (83f60e3def054e74)
+[1m[31mDebugger listening on ws://localhost:9229/0723f6ff-58c4-40b3-b5dc-fb254186e1d2[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/0723f6ff-58c4-40b3-b5dc-fb254186e1d2[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 237 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./src/app/debt/services/cbr.service.ts[39m[22m [1m[32m7:15-30[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve 'soap' in 'C:\11\myhome-new\myhome-new\apps\correction\src\app\debt\services'[39m[22m
+
+[1m[31mERROR[39m[22m in [1m./apps/correction/src/app/debt/services/cbr.service.ts:[32m[1m4:35[22m[39m[1m[39m[22m
+[90mTS2307: [39mCannot find module 'soap' or its corresponding type declarations.
+  [0m [90m 2 |[39m [36mimport[39m { [33mCorrectionGetKeyRate[39m } [36mfrom[39m [32m"@myhome/contracts"[39m[33m;[39m[0m
+  [0m [90m 3 |[39m [36mimport[39m { [33mInjectable[39m } [36mfrom[39m [32m"@nestjs/common"[39m[33m;[39m[0m
+  [0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { createClientAsync } [36mfrom[39m [32m"soap"[39m[33m;[39m[0m
+  [0m [90m   |[39m                                   [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 5 |[39m[0m
+  [0m [90m 6 |[39m [33m@[39m[33mInjectable[39m()[0m
+  [0m [90m 7 |[39m [36mexport[39m [36mclass[39m [33mCBRService[39m {[0m
+
+webpack compiled with [1m[31m2 errors[39m[22m (0b6de63acb985167)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (3a593959f1dc62d2)
+[1m[31mDebugger listening on ws://localhost:9229/0c5b9b67-9d3c-460b-bf0a-56a14f7be8f1[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/0c5b9b67-9d3c-460b-bf0a-56a14f7be8f1[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./src/app/debt/services/cbr.service.ts[39m[22m [1m[32m27:31[39m[22m
+[1mModule parse [1m[31mfailed[39m[22m[1m: [1m[31mUnexpected[39m[22m[1m token (27:31)
+File was processed with these loaders:
+ * ../../node_modules/ts-loader/index.js
+You may need an additional loader to handle the result of these loaders.
+|             const result = await axios_1.default.post(url, xmlRequest, { headers, timeout });
+|             // Process the result as needed
+>             console.log(result[]);
+|             return result.data; // Adjust the return as per your requirement
+|         }[39m[22m
+
+[1m[31mERROR[39m[22m in [1mC:\11\myhome-new\myhome-new\apps\correction\src\app\debt\services\cbr.service.ts[39m[22m
+[1m./src/app/debt/services/cbr.service.ts[39m[22m [1m[32m33:31[39m[22m
+[90m[tsl] [39m[1m[31mERROR[39m[22m[1m[31m in [39m[22m[1m[36mC:\11\myhome-new\myhome-new\apps\correction\src\app\debt\services\cbr.service.ts(33,32)[39m[22m
+[1m[31m      TS1011: An element access expression should take an argument.[39m[22m
+
+webpack compiled with [1m[31m2 errors[39m[22m (74880c6916d2eba4)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./apps/correction/src/app/debt/services/cbr.service.ts:[32m[1m33:32[22m[39m[1m[39m[22m
+[90mTS2304: [39mCannot find name 'NumberToWordsResult'.
+  [0m [90m 31 |[39m[0m
+  [0m [90m 32 |[39m             [90m// Process the result as needed[39m[0m
+  [0m[31m[1m>[22m[39m[90m 33 |[39m             console[33m.[39mlog(result[[33mNumberToWordsResult[39m])[33m;[39m[0m
+  [0m [90m    |[39m                                [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 34 |[39m[0m
+  [0m [90m 35 |[39m             [36mreturn[39m result[33m.[39mdata[33m;[39m [90m// Adjust the return as per your requirement[39m[0m
+  [0m [90m 36 |[39m         } [36mcatch[39m (error) {[0m
+
+webpack compiled with [1m[31m1 error[39m[22m (d979cb4403b579a2)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (75d78e66e38ff20d)
+[1m[31mDebugger listening on ws://localhost:9229/1ceabb7b-af85-4399-a3c7-6969c21b4671[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/1ceabb7b-af85-4399-a3c7-6969c21b4671[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 238 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (3cd881a88e0ee813)
+[1m[31mDebugger listening on ws://localhost:9229/93c4f3ae-d046-4dcd-b6a2-68dbb3effec4[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/93c4f3ae-d046-4dcd-b6a2-68dbb3effec4[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 237 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./src/app/debt/services/cbr.service.ts[39m[22m [1m[32m7:15-30[39m[22m
+[1mModule [1m[31mnot found[39m[22m[1m: [1m[31mError[39m[22m[1m: Can't resolve 'soap' in 'C:\11\myhome-new\myhome-new\apps\correction\src\app\debt\services'[39m[22m
+
+[1m[31mERROR[39m[22m in [1m./apps/correction/src/app/debt/services/cbr.service.ts:[32m[1m4:35[22m[39m[1m[39m[22m
+[90mTS2307: [39mCannot find module 'soap' or its corresponding type declarations.
+  [0m [90m 2 |[39m [36mimport[39m { [33mCorrectionGetKeyRate[39m } [36mfrom[39m [32m"@myhome/contracts"[39m[33m;[39m[0m
+  [0m [90m 3 |[39m [36mimport[39m { [33mInjectable[39m } [36mfrom[39m [32m"@nestjs/common"[39m[33m;[39m[0m
+  [0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { createClientAsync } [36mfrom[39m [32m"soap"[39m[33m;[39m[0m
+  [0m [90m   |[39m                                   [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 5 |[39m[0m
+  [0m [90m 6 |[39m [33m@[39m[33mInjectable[39m()[0m
+  [0m [90m 7 |[39m [36mexport[39m [36mclass[39m [33mCBRService[39m {[0m
+
+webpack compiled with [1m[31m2 errors[39m[22m (39b4258c311e50b0)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m

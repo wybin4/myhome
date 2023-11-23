@@ -1,0 +1,96 @@
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 237 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (5cbf687f3113b581)
+[1m[31mDebugger listening on ws://localhost:9229/7d967095-82dc-48ff-b095-5d211c62322f[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/7d967095-82dc-48ff-b095-5d211c62322f[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+[1m[31m[31m[Nest] 14680  - [39m[31m23.11.2023, 18:48:43 [31m  ERROR[39m[31m [38;5;3m[ExceptionsHandler] [39m[31m[31mНевозможно получить данные о ключевой ставке[39m[31m[39m[22m
+[1m[31mError: Невозможно получить данные о ключевой ставке[39m[22m
+[1m[31m    at CBRController.getKeyRate (C:\11\myhome-new\myhome-new\dist\apps\correction\webpack:\src\app\debt\controllers\cbr.controller.ts:21:19)[39m[22m
+[1m[31m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-execution-context.js:46:28[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-proxy.js:9:17[39m[22m
+[1m[31m[39m[22m
+[1m[31m[31m[Nest] 14680  - [39m[31m23.11.2023, 18:49:49 [31m  ERROR[39m[31m [38;5;3m[ExceptionsHandler] [39m[31m[31mНевозможно получить данные о ключевой ставке[39m[31m[39m[22m
+[1m[31mError: Невозможно получить данные о ключевой ставке[39m[22m
+[1m[31m    at CBRController.getKeyRate (C:\11\myhome-new\myhome-new\dist\apps\correction\webpack:\src\app\debt\controllers\cbr.controller.ts:21:19)[39m[22m
+[1m[31m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-execution-context.js:46:28[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-proxy.js:9:17[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 237 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (07d49969b28991ce)
+[1m[31mDebugger listening on ws://localhost:9229/5c099e45-1c3c-4308-a5e4-e414fa5d8557[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/5c099e45-1c3c-4308-a5e4-e414fa5d8557[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 237 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./apps/correction/src/app/debt/services/penalty.service.ts:[32m[1m122:17[22m[39m[1m[39m[22m
+[90mTS2322: [39mType 'void' is not assignable to type 'number'.
+  [0m [90m 120 |[39m         [36mif[39m ([33m![39mkeyRate) {[0m
+  [0m [90m 121 |[39m             [36mtry[39m {[0m
+  [0m[31m[1m>[22m[39m[90m 122 |[39m                 keyRate [33m=[39m [36mawait[39m [36mthis[39m[33m.[39mcbrService[33m.[39mgetKeyRate({[0m
+  [0m [90m     |[39m                 [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 123 |[39m                     startDate[33m:[39m debtHistory[33m.[39mdate[33m,[39m[0m
+  [0m [90m 124 |[39m                     endDate[33m:[39m [36mnew[39m [33mDate[39m()[0m
+  [0m [90m 125 |[39m                 })[33m;[39m[0m
+
+[1m[31mERROR[39m[22m in [1m./apps/correction/src/app/debt/services/penalty.service.ts:[32m[1m190:17[22m[39m[1m[39m[22m
+[90mTS2322: [39mType 'void' is not assignable to type 'number'.
+  [0m [90m 188 |[39m             [36mconst[39m lastMonth [33m=[39m [36mnew[39m [33mDate[39m(today[33m.[39msetMonth(today[33m.[39mgetMonth() [33m-[39m [35m1[39m))[33m;[39m[0m
+  [0m [90m 189 |[39m             [36mtry[39m {[0m
+  [0m[31m[1m>[22m[39m[90m 190 |[39m                 keyRate [33m=[39m [36mawait[39m [36mthis[39m[33m.[39mcbrService[33m.[39mgetKeyRate({[0m
+  [0m [90m     |[39m                 [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 191 |[39m                     startDate[33m:[39m lastMonth[33m,[39m[0m
+  [0m [90m 192 |[39m                     endDate[33m:[39m [36mnew[39m [33mDate[39m()[0m
+  [0m [90m 193 |[39m                 })[33m;[39m[0m
+
+webpack compiled with [1m[31m2 errors[39m[22m (c5799b8304ac74ae)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 237 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (e395f9e5d215f064)
+[1m[31mDebugger listening on ws://localhost:9229/1fba55bf-96a5-48e2-9b12-7c0697a3e6f7[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/1fba55bf-96a5-48e2-9b12-7c0697a3e6f7[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+[1m[31m[31m[Nest] 17044  - [39m[31m23.11.2023, 18:50:51 [31m  ERROR[39m[31m [38;5;3m[ExceptionsHandler] [39m[31m[31mНевозможно получить данные о ключевой ставке[39m[31m[39m[22m
+[1m[31m[39m[22m
+[1m[31mError: Невозможно получить данные о ключевой ставке[39m[22m
+[1m[31m    at CBRController.getKeyRate (C:\11\myhome-new\myhome-new\dist\apps\correction\webpack:\src\app\debt\controllers\cbr.controller.ts:21:19)[39m[22m
+[1m[31m    at processTicksAndRejections (node:internal/process/task_queues:95:5)[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-execution-context.js:46:28[39m[22m
+[1m[31m    at C:\11\myhome-new\myhome-new\node_modules\@nestjs\core\router\router-proxy.js:9:17[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 237 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (8096966005347771)
+[1m[31mDebugger listening on ws://localhost:9229/32d47869-bde3-488f-b1d6-f11afa0f4770[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/32d47869-bde3-488f-b1d6-f11afa0f4770[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 237 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (8c774bffb93138b6)
+[1m[31mDebugger listening on ws://localhost:9229/4d86c233-b0fa-4739-bbef-3b319c47be3d[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/4d86c233-b0fa-4739-bbef-3b319c47be3d[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 237 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+
+[1m[31mERROR[39m[22m in [1m./apps/correction/src/app/debt/services/cbr.service.ts:[32m[1m3:22[22m[39m[1m[39m[22m
+[90mTS2724: [39m'"@nestjs/common"' has no exported member named 'HttpService'. Did you mean 'HttpServer'?
+  [0m [90m 1 |[39m [36mimport[39m { [33mCANT_GET_KEY_RATE[39m[33m,[39m [33mRMQException[39m } [36mfrom[39m [32m"@myhome/constants"[39m[33m;[39m[0m
+  [0m [90m 2 |[39m [36mimport[39m { [33mCorrectionGetKeyRate[39m } [36mfrom[39m [32m"@myhome/contracts"[39m[33m;[39m[0m
+  [0m[31m[1m>[22m[39m[90m 3 |[39m [36mimport[39m { [33mInjectable[39m[33m,[39m [33mHttpService[39m } [36mfrom[39m [32m"@nestjs/common"[39m[33m;[39m[0m
+  [0m [90m   |[39m                      [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+  [0m [90m 4 |[39m[0m
+  [0m [90m 5 |[39m [33m@[39m[33mInjectable[39m()[0m
+  [0m [90m 6 |[39m [36mexport[39m [36mclass[39m [33mCBRService[39m {[0m
+
+webpack compiled with [1m[31m1 error[39m[22m (9d95bed394548916)
+[1m[31mBuild failed, waiting for changes to restart...[39m[22m
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 237 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+webpack compiled [1m[32msuccessfully[39m[22m (d8cd83b1b4e5e5e2)
+[1m[31mDebugger listening on ws://localhost:9229/69a0906e-e275-415d-8e17-fce4174370ef[39m[22m
+[1m[31mDebugger listening on ws://localhost:9229/69a0906e-e275-415d-8e17-fce4174370ef[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m

@@ -1,0 +1,21 @@
+{
+  "run": {
+    "command": "nx build api",
+    "startTime": "2023-11-24T15:02:55.474Z",
+    "endTime": "2023-11-24T15:03:00.575Z",
+    "inner": false
+  },
+  "tasks": [
+    {
+      "taskId": "api:build:production",
+      "target": "build",
+      "projectName": "api",
+      "hash": "10074077400027019945",
+      "startTime": "2023-11-24T15:02:55.477Z",
+      "endTime": "2023-11-24T15:03:00.574Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    }
+  ]
+}

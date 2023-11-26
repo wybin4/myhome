@@ -2,12 +2,13 @@ FROM node:20-alpine as build
 WORKDIR /opt/app
 ADD *.json ./
 RUN npm install
+RUN npm i webpack
 ADD . .
 RUN npm run build api
 
 FROM node:20-alpine
 WORKDIR /opt/app
 ADD package.json ./
-RUN npm install --only=prod
+RUN npm install --production
 COPY --from=build /opt/app/dist/apps/api ./dist
-CMD ["node", "./dist/main.js"]
+CMD [ "node", "./dist/main.js" ]

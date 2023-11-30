@@ -38,11 +38,7 @@ testem.log
 .DS_Store
 Thumbs.db
 
-# envs 
-envs
+envs/
+uploads/
 
-# uploads
-
-uploads
-
-.nx/cache
+.nx/cache/

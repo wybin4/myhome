@@ -8,26 +8,17 @@
       "runner": "nx-cloud",
       "options": {
         "cacheableOperations": [],
-        "accessToken": "OTE1YzY4NTctMmMwYi00ZGE4LTg0OTUtZTgyMWM3ZjY5ZjY5fHJlYWQtd3JpdGU="
+        "accessToken": "MDYyNjA3ZDYtZjE4Ni00YmRlLTlhNTUtNzlmYTYxODhlMThlfHJlYWQtd3JpdGU="
       }
     }
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "production",
-        "^production"
-      ]
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
     },
     "test": {
-      "inputs": [
-        "default",
-        "^production",
-        "{workspaceRoot}/jest.preset.js"
-      ]
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
     },
     "lint": {
       "inputs": [
@@ -38,10 +29,7 @@
     }
   },
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "sharedGlobals"
-    ],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
@@ -51,5 +39,6 @@
       "!{projectRoot}/.eslintrc.json"
     ],
     "sharedGlobals": []
-  }
+  },
+  "nxCloudAccessToken": "Mjg0MjkwY2UtNDQ2Yy00NzVhLTllMDctNDI4YzJiZjdjNGE5fHJlYWQtd3JpdGU="
 }

@@ -15,6 +15,9 @@ export class UserEntity implements IUser {
   @Column({ nullable: false })
   passwordHash: string;
 
+  @Column({ nullable: true })
+  link?: string;
+
   constructor(data?: Partial<UserEntity>) {
     if (data) {
       Object.assign(this, data);
@@ -46,6 +49,10 @@ export class UserEntity implements IUser {
 
   public getWithCheckingAccount() {
     return this.getPublicProfile();
+  }
+
+  public getLink() {
+    return this.link;
   }
 
 }

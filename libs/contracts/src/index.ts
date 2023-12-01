@@ -1,6 +1,7 @@
 export * from './lib/api/api.emit-service-notifications';
 
 export * from './lib/account/account.login';
+export * from './lib/account/account.set-password';
 export * from './lib/account/account.refresh';
 export * from './lib/account/account.register';
 export * from './lib/account/account.user-info';

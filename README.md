@@ -33,9 +33,10 @@ services:
 
 Запуск проекта:
 1. `git clone https://github.com/wybin4/myhome.git`
-2. `npm install --save-dev @nrwl/nest`
-3. copy folder envs.exmaple to envs folder
-4. `nx run [any]:serve:development`
+2. `npx nx@latest init`
+3. `npm install --location=global nx @nrwl/cli`
+4. copy folder envs.exmaple to envs folder
+5. `nx run [any]:serve:development`
 
 Запуск всех сервисов - `nx run-many --target=serve --all --parallel=10`
 

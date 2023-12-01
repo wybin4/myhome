@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { AdminEntity, ManagementCompanyEntity, OwnerEntity, UserEntity } from '../user/user.entity';
 import { IJWTPayload, IUser, UserRole } from '@myhome/interfaces';
 import { JwtService } from '@nestjs/jwt';
-import { AccountLogin, AccountRefresh, AccountRegister, EmailRegister, IAddUser } from '@myhome/contracts';
-import { INCORRECT_LOGIN, INCORRECT_PASSWORD, INCORRECT_ROLE_ACTION, RMQException, USER_ALREADY_EXIST, USER_NOT_EXIST } from '@myhome/constants';
+import { AccountLogin, AccountRefresh, AccountRegister, AccountSetPassword, EmailRegister, IAddUser } from '@myhome/contracts';
+import { INCORRECT_LOGIN, INCORRECT_PASSWORD, INCORRECT_PASSWORD_LINK, INCORRECT_ROLE_ACTION, RMQException, USER_ALREADY_EXIST, USER_NOT_EXIST } from '@myhome/constants';
 import { RMQService } from 'nestjs-rmq';
 import { AdminRepository, OwnerRepository, ManagementCompanyRepository, IUserRepository } from '../user/user.repository';
 import { ConfigService } from '@nestjs/config';
+import { v4 as uuidv4 } from "uuid";
 
 @Injectable()
 export class AuthService {
@@ -18,6 +19,18 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly rmqService: RMQService,
   ) { }
+
+  async setPassword(dto: AccountSetPassword.Request): Promise<AccountSetPassword.Response> {
+    switch (dto.userRole) {
+      case UserRole.Admin:
+        return await this.genericSetPassword<AdminEntity>(this.adminRepository, dto, AdminEntity);
+      case UserRole.ManagementCompany:
+        return await this.genericSetPassword<ManagementCompanyEntity>(this.managementCompanyRepository,
+          dto, ManagementCompanyEntity);
+      case UserRole.Owner:
+        return await this.genericSetPassword<OwnerEntity>(this.ownerRepository, dto, OwnerEntity);
+    }
+  }
 
   async register(dto: AccountRegister.Request): Promise<AccountRegister.Response> {
     const { registerRole, userRole, ...rest } = dto;
@@ -41,17 +54,30 @@ export class AuthService {
     }
   }
 
+  private async genericSetPassword<T extends UserEntity>(
+    repository: IUserRepository<T>,
+    dto: AccountSetPassword.Request,
+    createInstance: new (dto: IUser) => T
+  ) {
+    const old = await repository.findByLink(dto.link);
+    if (!old) {
+      throw new RMQException(INCORRECT_PASSWORD_LINK.message, INCORRECT_PASSWORD_LINK.status);
+    }
+    const newTEntity = await new createInstance({ ...old, passwordHash: "", link: "" }).setPassword(dto.password);
+    const newT = await repository.update(newTEntity);
+    return { profile: newT.getPublicProfile() };
+  }
+
   private async genericAddUser<T extends UserEntity>(
     repository: IUserRepository<T>,
     dto: IAddUser,
-    createInstance: new (dto: IUser) => T,
+    createInstance: new (dto: IUser) => T
   ) {
     const old = await repository.findByEmail(dto.email);
     if (old) {
       throw new RMQException(USER_ALREADY_EXIST.message, USER_ALREADY_EXIST.status);
     }
-    // const newTEntity = await new createInstance({ ...dto, passwordHash: "" }).setPassword("sds2015sds");
-    const newTEntity = new createInstance({ ...dto, passwordHash: "" });
+    const newTEntity = new createInstance({ ...dto, passwordHash: "", link: uuidv4() });
     const newT = await repository.create(newTEntity);
 
     await this.rmqService.notify(EmailRegister.topic,

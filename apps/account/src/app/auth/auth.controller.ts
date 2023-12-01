@@ -1,6 +1,6 @@
 import { Body, Controller } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AccountLogin, AccountRefresh, AccountRegister } from '@myhome/contracts';
+import { AccountLogin, AccountRefresh, AccountRegister, AccountSetPassword } from '@myhome/contracts';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
 
@@ -13,6 +13,16 @@ export class AuthController {
   async register(@Body() dto: AccountRegister.Request): Promise<AccountRegister.Response> {
     try {
       return await this.authService.register(dto);
+    } catch (e) {
+      throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+    }
+  }
+
+  @RMQValidate()
+  @RMQRoute(AccountSetPassword.topic)
+  async setPassword(@Body() dto: AccountSetPassword.Request) {
+    try {
+      return await this.authService.setPassword(dto);
     } catch (e) {
       throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
     }

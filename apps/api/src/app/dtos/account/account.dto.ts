@@ -13,3 +13,9 @@ export class RegisterDto {
     checkingAccount?: string;
     registerRole: UserRole;
 }
+
+export class SetPasswordDto {
+    password: string;
+    userRole: UserRole;
+    link: string;
+}

@@ -10,6 +10,7 @@ export interface IUser {
   email: string;
   passwordHash: string;
   checkingAcount?: string;
+  link?: string;
 }
 
 export type IGetUser = Omit<IUser, 'passwordHash'>;

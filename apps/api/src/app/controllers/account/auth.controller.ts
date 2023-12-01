@@ -1,12 +1,12 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { AccountLogin, AccountRefresh, AccountRegister } from '@myhome/contracts';
+import { AccountLogin, AccountRefresh, AccountRegister, AccountSetPassword } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { RefreshAuthGuard } from '../../guards/refresh.guard';
-import { RegisterDto, LoginDto } from '../../dtos/account/account.dto';
+import { RegisterDto, LoginDto, SetPasswordDto } from '../../dtos/account/account.dto';
 import { IJWTPayload, UserRole } from '@myhome/interfaces';
 
 @Controller('auth')
@@ -25,6 +25,19 @@ export class AuthController {
         AccountRegister.Request,
         AccountRegister.Response
       >(AccountRegister.topic, dto);
+    } catch (e) {
+      CatchError(e);
+    }
+  }
+
+  @HttpCode(200)
+  @Post('set-password')
+  async setPassword(@Body() dto: SetPasswordDto) {
+    try {
+      return await this.rmqService.send<
+        AccountSetPassword.Request,
+        AccountSetPassword.Response
+      >(AccountSetPassword.topic, dto);
     } catch (e) {
       CatchError(e);
     }

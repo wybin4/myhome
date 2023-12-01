@@ -20,6 +20,10 @@ export const USER_ALREADY_EXIST = {
     message: 'Такой пользователь уже существует',
     status: HttpStatus.BAD_REQUEST
 };
+export const INCORRECT_PASSWORD_LINK = {
+    message: 'Неверная ссылка для установления пароля',
+    status: HttpStatus.BAD_REQUEST
+};
 export const USERS_NOT_EXIST = {
     message: "Такие пользователи не существуют",
     status: HttpStatus.NOT_FOUND

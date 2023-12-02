@@ -5,10 +5,9 @@ RUN npm install
 RUN npm i webpack
 ADD . .
 RUN npm run build single-payment-document
+RUN npm ci --only=production && npm cache clean --force
 
 FROM node:20-alpine
-WORKDIR /opt/app
-ADD package.json ./
-RUN npm install --production
 COPY --from=build /opt/app/dist/apps/single-payment-document ./dist
+COPY --from=build /opt/app/node_modules ./node_modules
 CMD [ "node", "./dist/main.js" ]

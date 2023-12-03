@@ -8,6 +8,7 @@ RUN npm run build account
 
 FROM node:20-alpine
 WORKDIR /opt/app
+WORKDIR /opt/appWORKDIR /opt/app
 ADD package.json ./
 RUN npm install --production
 COPY --from=build /opt/app/dist/apps/account ./dist

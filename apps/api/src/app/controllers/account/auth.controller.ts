@@ -17,7 +17,7 @@ export class AuthController {
   ) { }
 
   @HttpCode(200)
-  @UseGuards(JWTAuthGuard)
+  // @UseGuards(JWTAuthGuard)
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     try {

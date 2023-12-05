@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { AdminEntity, ManagementCompanyEntity, OwnerEntity, UserEntity } from '../user/user.entity';
 import { IJWTPayload, IUser, UserRole } from '@myhome/interfaces';
 import { JwtService } from '@nestjs/jwt';
-import { AccountLogin, AccountRefresh, AccountRegister, AccountSetPassword, EmailRegister, IAddUser } from '@myhome/contracts';
-import { INCORRECT_LOGIN, INCORRECT_PASSWORD, INCORRECT_PASSWORD_LINK, INCORRECT_ROLE_ACTION, RMQException, USER_ALREADY_EXIST, USER_NOT_EXIST } from '@myhome/constants';
+import { AccountLogin, AccountRefresh, AccountRegister, AccountRegisterMany, AccountSetPassword, EmailRegister, EmailRegisterMany, IAddUser, IAddUsers } from '@myhome/contracts';
+import { INCORRECT_LOGIN, INCORRECT_PASSWORD, INCORRECT_PASSWORD_LINK, INCORRECT_ROLE_ACTION, RMQException, USERS_ALREADY_EXIST, USER_ALREADY_EXIST, USER_NOT_EXIST } from '@myhome/constants';
 import { RMQService } from 'nestjs-rmq';
 import { AdminRepository, OwnerRepository, ManagementCompanyRepository, IUserRepository } from '../user/user.repository';
 import { ConfigService } from '@nestjs/config';
@@ -54,6 +54,28 @@ export class AuthService {
     }
   }
 
+  async registerMany(dto: AccountRegisterMany.Request): Promise<AccountRegisterMany.Response> {
+    const { registerRole, userRole, users } = dto;
+
+    if (
+      (registerRole === UserRole.Admin && userRole === UserRole.ManagementCompany) ||
+      (registerRole === UserRole.ManagementCompany && userRole === UserRole.Owner) ||
+      (registerRole === UserRole.Admin && userRole === UserRole.Admin)
+    ) {
+      switch (userRole) {
+        case UserRole.Admin:
+          return await this.genericAddUsers<AdminEntity>(this.adminRepository, users, AdminEntity);
+        case UserRole.ManagementCompany:
+          return await this.genericAddUsers<ManagementCompanyEntity>(this.managementCompanyRepository,
+            users, ManagementCompanyEntity);
+        case UserRole.Owner:
+          return await this.genericAddUsers<OwnerEntity>(this.ownerRepository, users, OwnerEntity);
+      }
+    } else {
+      throw new RMQException(INCORRECT_ROLE_ACTION.message, INCORRECT_ROLE_ACTION.status);
+    }
+  }
+
   private async genericSetPassword<T extends UserEntity>(
     repository: IUserRepository<T>,
     dto: AccountSetPassword.Request,
@@ -85,6 +107,25 @@ export class AuthService {
     );
 
     return { profile: newT.getWithCheckingAccount() };
+  }
+
+  private async genericAddUsers<T extends UserEntity>(
+    repository: IUserRepository<T>,
+    dto: IAddUsers[],
+    createInstance: new (dto: IUser) => T
+  ) {
+    const olds = await repository.findManyByEmails(dto.map(d => d.email));
+    if (olds.length > 0) {
+      throw new RMQException(USERS_ALREADY_EXIST.message, USERS_ALREADY_EXIST.status);
+    }
+    const newEntities = dto.map(d => new createInstance({ ...d, passwordHash: "", link: uuidv4() }));
+    const news = await repository.createMany(newEntities);
+
+    await this.rmqService.notify(EmailRegisterMany.topic,
+      { users: news, link: 'https://nx.dev/packages/nest' }
+    );
+
+    return { profiles: news.map(n => n.getWithCheckingAccount()) };
   }
 
   async validateUser(dto: AccountLogin.Request) {

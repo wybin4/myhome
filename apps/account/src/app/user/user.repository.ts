@@ -8,8 +8,10 @@ export abstract class IUserRepository<T extends IUser> {
     abstract findByIds(ids: number[]): Promise<T[]>;
     abstract findById(id: number): Promise<T>;
     abstract findByEmail(email: string): Promise<T>;
+    abstract findManyByEmails(emails: string[]): Promise<T[]>;
     abstract findByLink(link: string): Promise<T>;
     abstract create(item: T): Promise<T>;
+    abstract createMany(items: T[]): Promise<T[]>;
     abstract update(item: T): Promise<T>;
 }
 
@@ -37,6 +39,12 @@ export class UserRepository<T extends User> implements IUserRepository<T> {
         });
     }
 
+    async findManyByEmails(emails: string[]): Promise<T[]> {
+        return await this.repository.find({
+            where: { email: In(emails) } as unknown as FindOptionsWhere<T>
+        });
+    }
+
     async findByLink(link: string): Promise<T> {
         return await this.repository.findOne({
             where: { link: link } as unknown as FindOptionsWhere<T>
@@ -45,6 +53,10 @@ export class UserRepository<T extends User> implements IUserRepository<T> {
 
     async create(item: T) {
         return await this.repository.save(item);
+    }
+
+    async createMany(items: T[]) {
+        return await this.repository.save(items);
     }
 
     async findById(id: number): Promise<T> {

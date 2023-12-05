@@ -4,6 +4,7 @@ export * from './lib/account/account.login';
 export * from './lib/account/account.set-password';
 export * from './lib/account/account.refresh';
 export * from './lib/account/account.register';
+export * from './lib/account/account.register-many';
 export * from './lib/account/account.user-info';
 export * from './lib/account/account.users-info';
 export * from './lib/account/account.get-users-by-another-role';
@@ -47,6 +48,7 @@ export * from './lib/reference/common/reference.get-all-types-of-service';
 export * from './lib/reference/common/reference.get-common';
 
 export * from './lib/email/email.register';
+export * from './lib/email/email.register-many';
 
 export * from './lib/event/appeal/event.add-appeal';
 export * from './lib/event/appeal/event.update-appeal';

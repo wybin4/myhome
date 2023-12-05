@@ -1,11 +1,12 @@
-import { IGetUser } from '@myhome/interfaces';
+import { UserRole } from '@myhome/interfaces';
 
 export namespace EmailRegister {
     export const topic = 'email.register.event';
 
     export class Request {
-        user!: IGetUser;
-        html!: string;
+        email!: string;
+        userRole!: UserRole;
+        link!: string;
     }
 
     export class Response { }

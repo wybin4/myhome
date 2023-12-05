@@ -1,3 +1,4 @@
+import { IAddUsers } from '@myhome/contracts';
 import { UserRole } from '@myhome/interfaces';
 
 export class LoginDto {
@@ -11,7 +12,11 @@ export class RegisterDto {
     email: string;
     name?: string;
     checkingAccount?: string;
-    registerRole: UserRole;
+}
+
+export class RegisterManyDto {
+    users: IAddUsers[];
+    userRole: UserRole;
 }
 
 export class SetPasswordDto {

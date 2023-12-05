@@ -1,12 +1,12 @@
 import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { AccountLogin, AccountRefresh, AccountRegister, AccountSetPassword } from '@myhome/contracts';
+import { AccountLogin, AccountRefresh, AccountRegister, AccountRegisterMany, AccountSetPassword } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { RefreshAuthGuard } from '../../guards/refresh.guard';
-import { RegisterDto, LoginDto, SetPasswordDto } from '../../dtos/account/account.dto';
+import { RegisterDto, LoginDto, SetPasswordDto, RegisterManyDto } from '../../dtos/account/account.dto';
 import { IJWTPayload, UserRole } from '@myhome/interfaces';
 
 @Controller('auth')
@@ -17,14 +17,28 @@ export class AuthController {
   ) { }
 
   @HttpCode(200)
-  // @UseGuards(JWTAuthGuard)
+  @UseGuards(JWTAuthGuard)
   @Post('register')
-  async register(@Body() dto: RegisterDto) {
+  async register(@Req() req: { user: IJWTPayload }, @Body() dto: RegisterDto) {
     try {
       return await this.rmqService.send<
         AccountRegister.Request,
         AccountRegister.Response
-      >(AccountRegister.topic, dto);
+      >(AccountRegister.topic, { ...dto, registerRole: req.user.userRole });
+    } catch (e) {
+      CatchError(e);
+    }
+  }
+
+  @HttpCode(200)
+  @UseGuards(JWTAuthGuard)
+  @Post('register-many')
+  async registerMany(@Req() req: { user: IJWTPayload }, @Body() dto: RegisterManyDto) {
+    try {
+      return await this.rmqService.send<
+        AccountRegisterMany.Request,
+        AccountRegisterMany.Response
+      >(AccountRegisterMany.topic, { ...dto, registerRole: req.user.userRole });
     } catch (e) {
       CatchError(e);
     }

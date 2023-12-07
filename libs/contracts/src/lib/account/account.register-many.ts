@@ -25,7 +25,7 @@ export namespace AccountRegisterMany {
         @ArrayMinSize(1, {message: "Массив пользователей не должен быть пустым"})
         @ValidateNested({ each: true, always: true })
         @Type(() => UserValidator)
-        users!: IAddUsers[];
+        profiles!: IAddUsers[];
 
         @Validate(IsValidEnumValue, [UserRole])
         registerRole!: UserRole;

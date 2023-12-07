@@ -14,6 +14,10 @@ export class GeneralMeterReadingRepository {
         return await this.generalMeterReadingRepository.save(generalMeterReading);
     }
 
+    async createMany(generalMeterReadings: GeneralMeterReadingEntity[]) {
+        return await this.generalMeterReadingRepository.save(generalMeterReadings);
+    }
+
     async findById(id: number) {
         return await this.generalMeterReadingRepository.findOne({ where: { id } });
     }

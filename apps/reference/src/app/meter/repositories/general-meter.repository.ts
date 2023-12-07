@@ -23,6 +23,10 @@ export class GeneralMeterRepository {
         }
     }
 
+    async createMany(generalMeters: GeneralMeterEntity[]) {
+        return await this.generalMeterRepository.save(generalMeters);
+    }
+
     async findById(id: number) {
         return await this.generalMeterRepository.findOne({ where: { id } });
     }
@@ -34,8 +38,8 @@ export class GeneralMeterRepository {
             .getMany();
     }
 
-    async findByFNumber(factoryNumber: string) {
-        return await this.generalMeterRepository.findOne({ where: { factoryNumber } });
+    async findByFNumbers(factoryNumbers: string[]) {
+        return await this.generalMeterRepository.find({ where: { factoryNumber: In(factoryNumbers) } });
     }
 
     async update(meter: GeneralMeterEntity) {

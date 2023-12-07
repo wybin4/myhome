@@ -1,12 +1,13 @@
 import {
     METER_NOT_EXIST, INCORRECT_METER_TYPE,
-    METER_ALREADY_EXIST,
-    RMQException, APART_NOT_EXIST, TYPE_OF_SERVICE_NOT_EXIST, HOUSE_NOT_EXIST
+    RMQException,
+    TYPES_OF_SERVICE_NOT_EXIST,
+    METERS_ALREADY_EXIST,
+    HOUSES_NOT_EXIST,
+    APARTS_NOT_EXIST,
 } from "@myhome/constants";
-import { ReferenceAddMeter } from "@myhome/contracts";
-import {  MeterType } from "@myhome/interfaces";
+import { MeterType } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
-
 import { Cron } from "@nestjs/schedule";
 import { GeneralMeterEntity } from "../../entities/general-meter.entity";
 import { IndividualMeterEntity } from "../../entities/individual-meter.entity";
@@ -17,9 +18,10 @@ import { ApartmentRepository } from "../../../subscriber/repositories/apartment.
 import { TypeOfServiceRepository } from "../../../common/repositories/type-of-service.repository";
 import { HouseRepository } from "../../../subscriber/repositories/house.repository";
 import { GeneralMeterReadingRepository } from "../../repositories/general-meter-reading.repository";
+import { IndividualMeterReadingRepository } from "../../repositories/individual-meter-reading.repository";
+import { ReferenceAddMeters } from "@myhome/contracts";
 import { GeneralMeterReadingEntity } from "../../entities/general-meter-reading.entity";
 import { IndividualMeterReadingEntity } from "../../entities/individual-meter-reading.entity";
-import { IndividualMeterReadingRepository } from "../../repositories/individual-meter-reading.repository";
 
 export type Meters = IndividualMeterEntity | GeneralMeterEntity;
 
@@ -62,85 +64,105 @@ export class MeterCommandsService {
         }
     }
 
-    public async addMeter(dto: ReferenceAddMeter.Request): Promise<ReferenceAddMeter.Response> {
-        const typeOfService = await this.typeOfServiceRepository.findById(dto.typeOfServiceId);
-        if (!typeOfService) {
-            throw new RMQException(TYPE_OF_SERVICE_NOT_EXIST.message(dto.typeOfServiceId), TYPE_OF_SERVICE_NOT_EXIST.status);
+    public async addMeters(dto: ReferenceAddMeters.Request): Promise<ReferenceAddMeters.Response> {
+        const typeOfServices = await this.typeOfServiceRepository.findMany(dto.meters.map(m => m.typeOfServiceId));
+        if (!typeOfServices.length) {
+            throw new RMQException(TYPES_OF_SERVICE_NOT_EXIST.message, TYPES_OF_SERVICE_NOT_EXIST.status);
         }
-        const previousReading = dto.previousReading;
-        const previousReadAt = new Date(dto.previousReadAt);
 
         switch (dto.meterType) {
             case (MeterType.General): {
-                const existedMeter = await this.generalMeterRepository.findByFNumber(dto.factoryNumber);
-                if (existedMeter) {
-                    throw new RMQException(METER_ALREADY_EXIST, HttpStatus.CONFLICT);
+                const existedMeters = await this.generalMeterRepository.findByFNumbers(dto.meters.map(m => String(m.factoryNumber)));
+                if (existedMeters.length) {
+                    throw new RMQException(METERS_ALREADY_EXIST.message, METERS_ALREADY_EXIST.status);
                 }
-                const house = await this.houseRepository.findById(dto.houseId);
-                if (!house) {
-                    throw new RMQException(HOUSE_NOT_EXIST.message(dto.apartmentId), HOUSE_NOT_EXIST.status);
+                const houses = await this.houseRepository.findMany(dto.meters.map(m => m.houseId));
+                if (!houses.length) {
+                    throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
                 }
 
-                const newMeter = new GeneralMeterEntity({
-                    ...dto,
-                    verifiedAt: new Date(dto.verifiedAt),
-                    issuedAt: new Date(dto.issuedAt)
+                const newMeters = dto.meters.map(m => {
+                    return new GeneralMeterEntity({
+                        ...m,
+                        factoryNumber: String(m.factoryNumber),
+                        verifiedAt: new Date(m.verifiedAt),
+                        issuedAt: new Date(m.issuedAt)
+                    });
                 });
-                const meter = await this.generalMeterRepository.create(newMeter);
+                const meters = await this.generalMeterRepository.createMany(newMeters);
 
-                const newMeterReading = new GeneralMeterReadingEntity({
-                    generalMeterId: meter.id,
-                    reading: previousReading,
-                    readAt: previousReadAt
+                const newMeterReadings = meters.map(m => {
+                    const currDto = dto.meters.find(dm => String(dm.factoryNumber) === m.factoryNumber);
+                    return new GeneralMeterReadingEntity({
+                        generalMeterId: m.id,
+                        reading: currDto.previousReading,
+                        readAt: new Date(currDto.previousReadAt)
+                    });
                 });
-                await this.generalMeterReadingRepository.create(newMeterReading);
+                await this.generalMeterReadingRepository.createMany(newMeterReadings);
 
                 return {
-                    meter: {
-                        ...meter,
-                        houseName: house.getAddress(),
-                        typeOfServiceName: typeOfService.name,
-                        currentReading: undefined,
-                        currentReadAt: undefined,
-                        previousReading,
-                        previousReadAt
-                    }
+                    meters: meters.map(meter => {
+                        const currDto = dto.meters.find(dm => String(dm.factoryNumber) === meter.factoryNumber);
+                        const currHouse = houses.find(h => h.id === meter.houseId);
+                        const currToS = typeOfServices.find(tos => tos.id === meter.typeOfServiceId);
+                        return {
+                            ...meter,
+                            houseName: currHouse.getAddress(),
+                            typeOfServiceName: currToS.name,
+                            currentReading: undefined,
+                            currentReadAt: undefined,
+                            previousReading: currDto.previousReading,
+                            previousReadAt: new Date(currDto.previousReadAt)
+                        };
+                    })
                 }
             }
             case (MeterType.Individual): {
-                const existedMeter = await this.individualMeterRepository.findByFNumber(dto.factoryNumber);
-                if (existedMeter) {
-                    throw new RMQException(METER_ALREADY_EXIST, HttpStatus.CONFLICT);
+                const existedMeters = await this.individualMeterRepository.findByFNumbers(dto.meters.map(m => String(m.factoryNumber)));
+                if (existedMeters.length) {
+                    throw new RMQException(METERS_ALREADY_EXIST.message, METERS_ALREADY_EXIST.status);
                 }
-                const apartment = await this.apartmentRepository.findByIdWithHouse(dto.apartmentId);
-                if (!apartment) {
-                    throw new RMQException(APART_NOT_EXIST.message(dto.apartmentId), APART_NOT_EXIST.status);
+                const apartments = await this.apartmentRepository.findByIdWithHouse(dto.meters.map(m => m.apartmentId));
+                if (!apartments.length) {
+                    throw new RMQException(APARTS_NOT_EXIST.message, APARTS_NOT_EXIST.status);
                 }
 
-                const newMeter = new IndividualMeterEntity({
-                    ...dto,
-                    verifiedAt: new Date(dto.verifiedAt),
-                    issuedAt: new Date(dto.issuedAt)
+                const newMeters = dto.meters.map(m => {
+                    return new IndividualMeterEntity({
+                        ...m,
+                        factoryNumber: String(m.factoryNumber),
+                        verifiedAt: new Date(m.verifiedAt),
+                        issuedAt: new Date(m.issuedAt)
+                    });
                 });
-                const meter = await this.individualMeterRepository.create(newMeter);
+                const meters = await this.individualMeterRepository.createMany(newMeters);
 
-                const newMeterReading = new IndividualMeterReadingEntity({
-                    individualMeterId: meter.id,
-                    reading: previousReading,
-                    readAt: previousReadAt
+                const newMeterReadings = meters.map(m => {
+                    const currDto = dto.meters.find(dm => String(dm.factoryNumber) === m.factoryNumber);
+                    return new IndividualMeterReadingEntity({
+                        individualMeterId: m.id,
+                        reading: currDto.previousReading,
+                        readAt: new Date(currDto.previousReadAt)
+                    });
                 });
-                await this.individualMeterReadingRepository.create(newMeterReading);
+                await this.individualMeterReadingRepository.createMany(newMeterReadings);
 
                 return {
-                    meter: {
-                        ...meter,
-                        houseName: apartment.getAddress(apartment.house),
-                        typeOfServiceName: typeOfService.name,
-                        currentReading: undefined,
-                        currentReadAt: undefined,
-                        previousReading,
-                        previousReadAt
-                    }
+                    meters: meters.map(meter => {
+                        const currDto = dto.meters.find(dm => String(dm.factoryNumber) === meter.factoryNumber);
+                        const currApartment = apartments.find(h => h.id === meter.apartmentId);
+                        const currToS = typeOfServices.find(tos => tos.id === meter.typeOfServiceId);
+                        return {
+                            ...meter,
+                            houseName: currApartment.getAddress(currApartment.house),
+                            typeOfServiceName: currToS.name,
+                            currentReading: undefined,
+                            currentReadAt: undefined,
+                            previousReading: currDto.previousReading,
+                            previousReadAt: new Date(currDto.previousReadAt)
+                        };
+                    })
                 }
             }
             default:

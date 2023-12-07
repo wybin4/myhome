@@ -1,15 +1,9 @@
+import { IAddMeter } from "@myhome/contracts";
 import { MeterType } from "@myhome/interfaces";
 
-export class AddMeterDto {
-    typeOfServiceId: number;
-    apartmentId?: number;
-    houseId?: number;
-    factoryNumber: string;
-    verifiedAt: string;
-    issuedAt: string;
+export class AddMetersDto {
+    meters: IAddMeter[];
     meterType: MeterType;
-    previousReading: number;
-    previousReadAt: string;
 }
 
 export class GetMetersByUserDto {

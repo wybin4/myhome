@@ -55,7 +55,7 @@ export class AuthService {
   }
 
   async registerMany(dto: AccountRegisterMany.Request): Promise<AccountRegisterMany.Response> {
-    const { registerRole, userRole, users } = dto;
+    const { registerRole, userRole, profiles } = dto;
 
     if (
       (registerRole === UserRole.Admin && userRole === UserRole.ManagementCompany) ||
@@ -64,12 +64,12 @@ export class AuthService {
     ) {
       switch (userRole) {
         case UserRole.Admin:
-          return await this.genericAddUsers<AdminEntity>(this.adminRepository, users, AdminEntity);
+          return await this.genericAddUsers<AdminEntity>(this.adminRepository, profiles, AdminEntity);
         case UserRole.ManagementCompany:
           return await this.genericAddUsers<ManagementCompanyEntity>(this.managementCompanyRepository,
-            users, ManagementCompanyEntity);
+            profiles, ManagementCompanyEntity);
         case UserRole.Owner:
-          return await this.genericAddUsers<OwnerEntity>(this.ownerRepository, users, OwnerEntity);
+          return await this.genericAddUsers<OwnerEntity>(this.ownerRepository, profiles, OwnerEntity);
       }
     } else {
       throw new RMQException(INCORRECT_ROLE_ACTION.message, INCORRECT_ROLE_ACTION.status);
@@ -102,9 +102,13 @@ export class AuthService {
     const newTEntity = new createInstance({ ...dto, passwordHash: "", link: uuidv4() });
     const newT = await repository.create(newTEntity);
 
-    await this.rmqService.notify(EmailRegister.topic,
-      { user: newT, link: 'https://nx.dev/packages/nest' }
-    );
+    try {
+      await this.rmqService.notify(EmailRegister.topic,
+        { user: newT, link: 'https://nx.dev/packages/nest' }
+      );
+    } catch (e) {
+      throw new RMQException(e.message, e.status);
+    }
 
     return { profile: newT.getWithCheckingAccount() };
   }
@@ -121,9 +125,13 @@ export class AuthService {
     const newEntities = dto.map(d => new createInstance({ ...d, passwordHash: "", link: uuidv4() }));
     const news = await repository.createMany(newEntities);
 
-    await this.rmqService.notify(EmailRegisterMany.topic,
-      { users: news, link: 'https://nx.dev/packages/nest' }
-    );
+    try {
+      await this.rmqService.notify(EmailRegisterMany.topic,
+        { users: news, link: 'https://nx.dev/packages/nest' }
+      );
+    } catch (e) {
+      throw new RMQException(e.message, e.status);
+    }
 
     return { profiles: news.map(n => n.getWithCheckingAccount()) };
   }

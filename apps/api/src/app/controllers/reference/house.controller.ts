@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, Post, Req, SetMetadata, UseGuards } from '@nestjs/common';
-import { ReferenceAddHouse, ReferenceGetHousesByUser } from '@myhome/contracts';
+import { ReferenceGetHousesByUser, ReferenceAddHouses } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
-import { AddHouseDto, GetHousesByUserDto } from '../../dtos/reference/house.dto';
+import { AddHousesDto, GetHousesByUserDto } from '../../dtos/reference/house.dto';
 import { CatchError } from '../../error.filter';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
 import { IJWTPayload, UserRole } from '@myhome/interfaces';
@@ -31,17 +31,16 @@ export class HouseController {
     @SetMetadata('role', UserRole.ManagementCompany)
     @UseGuards(JWTAuthGuard, RoleGuard)
     @HttpCode(201)
-    @Post('add-house')
-    async addHouse(@Req() req: { user: IJWTPayload }, @Body() dto: AddHouseDto) {
+    @Post('add-houses')
+    async addHouses(@Req() req: { user: IJWTPayload }, @Body() dto: AddHousesDto) {
         try {
             const managementCompanyId = req.user.userId;
             return await this.rmqService.send<
-                ReferenceAddHouse.Request,
-                ReferenceAddHouse.Response
-            >(ReferenceAddHouse.topic, { ...dto, managementCompanyId });
+                ReferenceAddHouses.Request,
+                ReferenceAddHouses.Response
+            >(ReferenceAddHouses.topic, { ...dto, managementCompanyId });
         } catch (e) {
             CatchError(e);
         }
     }
-
 }

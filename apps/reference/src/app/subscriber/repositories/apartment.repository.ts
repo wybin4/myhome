@@ -23,24 +23,37 @@ export class ApartmentRepository {
         }
     }
 
+    async createMany(apartments: ApartmentEntity[]) {
+        return await this.apartmentRepository.save(apartments);
+    }
+
     async findById(id: number) {
         return await this.apartmentRepository.findOne({ where: { id } });
     }
 
-    async findByIdWithHouse(apartmentId: number) {
+    async findByIdWithHouse(apartmentIds: number[]) {
         return await this.apartmentRepository.createQueryBuilder('apartment')
             .innerJoinAndSelect('apartment.house', 'house')
-            .where('apartment.id = :apartmentId', { apartmentId })
-            .getOne();
+            .where('apartment.id in (:...apartmentIds)', { apartmentIds })
+            .getMany();
     }
 
-    async findByNumber(apatNumber: number, houseId: number) {
-        return await this.apartmentRepository
-            .createQueryBuilder('apartment')
-            .where('apartment.apartmentNumber = :apatNumber', { apatNumber })
-            .andWhere('apartment.houseId = :houseId', { houseId })
-            .getOne();
+    async findByNumber(data: { apatNumber: number; houseId: number }[]) {
+        const queryBuilder = this.apartmentRepository.createQueryBuilder('apartment');
+
+        const conditions = data.map(({ apatNumber, houseId }, index) => {
+            queryBuilder.setParameter(`apatNumber${index}`, apatNumber);
+            queryBuilder.setParameter(`houseId${index}`, houseId);
+            return `(apartment.apartmentNumber = :apatNumber${index} AND apartment.houseId = :houseId${index})`;
+        });
+
+        const combinedConditions = conditions.join(' OR ');
+
+        return await queryBuilder
+            .where(combinedConditions)
+            .getMany();
     }
+
 
     async findManyByHouse(houseId: number) {
         return await this.apartmentRepository.find({ where: { houseId } });

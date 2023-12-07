@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, Post, Req, SetMetadata, UseGuards } from '@nestjs/common';
-import { ReferenceAddSubscriber, ReferenceUpdateSubscriber, ReferenceGetSubscribersByUser } from '@myhome/contracts';
+import { ReferenceUpdateSubscriber, ReferenceGetSubscribersByUser, ReferenceAddSubscribers } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
-import { AddSubscriberDto, UpdateSubscriberDto, GetSubscribersByUserDto } from '../../dtos/reference/subscriber.dto';
+import { UpdateSubscriberDto, GetSubscribersByUserDto, AddSubscribersDto } from '../../dtos/reference/subscriber.dto';
 import { CatchError } from '../../error.filter';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
 import { IJWTPayload, UserRole } from '@myhome/interfaces';
@@ -31,13 +31,13 @@ export class SubscriberController {
     @SetMetadata('role', UserRole.ManagementCompany)
     @UseGuards(JWTAuthGuard, RoleGuard)
     @HttpCode(201)
-    @Post('add-subscriber')
-    async addSubscriber(@Body() dto: AddSubscriberDto) {
+    @Post('add-subscribers')
+    async addSubscribers(@Body() dto: AddSubscribersDto) {
         try {
             return await this.rmqService.send<
-                ReferenceAddSubscriber.Request,
-                ReferenceAddSubscriber.Response
-            >(ReferenceAddSubscriber.topic, dto);
+                ReferenceAddSubscribers.Request,
+                ReferenceAddSubscribers.Response
+            >(ReferenceAddSubscribers.topic, dto);
         } catch (e) {
             CatchError(e);
         }

@@ -155,7 +155,7 @@ export class MeterQueriesService {
                         const currentTypeOfService = typesOfService.find(obj => obj.id === meter.meter.typeOfServiceId);
                         const currentHouse = houses.find(obj => obj.id === (meter.meter as IGeneralMeter).houseId);
                         const currentReading = meter.reading.current;
-                        const previousReading = meter.reading.current;
+                        const previousReading = meter.reading.previous;
 
                         return {
                             ...meter.meter,
@@ -199,7 +199,7 @@ export class MeterQueriesService {
                         const currentTypeOfService = typesOfService.find(obj => obj.id === meter.meter.typeOfServiceId);
                         const currentApartment = apartments.find(obj => obj.id === (meter.meter as IIndividualMeter).apartmentId);
                         const currentReading = meter.reading.current;
-                        const previousReading = meter.reading.current;
+                        const previousReading = meter.reading.previous;
 
                         return {
                             ...meter.meter,

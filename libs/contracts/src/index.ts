@@ -11,17 +11,17 @@ export * from './lib/account/account.get-users-by-another-role';
 export * from './lib/account/account.get-all-users';
 export * from './lib/account/account.change-profile';
 
-export * from './lib/reference/subscriber/house/reference.add-house';
+export * from './lib/reference/subscriber/house/reference.add-houses';
 export * from './lib/reference/subscriber/house/reference.get-houses';
 export * from './lib/reference/subscriber/house/reference.get-houses-by-user';
 
 export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-subscribers';
-export * from './lib/reference/subscriber/apartment/reference.add-apartment';
+export * from './lib/reference/subscriber/apartment/reference.add-apartments';
 export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-subscribers';
 export * from './lib/reference/subscriber/apartment/reference.get-apartments';
 export * from './lib/reference/subscriber/apartment/reference.get-apartments-by-user';
 
-export * from './lib/reference/subscriber/subscriber/reference.add-subscriber';
+export * from './lib/reference/subscriber/subscriber/reference.add-subscribers';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-user';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers';
 export * from './lib/reference/subscriber/subscriber/reference.get-subscribers-by-houses';
@@ -31,6 +31,7 @@ export * from './lib/reference/subscriber/subscriber/reference.get-receivers-by-
 
 export * from './lib/reference/meter/reference.expire-meter';
 export * from './lib/reference/meter/reference.add-meter';
+export * from './lib/reference/meter/reference.add-meters';
 export * from './lib/reference/meter/reference.get-meters';
 export * from './lib/reference/meter/reference.get-meters-by-user';
 export * from './lib/reference/meter/reference.update-meter';
@@ -39,7 +40,7 @@ export * from './lib/reference/meter/reference.get-individual-meter-readings';
 export * from './lib/reference/meter/reference.get-meter-readings-by-hid';
 
 export * from './lib/reference/tariff-and-norm/reference.update-tariff-and-norm';
-export * from './lib/reference/tariff-and-norm/reference.add-tariff-and-norm';
+export * from './lib/reference/tariff-and-norm/reference.add-tariff-and-norms';
 export * from './lib/reference/tariff-and-norm/reference.get-tariffs-and-norms-by-user';
 export * from './lib/reference/tariff-and-norm/reference.get-all-tariffs';
 

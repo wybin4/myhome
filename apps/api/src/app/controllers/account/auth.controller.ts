@@ -16,7 +16,7 @@ export class AuthController {
     private readonly configService: ConfigService
   ) { }
 
-  @HttpCode(200)
+  @HttpCode(201)
   @UseGuards(JWTAuthGuard)
   @Post('register')
   async register(@Req() req: { user: IJWTPayload }, @Body() dto: RegisterDto) {
@@ -30,7 +30,7 @@ export class AuthController {
     }
   }
 
-  @HttpCode(200)
+  @HttpCode(201)
   @UseGuards(JWTAuthGuard)
   @Post('register-many')
   async registerMany(@Req() req: { user: IJWTPayload }, @Body() dto: RegisterManyDto) {

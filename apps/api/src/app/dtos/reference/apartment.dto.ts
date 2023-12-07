@@ -1,10 +1,7 @@
-export class AddApartmentDto {
-    id?: number;
-    houseId: number;
-    apartmentNumber: number;
-    totalArea: number;
-    livingArea: number;
-    numberOfRegistered: number;
+import { IApartment } from "@myhome/interfaces";
+
+export class AddApartmentsDto {
+    apartments!: IApartment[];
 }
 
 export class GetApartmentsByUserDto {

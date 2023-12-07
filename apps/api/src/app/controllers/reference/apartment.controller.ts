@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, Post, Req, SetMetadata, UseGuards } from '@nestjs/common';
-import { ReferenceAddApartment, ReferenceGetApartmentsByUser } from '@myhome/contracts';
+import { ReferenceAddApartments, ReferenceGetApartmentsByUser } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
-import { AddApartmentDto, GetApartmentsByUserDto } from '../../dtos/reference/apartment.dto';
+import { AddApartmentsDto, GetApartmentsByUserDto } from '../../dtos/reference/apartment.dto';
 import { CatchError } from '../../error.filter';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
 import { IJWTPayload, UserRole } from '@myhome/interfaces';
@@ -31,16 +31,15 @@ export class ApartmentController {
     @SetMetadata('role', UserRole.ManagementCompany)
     @UseGuards(JWTAuthGuard, RoleGuard)
     @HttpCode(201)
-    @Post('add-apartment')
-    async addApartment(@Body() dto: AddApartmentDto) {
+    @Post('add-apartments')
+    async addApartments(@Body() dto: AddApartmentsDto) {
         try {
             return await this.rmqService.send<
-                ReferenceAddApartment.Request,
-                ReferenceAddApartment.Response
-            >(ReferenceAddApartment.topic, dto);
+                ReferenceAddApartments.Request,
+                ReferenceAddApartments.Response
+            >(ReferenceAddApartments.topic, dto);
         } catch (e) {
             CatchError(e);
         }
     }
-
 }

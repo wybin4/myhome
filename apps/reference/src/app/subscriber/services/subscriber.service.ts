@@ -1,4 +1,4 @@
-import { SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_EXIST, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, getGenericObjects, checkUsers, APART_NOT_EXIST, checkUser, USER_NOT_EXIST } from "@myhome/constants";
+import { SUBSCRIBER_NOT_EXIST, RMQException, SUBSCRIBER_ALREADY_ARCHIEVED, SUBSCRIBERS_NOT_EXIST, getGenericObjects, checkUsers, SUBSCRIBERS_ALREADY_EXISTS, APARTS_NOT_EXIST, USERS_NOT_EXIST } from "@myhome/constants";
 import { SubscriberStatus, UserRole } from "@myhome/interfaces";
 import { Injectable, HttpStatus } from "@nestjs/common";
 import { SubscriberEntity } from "../entities/subscriber.entity";
@@ -6,7 +6,7 @@ import { ApartmentRepository } from "../repositories/apartment.repository";
 import { HouseRepository } from "../repositories/house.repository";
 import { SubscriberRepository } from "../repositories/subscriber.repository";
 import { RMQService } from "nestjs-rmq";
-import { ReferenceAddSubscriber, ReferenceGetSubscribersByHouses, ReferenceGetSubscribersByUser, ReferenceGetUsersByAnotherRole, ReferenceGetReceiversByOwner, ReferenceGetSubscribers } from "@myhome/contracts";
+import { ReferenceGetSubscribersByHouses, ReferenceGetSubscribersByUser, ReferenceGetUsersByAnotherRole, ReferenceGetReceiversByOwner, ReferenceGetSubscribers, ReferenceAddSubscribers } from "@myhome/contracts";
 
 export interface IApartmentAndSubscriber {
 	subscriberId: number;
@@ -23,34 +23,42 @@ export class SubscriberService {
 		readonly rmqService: RMQService,
 	) { }
 
-	async addSubscriber(dto: ReferenceAddSubscriber.Request): Promise<ReferenceAddSubscriber.Response> {
-		const existedSubscriber = await this.subscriberRepository.findByApartmentIdAndPersonalAccount(
-			dto.apartmentId,
-			dto.personalAccount
-		);
-		if (existedSubscriber) {
-			throw new RMQException(SUBSCRIBER_ALREADY_EXIST, HttpStatus.CONFLICT);
+	async addSubscribers(dto: ReferenceAddSubscribers.Request): Promise<ReferenceAddSubscribers.Response> {
+		const existed = await this.subscriberRepository.findByApartmentIdAndPersonalAccount(dto.subscribers.map(s => {
+			return {
+				apartmentId: s.apartmentId,
+				personalAccount: s.personalAccount
+			}
+		}));
+		if (existed.length) {
+			throw new RMQException(SUBSCRIBERS_ALREADY_EXISTS.message, SUBSCRIBERS_ALREADY_EXISTS.status);
 		}
-		const apartment = await this.apartmentRepository.findByIdWithHouse(dto.apartmentId);
-		if (!apartment) {
-			throw new RMQException(APART_NOT_EXIST.message(dto.apartmentId), APART_NOT_EXIST.status);
+		const apartments = await this.apartmentRepository.findByIdWithHouse(dto.subscribers.map(s => s.apartmentId));
+		if (!apartments) {
+			throw new RMQException(APARTS_NOT_EXIST.message, APARTS_NOT_EXIST.status);
 		}
-		const { profile } = await checkUser(this.rmqService, dto.ownerId, UserRole.Owner);
-		if (!profile) {
-			throw new RMQException(USER_NOT_EXIST.message(dto.ownerId), USER_NOT_EXIST.status);
+		const { profiles } = await checkUsers(this.rmqService, dto.subscribers.map(s => s.ownerId), UserRole.Owner);
+		if (!profiles) {
+			throw new RMQException(USERS_NOT_EXIST.message, USERS_NOT_EXIST.status);
 		}
 
-		const newSubscriber = new SubscriberEntity({
-			...dto,
-			status: SubscriberStatus.Active
-		});
-		const newSubscriberEntity = await this.subscriberRepository.create(newSubscriber);
+		const newSubscribers = dto.subscribers.map(s =>
+			new SubscriberEntity({
+				...s,
+				status: SubscriberStatus.Active
+			})
+		);
+		const subscribers = await this.subscriberRepository.createMany(newSubscribers);
 		return {
-			subscriber: {
-				...newSubscriberEntity.get(),
-				apartmentName: apartment.getAddress(apartment.house),
-				ownerName: profile.name
-			}
+			subscribers: subscribers.map(s => {
+				const currentApart = apartments.find(a => a.id === s.apartmentId);
+				const currentProfile = profiles.find(p => p.id === s.ownerId);
+				return {
+					...s.get(),
+					apartmentName: currentApart.getAddress(currentApart.house),
+					ownerName: currentProfile.name
+				};
+			})
 		}
 	}
 

@@ -1,9 +1,9 @@
-import { RMQException, APART_ALREADY_EXIST, addGenericObject, checkUser, getGenericObjects, APARTS_NOT_EXIST, HOUSE_NOT_EXIST } from "@myhome/constants";
-import { ReferenceAddApartment, ReferenceGetApartmentsByUser, ReferenceGetApartmentsBySubscribers, ReferenceGetApartments, IGetApartmentAllInfo } from "@myhome/contracts";
-import { Injectable, HttpStatus } from "@nestjs/common";
+import { RMQException, checkUser, getGenericObjects, APARTS_NOT_EXIST, APARTS_ALREADY_EXISTS, HOUSES_NOT_EXIST } from "@myhome/constants";
+import { ReferenceGetApartmentsByUser, ReferenceGetApartmentsBySubscribers, ReferenceGetApartments, IGetApartmentAllInfo, ReferenceAddApartments } from "@myhome/contracts";
+import { Injectable } from "@nestjs/common";
 import { ApartmentEntity } from "../entities/apartment.entity";
 import { ApartmentRepository } from "../repositories/apartment.repository";
-import { IApartment, UserRole } from "@myhome/interfaces";
+import { UserRole } from "@myhome/interfaces";
 import { RMQService } from "nestjs-rmq";
 import { HouseRepository } from "../repositories/house.repository";
 
@@ -15,28 +15,32 @@ export class ApartmentService {
 		private readonly houseRepository: HouseRepository
 	) { }
 
-	async addApartment(dto: ReferenceAddApartment.Request): Promise<ReferenceAddApartment.Response> {
-		const existedApartment = await this.apartmentRepository.findByNumber(dto.apartmentNumber, dto.houseId);
-		if (existedApartment) {
-			throw new RMQException(APART_ALREADY_EXIST, HttpStatus.CONFLICT);
+	async addApartments(dto: ReferenceAddApartments.Request): Promise<ReferenceAddApartments.Response> {
+		const existedApartment = await this.apartmentRepository.findByNumber(dto.apartments.map(a => {
+			return {
+				houseId: a.houseId,
+				apatNumber: a.apartmentNumber
+			};
+		}));
+		if (existedApartment.length) {
+			throw new RMQException(APARTS_ALREADY_EXISTS.message, APARTS_ALREADY_EXISTS.status);
 		}
-		const house = await this.houseRepository.findById(dto.houseId);
-		if (!house) {
-			throw new RMQException(HOUSE_NOT_EXIST.message(dto.houseId), HOUSE_NOT_EXIST.status);
+		const houses = await this.houseRepository.findMany(dto.apartments.map(a => a.houseId));
+		if (!houses.length) {
+			throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
 		}
 
-		const newApartment = await addGenericObject<ApartmentEntity>
-			(
-				this.apartmentRepository,
-				(item) => new ApartmentEntity(item),
-				dto as IApartment
-			);
+		const newEntities = dto.apartments.map(a => new ApartmentEntity(a));
+		const news = await this.apartmentRepository.createMany(newEntities);
 
 		return {
-			apartment: {
-				...newApartment,
-				name: house.getAddress()
-			}
+			apartments: news.map(a => {
+				const currentHouse = houses.find(h => h.id === a.houseId);
+				return {
+					...a,
+					name: currentHouse.getAddress()
+				};
+			})
 		};
 	}
 

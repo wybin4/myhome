@@ -1,8 +1,8 @@
 import { HouseRepository } from '../repositories/house.repository';
 import { HouseEntity } from '../entities/house.entity';
 import { IHouse } from '@myhome/interfaces';
-import { HOUSES_NOT_EXIST, RMQException, addGenericObject, checkMCIds, getGenericObjects } from '@myhome/constants';
-import { ReferenceAddHouse, ReferenceGetHouses, ReferenceGetHousesByUser } from '@myhome/contracts';
+import { HOUSES_NOT_EXIST, RMQException, checkMCIds, getGenericObjects } from '@myhome/constants';
+import { ReferenceAddHouses, ReferenceGetHouses, ReferenceGetHousesByUser } from '@myhome/contracts';
 import { Injectable } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
 
@@ -65,15 +65,11 @@ export class HouseService {
 		}
 	}
 
-	async addHouse(dto: ReferenceAddHouse.Request) {
-		return {
-			house: await addGenericObject<HouseEntity>
-				(
-					this.houseRepository,
-					(item) => new HouseEntity(item),
-					dto as IHouse
-				)
-		};
+	async addHouses(dto: ReferenceAddHouses.Request): Promise<ReferenceAddHouses.Response> {
+		const newEntities = dto.houses.map(d => new HouseEntity({ ...d, managementCompanyId: dto.managementCompanyId }));
+		const news = await this.houseRepository.createMany(newEntities);
+
+		return { houses: news.map(n => n.get()) };
 	}
 
 	public getAddress(house: IHouse, withCity = true): string {

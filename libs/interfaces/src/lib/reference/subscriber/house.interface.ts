@@ -8,3 +8,5 @@ export interface IHouse {
     noLivingArea: number;
     commonArea: number;
 }
+
+export type IAddHouse = Omit<IHouse, "managementCompanyId">;

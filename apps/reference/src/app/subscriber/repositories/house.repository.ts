@@ -15,6 +15,10 @@ export class HouseRepository {
         return await this.houseRepository.save(house);
     }
 
+    async createMany(houses: HouseEntity[]) {
+        return await this.houseRepository.save(houses);
+    }
+
     async findById(id: number) {
         return await this.houseRepository.findOne({ where: { id } });
     }

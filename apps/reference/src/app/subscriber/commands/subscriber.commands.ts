@@ -1,4 +1,4 @@
-import { ReferenceAddSubscriber, ReferenceUpdateSubscriber } from '@myhome/contracts';
+import { ReferenceAddSubscribers, ReferenceUpdateSubscriber } from '@myhome/contracts';
 import { Body, Controller } from '@nestjs/common';
 import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
@@ -11,10 +11,10 @@ export class SubscriberCommands {
     ) { }
 
     @RMQValidate()
-    @RMQRoute(ReferenceAddSubscriber.topic)
-    async addSubscriber(@Body() dto: ReferenceAddSubscriber.Request) {
+    @RMQRoute(ReferenceAddSubscribers.topic)
+    async addSubscribers(@Body() dto: ReferenceAddSubscribers.Request) {
         try {
-            return await this.subscriberService.addSubscriber(dto);
+            return await this.subscriberService.addSubscribers(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

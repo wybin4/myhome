@@ -23,6 +23,11 @@ export class SubscriberRepository {
         }
     }
 
+    async createMany(subscribers: SubscriberEntity[]) {
+        return await this.subscriberRepository.save(subscribers);
+
+    }
+
     async findById(id: number) {
         return await this.subscriberRepository.findOne({ where: { id } });
     }
@@ -94,17 +99,16 @@ export class SubscriberRepository {
             .getMany();
     }
 
-
-    async findByApartmentIdAndPersonalAccount(apartmentId: number, personalAccount: string) {
+    async findByApartmentIdAndPersonalAccount(subscribers: { apartmentId: number; personalAccount: string }[]) {
         const options = {
-            where: [
-                { apartmentId },
-                { personalAccount }
-            ],
-            or: true,
+            where: subscribers.map(({ apartmentId, personalAccount }) => ({
+                apartmentId,
+                personalAccount,
+            })),
+            and: true,
         };
 
-        return await this.subscriberRepository.findOne(options);
+        return await this.subscriberRepository.find(options);
     }
 
     async update(subscriber: SubscriberEntity) {

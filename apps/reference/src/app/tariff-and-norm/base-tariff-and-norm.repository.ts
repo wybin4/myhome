@@ -13,6 +13,7 @@ export abstract class IGenericTariffAndNormRepository<T extends BaseTariffAndNor
     abstract findById(id: number): Promise<T>;
     abstract findByMCId(managementCompanyId: number): Promise<T[]>;
     abstract create(item: T): Promise<T>;
+    abstract createMany(items: T[]): Promise<T[]>;
     abstract delete(id: number): Promise<void>;
     abstract update(item: T): Promise<T>;
 }
@@ -24,6 +25,10 @@ export class GenericTariffAndNormRepository<T extends BaseTariffAndNorm> impleme
 
     async create(item: T) {
         return await this.repository.save(item);
+    }
+
+    async createMany(items: T[]) {
+        return await this.repository.save(items);
     }
 
     async findById(id: number): Promise<T> {

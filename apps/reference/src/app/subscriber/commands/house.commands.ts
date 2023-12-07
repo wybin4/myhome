@@ -1,4 +1,4 @@
-import { ReferenceAddHouse } from '@myhome/contracts';
+import { ReferenceAddHouses } from '@myhome/contracts';
 import { Body, Controller } from '@nestjs/common';
 import { RMQValidate, RMQRoute, RMQError } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
@@ -11,10 +11,10 @@ export class HouseCommands {
     ) { }
 
     @RMQValidate()
-    @RMQRoute(ReferenceAddHouse.topic)
-    async addHouse(@Body() dto: ReferenceAddHouse.Request) {
+    @RMQRoute(ReferenceAddHouses.topic)
+    async addHouses(@Body() dto: ReferenceAddHouses.Request) {
         try {
-            return await this.houseService.addHouse(dto);
+            return await this.houseService.addHouses(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

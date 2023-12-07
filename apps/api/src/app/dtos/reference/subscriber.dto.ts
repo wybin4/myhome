@@ -1,7 +1,7 @@
-export class AddSubscriberDto {
-    ownerId: number;
-    apartmentId: number;
-    personalAccount: string;
+import { IAddSubscriber } from "@myhome/interfaces";
+
+export class AddSubscribersDto {
+    subscribers: IAddSubscriber[];
 }
 
 export class UpdateSubscriberDto {

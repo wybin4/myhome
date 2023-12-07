@@ -6,6 +6,8 @@ export interface ISubscriber {
     status: SubscriberStatus;
 }
 
+export type IAddSubscriber = Omit<ISubscriber, "status">;
+
 export enum SubscriberStatus {
     Archieved = 'Archieved',
     Active = 'Active'

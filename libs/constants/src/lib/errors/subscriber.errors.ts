@@ -24,8 +24,13 @@ export const HOUSES_NOT_EXIST = {
     message: 'Такие дома не существуют',
     status: HttpStatus.NOT_FOUND
 };
-export const APART_ALREADY_EXIST = 'Такая квартира уже существует';
-export const SUBSCRIBER_ALREADY_EXIST = 'Такой абонент уже существует';
+export const APARTS_ALREADY_EXISTS = {
+    message: 'Такие квартиры уже существуют',
+    status: HttpStatus.CONFLICT
+}; export const SUBSCRIBERS_ALREADY_EXISTS = {
+    message: 'Такие абоненты уже существуют',
+    status: HttpStatus.CONFLICT
+};
 export const SUBSCRIBER_ALREADY_ARCHIEVED = 'Абонент уже в архиве';
 export const CANT_GET_SUBSCRIBERS_BY_HOUSE_ID = {
     message: 'Невозможно получить абонентов по id дома',

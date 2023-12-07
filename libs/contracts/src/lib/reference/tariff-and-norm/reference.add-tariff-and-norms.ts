@@ -1,25 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TariffAndNormType, TariffAndNormData, TariffOrNormType, TypeOfNorm } from '@myhome/interfaces';
-import { IsNumber, Validate, ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
+import { ArrayMinSize, IsDefined, Validate, ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 import { IsValidEnumValue } from '../../enum.validator';
+import { ValidateNestedArray } from '../../array.validator';
+import { ParseInt } from '../../parse.validator';
 
-export namespace ReferenceAddTariffOrNorm {
-    export const topic = 'reference.add-tariff-and-norm.command';
+export namespace ReferenceAddTariffsOrNorms {
+    export const topic = 'reference.add-tariffs-and-norms.command';
 
-    export class Request {
-        @IsNumber({}, { message: "Id вида услуг должен быть числом" })
+    class TariffOrNormValidator {
+        @ParseInt({ message: "Id вида услуг должен быть числом" })
         typeOfServiceId!: number;
-
-        @Validate(IsValidEnumValue, [TariffAndNormType])
-        type!: TariffAndNormType;
 
         @IsDataValidBasedOnTypeOfTNType()
         data!: TariffAndNormData;
+
+        @Validate(IsValidEnumValue, [TariffAndNormType])
+        type!: TariffAndNormType;
+    }
+
+    export class Request {
+        @IsDefined({ message: "Массив тарифов или норм должен существовать" })
+        @ArrayMinSize(1, { message: "Массив тарифов или норм не должен быть пустым" })
+        @ValidateNestedArray(TariffOrNormValidator)
+        tariffAndNorms!: IAddTariffAndNorm[];
     }
 
     export class Response {
-        tariffAndNorm!: TariffOrNormType & { typeOfServiceName: string; unitName?: string; houseName?: string };
+        tariffAndNorms!: Array<TariffOrNormType & { typeOfServiceName: string; unitName?: string; houseName?: string }>;
     }
+}
+
+export interface IAddTariffAndNorm {
+    typeOfServiceId: number;
+    data: TariffAndNormData;
+    type: TariffAndNormType;
 }
 
 function checkUnitAndMC(data: any) {
@@ -146,7 +161,7 @@ export function IsDataValidBasedOnTypeOfTNType(validationOptions?: ValidationOpt
 
                         }
                     }
-                    return "Неверные данные для обращения";
+                    return "Неверные данные о тарифе или норме";
                 }
             },
         });

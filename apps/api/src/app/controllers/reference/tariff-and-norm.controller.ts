@@ -1,10 +1,10 @@
 import { Body, Controller, HttpCode, Post, Req, SetMetadata, UseGuards } from '@nestjs/common';
-import { ReferenceAddTariffOrNorm, ReferenceGetTariffsOrNormsByUser, ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
+import { IAddTariffAndNorm, ReferenceAddTariffsOrNorms, ReferenceGetTariffsOrNormsByUser, ReferenceUpdateTariffOrNorm } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
-import { AddTariffAndNormDto, GetTariffsAndNormsByUserDto, UpdateTariffAndNormDto } from '../../dtos/reference/tariff-and-norm.dto';
+import { AddTariffAndNormsDto, GetTariffsAndNormsByUserDto, UpdateTariffAndNormDto } from '../../dtos/reference/tariff-and-norm.dto';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
-import { IJWTPayload, UserRole } from '@myhome/interfaces';
+import { IJWTPayload, TariffAndNormData, UserRole } from '@myhome/interfaces';
 import { RoleGuard } from '../../guards/role.guard';
 
 @Controller('tariff-and-norm')
@@ -30,16 +30,23 @@ export class TariffAndNormController {
     @SetMetadata('role', UserRole.ManagementCompany)
     @UseGuards(JWTAuthGuard, RoleGuard)
     @HttpCode(201)
-    @Post('add-tariff-and-norm')
-    async addTariffAndNorm(@Req() req: { user: IJWTPayload }, @Body() dto: AddTariffAndNormDto) {
+    @Post('add-tariffs-and-norms')
+    async addTariffAndNorms(@Req() req: { user: IJWTPayload }, @Body() dto: AddTariffAndNormsDto) {
         try {
             const managementCompanyId = req.user.userId;
-            const { typeOfServiceId, type, ...rest } = dto;
-            const data = { ...rest, managementCompanyId };
+            const newDto: IAddTariffAndNorm[] = dto.tariffAndNorms.map(d => {
+                {
+                    return {
+                        typeOfServiceId: d.typeOfServiceId,
+                        type: dto.type,
+                        data: { ...d, managementCompanyId } as TariffAndNormData
+                    }
+                }
+            });
             return await this.rmqService.send<
-                ReferenceAddTariffOrNorm.Request,
-                ReferenceAddTariffOrNorm.Response
-            >(ReferenceAddTariffOrNorm.topic, { typeOfServiceId, type, data });
+                ReferenceAddTariffsOrNorms.Request,
+                ReferenceAddTariffsOrNorms.Response
+            >(ReferenceAddTariffsOrNorms.topic, { tariffAndNorms: [...newDto] });
         } catch (e) {
             CatchError(e);
         }

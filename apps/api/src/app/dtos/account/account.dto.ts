@@ -15,7 +15,7 @@ export class RegisterDto {
 }
 
 export class RegisterManyDto {
-    users: IAddUsers[];
+    profiles: IAddUsers[];
     userRole: UserRole;
 }
 

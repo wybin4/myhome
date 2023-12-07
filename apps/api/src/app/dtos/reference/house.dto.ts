@@ -1,10 +1,7 @@
-export class AddHouseDto {
-    city: string;
-    street: string;
-    houseNumber: string;
-    livingArea!: number;
-    noLivingArea!: number;
-    commonArea!: number;
+import { IAddHouse } from "@myhome/interfaces";
+
+export class AddHousesDto {
+    houses: IAddHouse[];
 }
 
 export class GetHousesByUserDto {

@@ -42,3 +42,23 @@ export function ParseDate(validationOptions?: ValidationOptions) {
         });
     };
 }
+
+export function ParseString(validationOptions?: ValidationOptions) {
+    return function (object: any, propertyName: string) {
+        registerDecorator({
+            name: 'ParseFactoryNumber',
+            target: object.constructor,
+            propertyName: propertyName,
+            options: validationOptions,
+            validator: {
+                validate(value: any) {
+                    return typeof value === "string" || typeof value === "number";
+                },
+
+                defaultMessage() {
+                    return `Значение должно быть строкой`;
+                }
+            },
+        });
+    };
+}

@@ -1,6 +1,8 @@
-import { IsNumber, Validate } from 'class-validator';
-import { ICommonHouseNeedTariff, IMunicipalTariff, INorm, ISeasonalityFactor, ISocialNorm, TariffAndNormType } from '@myhome/interfaces';
+import { IsNumber, IsOptional, Validate } from 'class-validator';
+import { ICommonHouseNeedTariff, IMeta, IMunicipalTariff, INorm, ISeasonalityFactor, ISocialNorm, TariffAndNormType } from '@myhome/interfaces';
 import { IsValidEnumValue } from '../../enum.validator';
+import { MetaValidator } from '../../meta.validator';
+import { ValidateNestedArray } from '../../array.validator';
 
 export namespace ReferenceGetTariffsOrNormsByUser {
     export const topic = 'reference.get-tariffs-and-norms-by-user.query';
@@ -11,6 +13,10 @@ export namespace ReferenceGetTariffsOrNormsByUser {
 
         @Validate(IsValidEnumValue, [TariffAndNormType])
         type!: TariffAndNormType;
+
+        @IsOptional()
+        @ValidateNestedArray(MetaValidator)
+        meta?: IMeta;
     }
 
     export class Response {

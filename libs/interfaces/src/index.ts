@@ -27,3 +27,4 @@ export * from './lib/correction/correction.interface';
 
 export * from './lib/payment/payment.interface';
 
+export * from './lib/meta.interface';

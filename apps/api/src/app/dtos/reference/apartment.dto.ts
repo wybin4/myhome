@@ -1,4 +1,4 @@
-import { IApartment } from "@myhome/interfaces";
+import { IApartment, IMeta } from "@myhome/interfaces";
 
 export class AddApartmentsDto {
     apartments!: IApartment[];
@@ -6,4 +6,5 @@ export class AddApartmentsDto {
 
 export class GetApartmentsByUserDto {
     isAllInfo!: boolean;
+    meta?: IMeta;
 }

@@ -1,18 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ReferenceAddMeter, ReferenceGetIndividualMeterReadings, ReferenceGetMeterReadingsByHID, ReferenceGetMeters, ReferenceUpdateMeter } from "@myhome/contracts";
+import { IAddMeter, ReferenceAddMeters, ReferenceGetIndividualMeterReadings, ReferenceGetMeterReadingsByHID, ReferenceGetMeters, ReferenceUpdateMeter } from "@myhome/contracts";
 import { MeterType } from "@myhome/interfaces";
 import { RMQService } from "nestjs-rmq";
 import { RMQException } from "../../exception";
+import { HttpStatus } from "@nestjs/common";
 
-export async function addMeter(rmqService: RMQService, dto: ReferenceAddMeter.Request) {
+export async function addMeter(rmqService: RMQService, dto: IAddMeter & { meterType: MeterType }) {
     try {
-        return await rmqService.send
+        const { meterType, ...rest } = dto;
+        const { meters } = await rmqService.send
             <
-                ReferenceAddMeter.Request,
-                ReferenceAddMeter.Response
+                ReferenceAddMeters.Request,
+                ReferenceAddMeters.Response
             >
-            (ReferenceAddMeter.topic, dto);
+            (ReferenceAddMeters.topic, { meters: [rest], meterType });
+        if (!meters || !meters.length) {
+            return meters[0];
+        } else {
+            throw new RMQException('Невозможно добавить счётчик', HttpStatus.BAD_REQUEST);
+        }
     } catch (e: any) {
         throw new RMQException(e.message, e.status);
     }

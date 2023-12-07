@@ -1,7 +1,7 @@
 import { IAddHouse, IHouse } from '@myhome/interfaces';
 import { ArrayMinSize, IsDefined, IsString, ValidateNested } from 'class-validator';
 import { ValidateNestedArray } from '../../../array.validator';
-import { ParseInt } from '../../../parse.validator';
+import { ParseInt, ParseString } from '../../../parse.validator';
 
 export namespace ReferenceAddHouses {
     export const topic = 'reference.add-houses.command';
@@ -13,7 +13,7 @@ export namespace ReferenceAddHouses {
         @IsString({ message: "Название улицы должно быть строкой" })
         street!: string;
 
-        @IsString({ message: "Номер дома должен быть строкой" })
+        @ParseString({ message: "Номер дома должен быть строкой" })
         houseNumber!: string;
 
         @ParseInt({ message: "Жилая площадь должна быть числом" })

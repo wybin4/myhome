@@ -1,4 +1,4 @@
-import { RMQException, INCORRECT_USER_ROLE, HOUSES_NOT_EXIST, VOTINGS_NOT_EXIST, checkUsers, getHouseAllInfo, getHousesByOId, getHousesByMCId } from "@myhome/constants";
+import { RMQException, INCORRECT_USER_ROLE, HOUSES_NOT_EXIST, checkUsers, getHouseAllInfo, getHousesByOId, getHousesByMCId } from "@myhome/constants";
 import { EventAddVoting, EventUpdateVoting } from "@myhome/contracts";
 import { UserRole, IGetVoting, IHouse, VotingStatus, IGetOption } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
@@ -120,21 +120,22 @@ export class VotingService {
         const houseIds = houses.map(h => h.id);
 
         const votings = await this.votingRepository.findVotingsByHouseIds(houseIds);
-        if (!votings.length) {
-            throw new RMQException(VOTINGS_NOT_EXIST.message(userId), VOTINGS_NOT_EXIST.status);
-        }
 
-        return votings.map(voting => {
-            const newOptions = voting.options.map((o) => {
+        if (votings.length) {
+            return votings.map(voting => {
+                const newOptions = voting.options.map((o) => {
+                    return {
+                        ...o,
+                        numberOfVotes: o.votes.length,
+                    };
+                });
                 return {
-                    ...o,
-                    numberOfVotes: o.votes.length,
+                    ...voting.get(),
+                    options: newOptions
                 };
             });
-            return {
-                ...voting.get(),
-                options: newOptions
-            };
-        });
+        } else {
+            return [];
+        }
     }
 }

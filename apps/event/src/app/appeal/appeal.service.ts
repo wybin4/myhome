@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { AppealRepository } from "./appeal.repository";
-import { getSubscriber, checkUser, RMQException, INCORRECT_USER_ROLE, checkUsers, getSubscribersAllInfo, getSubscribersByOId, getApartment, getTypeOfService, getMeters, getMeter, getTypesOfService, APPEAL_NOT_EXIST, addMeter, updateMeter } from "@myhome/constants";
+import { getSubscriber, checkUser, RMQException, INCORRECT_USER_ROLE, checkUsers, getSubscribersAllInfo, getSubscribersByOId, getApartment, getTypeOfService, getMeters, getMeter, getTypesOfService, APPEAL_NOT_EXIST, addMeter, updateMeter, METERS_NOT_EXIST } from "@myhome/constants";
 import { EventAddAppeal, EventUpdateAppeal } from "@myhome/contracts";
 import { AppealEntity } from "./appeal.entity";
 import { AddIndividualMeterData, AppealStatus, AppealType, IAppealEntity, IGetAppeal, IMeter, IMeterWithTypeOfService, ITypeOfService, MeterType, ServiceNotificationType, UserRole, VerifyIndividualMeterData } from "@myhome/interfaces";
@@ -63,7 +63,6 @@ export class AppealService {
                 if (!appeals) {
                     return;
                 }
-
                 const { meters, typesOfService } = await this.getMeterData(appeals);
 
                 const subscriberIds = appeals.map(appeal => appeal.subscriberId);
@@ -100,22 +99,36 @@ export class AppealService {
         const meterIds = Array.from(new Set(appeals.filter(a => a.typeOfAppeal === AppealType.VerifyIndividualMeter)
             .map(a => JSON.parse(a.data).meterId)));
 
-        const { meters } = await getMeters(this.rmqService, meterIds, MeterType.Individual);
+        if (!meterIds.length) {
+            return { meters: undefined, typesOfService: undefined };
+        } else {
+            const { meters } = await getMeters(this.rmqService, meterIds, MeterType.Individual);
+            if (!meters.length) {
+                throw new RMQException(METERS_NOT_EXIST.message, METERS_NOT_EXIST.status);
+            }
 
+            if (!typeOfServiceIds.length) {
+                typeOfServiceIds = meters.map(m => m.typeOfServiceId);
+            }
+            if (!typeOfServiceIds.length) {
+                return { meters: meters, typesOfService: undefined };
+            }
 
-        if (meters.length && !typeOfServiceIds.length) {
-            typeOfServiceIds = meters.map(m => m.typeOfServiceId);
+            const { typesOfService } = typeOfServiceIds.length ? await getTypesOfService(this.rmqService, typeOfServiceIds) : undefined;
+
+            return { meters, typesOfService };
         }
-
-        const { typesOfService } = await getTypesOfService(this.rmqService, typeOfServiceIds);
-
-        return { meters, typesOfService };
     }
 
     private getCurrentMeterData(
         appeal: IAppealEntity,
         typesOfService: ITypeOfService[], meters: IMeterWithTypeOfService[]
     ) {
+        if (!meters && !typesOfService) {
+            return { currentMeter: undefined, currentTOS: undefined };
+        } else if (!meters && typesOfService) {
+            return { currentMeter: undefined, currentTOS: undefined };
+        }
         const currentMeter = meters.find(m =>
             m.id === JSON.parse(appeal.data).meterId);
         let currentTOS = typesOfService.find(tos =>

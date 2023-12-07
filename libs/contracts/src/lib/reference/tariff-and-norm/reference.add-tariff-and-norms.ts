@@ -38,20 +38,20 @@ export interface IAddTariffAndNorm {
 }
 
 function checkUnitAndMC(data: any) {
-    return typeof data.unitId === 'number' && typeof data.managementCompanyId === 'number';
+    return parseInt(data.unitId) && parseInt(data.managementCompanyId);
 }
 
 function getUnitAndMCMessage(data: any, errors: string[]) {
-    if (typeof data.unitId !== 'number') {
+    if (parseInt(data.unitId)) {
         errors.push("Id единиц измерения должен быть числом");
     }
-    if (typeof data.managementCompanyId !== 'number') {
+    if (parseInt(data.managementCompanyId)) {
         errors.push("Id управляющей компании должен быть числом");
     }
 }
 
 function getNormMessage(data: any, errors: string[]) {
-    if (typeof data.norm !== 'number') {
+    if (parseInt(data.norm)) {
         errors.push("Норматив должен быть числом");
     }
 }
@@ -65,6 +65,10 @@ function getEnumMessage(enumType: any, value: any, errors: string[]) {
 function checkEnum(enumType: any, value: any) {
     const enumValues = Object.values(enumType);
     return enumValues.includes(value);
+}
+
+function parseInt(int: number) {
+    return !isNaN(Number(int)) || typeof int === 'number';
 }
 
 export function IsDataValidBasedOnTypeOfTNType(validationOptions?: ValidationOptions) {
@@ -82,26 +86,26 @@ export function IsDataValidBasedOnTypeOfTNType(validationOptions?: ValidationOpt
                     if (data !== undefined) {
                         switch (type) {
                             case TariffAndNormType.SocialNorm:
-                                return typeof data.norm === 'number'
-                                    && typeof data.amount === 'number'
+                                return parseInt(data.norm)
+                                    && parseInt(data.amount)
                                     && checkUnitAndMC(data);
                             case TariffAndNormType.MunicipalTariff:
-                                return typeof data.norm === 'number'
-                                    && (!data.supernorm || typeof data.supernorm === 'number')
-                                    && (!data.multiplyingFactor || typeof data.multiplyingFactor === 'number')
+                                return parseInt(data.norm)
+                                    && (!data.supernorm || parseInt(data.supernorm))
+                                    && (!data.multiplyingFactor || parseInt(data.multiplyingFactor))
                                     && checkUnitAndMC(data);
                             case TariffAndNormType.Norm:
-                                return typeof data.norm === 'number'
+                                return parseInt(data.norm)
                                     && checkEnum(TypeOfNorm, data.typeOfNorm)
                                     && checkUnitAndMC(data);
                             case TariffAndNormType.SeasonalityFactor:
-                                return typeof data.coefficient === 'number'
-                                    && typeof data.managementCompanyId === 'number'
+                                return typeof parseInt(data.coefficient)
+                                    && typeof parseInt(data.managementCompanyId)
                                     && typeof data.monthName === 'string'
                                     && data.monthName.length <= 10;
                             case TariffAndNormType.CommonHouseNeedTariff:
-                                return typeof data.multiplier === 'number'
-                                    && typeof data.houseId === 'number'
+                                return parseInt(data.multiplier)
+                                    && parseInt(data.houseId)
                                     && checkUnitAndMC(data);
                         }
                     }
@@ -118,17 +122,17 @@ export function IsDataValidBasedOnTypeOfTNType(validationOptions?: ValidationOpt
                         switch (type) {
                             case TariffAndNormType.SocialNorm:
                                 getNormMessage(data, errors);
-                                if (typeof data.amount !== 'number') {
+                                if (parseInt(data.amount)) {
                                     errors.push("Количество должно быть числом");
                                 }
                                 getUnitAndMCMessage(data, errors);
                                 return "Неверные данные о социальной норме: ".concat(errors.join("; "));
                             case TariffAndNormType.MunicipalTariff:
                                 getNormMessage(data, errors);
-                                if (!data.supernorm || typeof data.supernorm === 'number') {
+                                if (!data.supernorm || parseInt(data.supernorm)) {
                                     errors.push("Тариф сверх нормы должен быть числом");
                                 }
-                                if (!data.multiplyingFactor || typeof data.multiplyingFactor === 'number') {
+                                if (!data.multiplyingFactor || parseInt(data.multiplyingFactor)) {
                                     errors.push("Повышающий коэффициент должен быть числом");
                                 }
                                 getUnitAndMCMessage(data, errors);
@@ -139,10 +143,10 @@ export function IsDataValidBasedOnTypeOfTNType(validationOptions?: ValidationOpt
                                 getUnitAndMCMessage(data, errors);
                                 return "Неверные данные о нормативе: ".concat(errors.join("; "));
                             case TariffAndNormType.SeasonalityFactor:
-                                if (typeof data.coefficient !== 'number') {
+                                if (parseInt(data.coefficient)) {
                                     errors.push("Коэффициент должен быть числом");
                                 }
-                                if (typeof data.managementCompanyId !== 'number') {
+                                if (parseInt(data.managementCompanyId)) {
                                     errors.push("Id управляющей компании должен быть числом");
                                 }
                                 if (typeof data.monthName !== 'string' && data.monthName.length <= 10) {
@@ -150,10 +154,10 @@ export function IsDataValidBasedOnTypeOfTNType(validationOptions?: ValidationOpt
                                 }
                                 return "Неверные данные о коэффициенте сезонности: ".concat(errors.join("; "));
                             case TariffAndNormType.CommonHouseNeedTariff:
-                                if (typeof data.multiplier !== 'number') {
+                                if (parseInt(data.multiplier)) {
                                     errors.push("Множитель должен быть числом");
                                 }
-                                if (typeof data.houseId !== 'number') {
+                                if (parseInt(data.houseId)) {
                                     errors.push("Id дома должен быть числом");
                                 }
                                 getUnitAndMCMessage(data, errors);

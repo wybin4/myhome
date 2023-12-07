@@ -1,30 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MeterType, RequireHomeOrApartment } from '@myhome/interfaces';
-import { ArrayMinSize, IsDefined, Validate, ValidationOptions, registerDecorator } from 'class-validator';
+import { ArrayMinSize, IsDefined, Validate } from 'class-validator';
 import { IsValidEnumValue } from '../../enum.validator';
 import { IGetMetersByMCId } from './reference.get-meters-by-user';
 import { ValidateNestedArray } from '../../array.validator';
-import { ParseDate, ParseInt } from '../../parse.validator';
-
-export function ParseFactoryNumber(validationOptions?: ValidationOptions) {
-    return function (object: any, propertyName: string) {
-        registerDecorator({
-            name: 'ParseFactoryNumber',
-            target: object.constructor,
-            propertyName: propertyName,
-            options: validationOptions,
-            validator: {
-                validate(value: any) {
-                    return typeof value === "string" || typeof value === "number";
-                },
-
-                defaultMessage() {
-                    return `Значение должно быть датой`;
-                }
-            },
-        });
-    };
-}
+import { ParseDate, ParseInt, ParseString } from '../../parse.validator';
 
 export namespace ReferenceAddMeters {
     export const topic = 'reference.add-meters.command';
@@ -39,7 +19,7 @@ export namespace ReferenceAddMeters {
         @RequireHomeOrApartment()
         houseId?: number;
 
-        @ParseFactoryNumber({ message: "Неверный заводской номер счётчика" })
+        @ParseString({ message: "Неверный заводской номер счётчика" })
         factoryNumber!: string | number;
 
         @ParseDate({ message: "Неверная дата поверки" })

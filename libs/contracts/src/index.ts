@@ -30,7 +30,6 @@ export * from './lib/reference/subscriber/subscriber/reference.update-subscriber
 export * from './lib/reference/subscriber/subscriber/reference.get-receivers-by-owner';
 
 export * from './lib/reference/meter/reference.expire-meter';
-export * from './lib/reference/meter/reference.add-meter';
 export * from './lib/reference/meter/reference.add-meters';
 export * from './lib/reference/meter/reference.get-meters';
 export * from './lib/reference/meter/reference.get-meters-by-user';

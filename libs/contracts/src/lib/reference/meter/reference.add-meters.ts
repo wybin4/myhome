@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MeterType, RequireHomeOrApartment } from '@myhome/interfaces';
-import { ArrayMinSize, IsDefined, Validate } from 'class-validator';
+import { ArrayMinSize, IsDefined, IsOptional, Validate } from 'class-validator';
 import { IsValidEnumValue } from '../../enum.validator';
 import { IGetMetersByMCId } from './reference.get-meters-by-user';
 import { ValidateNestedArray } from '../../array.validator';
@@ -28,11 +28,13 @@ export namespace ReferenceAddMeters {
         @ParseDate({ message: "Неверная дата истечения поверки" })
         issuedAt!: string;
 
+        @IsOptional()
         @ParseInt({ message: "Показание счётчика должно быть числом" })
-        previousReading!: number;
+        previousReading?: number;
 
+        @IsOptional()
         @ParseDate({ message: "Неверная дата снятия показания" })
-        previousReadAt!: string;
+        previousReadAt?: string;
     }
 
     export class Request {

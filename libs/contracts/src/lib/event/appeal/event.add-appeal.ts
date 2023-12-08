@@ -49,6 +49,7 @@ export function IsDataValidBasedOnTypeOfAppeal(validationOptions?: ValidationOpt
                             case AppealType.VerifyIndividualMeter:
                                 return typeof data.meterId === 'number'
                                     && new Date(data.verifiedAt) instanceof Date
+                                    && new Date(data.issuedAt) instanceof Date
                                     && data.attachment !== undefined;
                             case AppealType.ProblemOrQuestion:
                                 return typeof data.text === 'string' && data.text.length <= 1000;

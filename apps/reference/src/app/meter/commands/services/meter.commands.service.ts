@@ -19,7 +19,7 @@ import { TypeOfServiceRepository } from "../../../common/repositories/type-of-se
 import { HouseRepository } from "../../../subscriber/repositories/house.repository";
 import { GeneralMeterReadingRepository } from "../../repositories/general-meter-reading.repository";
 import { IndividualMeterReadingRepository } from "../../repositories/individual-meter-reading.repository";
-import { ReferenceAddMeters } from "@myhome/contracts";
+import { ReferenceAddMeters, ReferenceUpdateMeter } from "@myhome/contracts";
 import { GeneralMeterReadingEntity } from "../../entities/general-meter-reading.entity";
 import { IndividualMeterReadingEntity } from "../../entities/individual-meter-reading.entity";
 
@@ -93,13 +93,19 @@ export class MeterCommandsService {
 
                 const newMeterReadings = meters.map(m => {
                     const currDto = dto.meters.find(dm => String(dm.factoryNumber) === m.factoryNumber);
-                    return new GeneralMeterReadingEntity({
-                        generalMeterId: m.id,
-                        reading: currDto.previousReading,
-                        readAt: new Date(currDto.previousReadAt)
-                    });
-                });
-                await this.generalMeterReadingRepository.createMany(newMeterReadings);
+                    if (currDto.previousReading) {
+                        return new GeneralMeterReadingEntity({
+                            generalMeterId: m.id,
+                            reading: currDto.previousReading,
+                            readAt: new Date(currDto.previousReadAt)
+                        });
+                    } else {
+                        return undefined;
+                    }
+                }).filter(nm => nm);
+                if (newMeterReadings.length) {
+                    await this.generalMeterReadingRepository.createMany(newMeterReadings);
+                }
 
                 return {
                     meters: meters.map(meter => {
@@ -113,7 +119,7 @@ export class MeterCommandsService {
                             currentReading: undefined,
                             currentReadAt: undefined,
                             previousReading: currDto.previousReading,
-                            previousReadAt: new Date(currDto.previousReadAt)
+                            previousReadAt: currDto.previousReadAt ? new Date(currDto.previousReadAt) : undefined
                         };
                     })
                 }
@@ -140,13 +146,19 @@ export class MeterCommandsService {
 
                 const newMeterReadings = meters.map(m => {
                     const currDto = dto.meters.find(dm => String(dm.factoryNumber) === m.factoryNumber);
-                    return new IndividualMeterReadingEntity({
-                        individualMeterId: m.id,
-                        reading: currDto.previousReading,
-                        readAt: new Date(currDto.previousReadAt)
-                    });
-                });
-                await this.individualMeterReadingRepository.createMany(newMeterReadings);
+                    if (currDto.previousReading) {
+                        return new IndividualMeterReadingEntity({
+                            individualMeterId: m.id,
+                            reading: currDto.previousReading,
+                            readAt: new Date(currDto.previousReadAt)
+                        });
+                    } else {
+                        return undefined;
+                    }
+                }).filter(nm => nm);
+                if (newMeterReadings.length) {
+                    await this.individualMeterReadingRepository.createMany(newMeterReadings);
+                }
 
                 return {
                     meters: meters.map(meter => {
@@ -160,7 +172,7 @@ export class MeterCommandsService {
                             currentReading: undefined,
                             currentReadAt: undefined,
                             previousReading: currDto.previousReading,
-                            previousReadAt: new Date(currDto.previousReadAt)
+                            previousReadAt: currDto.previousReadAt ? new Date(currDto.previousReadAt) : undefined
                         };
                     })
                 }
@@ -170,28 +182,26 @@ export class MeterCommandsService {
         }
     }
 
-    public async updateMeter(id: number, verifiedAt: Date, meterType: MeterType) {
-        let existedMeter: Meters, meterEntity: Promise<GeneralMeterEntity> | Promise<IndividualMeterEntity>;
+    public async updateMeter(dto: ReferenceUpdateMeter.Request): Promise<ReferenceUpdateMeter.Response> {
+        switch (dto.meterType) {
+            case (MeterType.General): {
 
-        switch (meterType) {
-            case (MeterType.General):
-                existedMeter = await this.generalMeterRepository.findById(id);
+                const existedMeter = await this.generalMeterRepository.findById(dto.id);
                 if (!existedMeter) {
-                    throw new RMQException(METER_NOT_EXIST.message(id), METER_NOT_EXIST.status);
+                    throw new RMQException(METER_NOT_EXIST.message(dto.id), METER_NOT_EXIST.status);
                 }
-                meterEntity = new GeneralMeterEntity(existedMeter).update(verifiedAt);
-                return Promise.all([
-                    this.generalMeterRepository.update(await meterEntity),
-                ]);
-            case (MeterType.Individual):
-                existedMeter = await this.individualMeterRepository.findById(id);
+                const meterEntity = new GeneralMeterEntity(existedMeter).update(new Date(dto.verifiedAt), new Date(dto.issuedAt));
+                return { meter: await this.generalMeterRepository.update(await meterEntity) };
+            }
+            case (MeterType.Individual): {
+                const existedMeter = await this.individualMeterRepository.findById(dto.id);
                 if (!existedMeter) {
-                    throw new RMQException(METER_NOT_EXIST.message(id), METER_NOT_EXIST.status);
+                    throw new RMQException(METER_NOT_EXIST.message(dto.id), METER_NOT_EXIST.status);
                 }
-                meterEntity = new IndividualMeterEntity(existedMeter).update(verifiedAt);
-                return Promise.all([
-                    this.individualMeterRepository.update(await meterEntity),
-                ]);
+
+                const meterEntity = new IndividualMeterEntity(existedMeter).update(new Date(dto.verifiedAt), new Date(dto.issuedAt));
+                return { meter: await this.individualMeterRepository.update(await meterEntity) };
+            }
             default:
                 throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);
         }

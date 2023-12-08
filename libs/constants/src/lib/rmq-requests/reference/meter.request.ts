@@ -15,11 +15,12 @@ export async function addMeter(rmqService: RMQService, dto: IAddMeter & { meterT
                 ReferenceAddMeters.Response
             >
             (ReferenceAddMeters.topic, { meters: [rest], meterType });
-        if (!meters || !meters.length) {
-            return meters[0];
-        } else {
+        if (!meters || meters.length === 0) {
             throw new RMQException('Невозможно добавить счётчик', HttpStatus.BAD_REQUEST);
+        } else {
+            return meters[0];
         }
+
     } catch (e: any) {
         throw new RMQException(e.message, e.status);
     }

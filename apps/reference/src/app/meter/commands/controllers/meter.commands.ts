@@ -22,9 +22,9 @@ export class MeterCommands {
 
     @RMQValidate()
     @RMQRoute(ReferenceUpdateMeter.topic)
-    async updateMeter(@Body() { id, verifiedAt, meterType }: ReferenceUpdateMeter.Request) {
+    async updateMeter(@Body() dto: ReferenceUpdateMeter.Request) {
         try {
-            return await this.meterCommandsService.updateMeter(id, new Date(verifiedAt), meterType);
+            return await this.meterCommandsService.updateMeter(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

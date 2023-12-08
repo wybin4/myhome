@@ -30,6 +30,7 @@ export interface AddIndividualMeterData extends AppealData {
 export interface VerifyIndividualMeterData extends AppealData {
     meterId: number;
     verifiedAt: Date;
+    issuedAt: Date;
     attachment: string;
 }
 

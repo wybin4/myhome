@@ -153,12 +153,11 @@ export class AppealService {
             attachment?: string
         ) => {
             const appeal = await this.createAppealEntity(appealDto, meter, typeOfService);
-
             return {
                 appeal: {
                     name: mc.name,
                     ...appeal,
-                    data: this.getText(appeal, "add", undefined, typeOfService).text,
+                    data: this.getText(appeal, "add", meter, typeOfService).text,
                     attachment
                 }
             };
@@ -219,8 +218,8 @@ export class AppealService {
                             verifiedAt: String(data.verifiedAt),
                             issuedAt: String(data.issuedAt),
                             meterType: MeterType.Individual,
-                            previousReading: 0,
-                            previousReadAt: "" // ИСПРАВИТЬ
+                            previousReading: undefined,
+                            previousReadAt: undefined
                         }
                     );
                     break;
@@ -232,6 +231,7 @@ export class AppealService {
                         {
                             id,
                             verifiedAt: String(data.verifiedAt),
+                            issuedAt: String(data.issuedAt),
                             meterType: MeterType.Individual
                         }
                     );

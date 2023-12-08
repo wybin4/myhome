@@ -1,6 +1,7 @@
-import { IsNumber, IsString, Validate } from 'class-validator';
+import { IsNumber, Validate } from 'class-validator';
 import { IGeneralMeter, IIndividualMeter, MeterType } from '@myhome/interfaces';
 import { IsValidEnumValue } from '../../enum.validator';
+import { ParseDate } from '../../parse.validator';
 
 export namespace ReferenceUpdateMeter {
     export const topic = 'reference.update-meter.command';
@@ -9,8 +10,11 @@ export namespace ReferenceUpdateMeter {
         @IsNumber({}, { message: "Id счётчика должно быть числом" })
         id!: number;
 
-        @IsString({ message: "Неверная дата поверки" })
+        @ParseDate({ message: "Неверная дата поверки" })
         verifiedAt!: string;
+
+        @ParseDate({ message: "Неверная дата истечения поверки" })
+        issuedAt!: string;
 
         @Validate(IsValidEnumValue, [MeterType])
         meterType!: MeterType;

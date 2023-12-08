@@ -60,8 +60,9 @@ export class GeneralMeterEntity implements IGeneralMeter {
         }
     }
 
-    public async update(verifiedAt: Date) {
+    public async update(verifiedAt: Date, issuedAt: Date) {
         this.verifiedAt = verifiedAt;
+        this.issuedAt = issuedAt;
         return this;
     }
 

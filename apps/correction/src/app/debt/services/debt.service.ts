@@ -1,13 +1,17 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DebtRepository } from "../repositories/debt.repository";
-import { CorrectionAddDebt, CorrectionGetDebt, CorrectionCalculateDebts, CorrectionUpdateDebt } from "@myhome/contracts";
+import { CorrectionAddDebts, CorrectionGetDebt, CorrectionCalculateDebts, CorrectionUpdateDebt, IAddDebt } from "@myhome/contracts";
 import { PenaltyRuleRepository } from "../repositories/penalty-rule.repository";
 import { CANT_GET_DEBT_BY_THIS_SPD_ID, DEBT_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException, checkSPD } from "@myhome/constants";
 import { IDebtDetail, IDebtHistory, IGetCorrection, IPenaltyCalculationRule } from "@myhome/interfaces";
 import { DebtEntity } from "../entities/debt.entity";
 import { PenaltyService } from "./penalty.service";
 import { Debt } from "../models/debt.model";
+
+export interface IPriority {
+    typeOfServiceIds: number[], managementCompanyId: number, _id?: string, priority: number
+}
 
 @Injectable()
 export class DebtService {
@@ -153,7 +157,7 @@ export class DebtService {
             throw new RMQException(PENALTY_RULES_NOT_EXIST.message, PENALTY_RULES_NOT_EXIST.status);
         }
         const penaltyCalcRuleGroups = penaltyRuleGroups.map(obj => obj.penaltyCalculationRules);
-        const filteredObjects: { typeOfServiceIds: number[], managementCompanyId: number, _id?: string, priority: number }[] = [];
+        const filteredObjects: IPriority[] = [];
         for (const level of penaltyCalcRuleGroups) {
             const filteredLevel = level.filter(obj => obj.managementCompanyId === managementCompanyId);
             filteredObjects.push(...filteredLevel);
@@ -196,20 +200,28 @@ export class DebtService {
     }
 
 
-    public async addDebt(dto: CorrectionAddDebt.Request) {
-        let filteredObjects = await this.getPriority(dto.managementCompanyId);
-        if (!filteredObjects.length) {
+    public async addDebts(dto: CorrectionAddDebts.Request): Promise<CorrectionAddDebts.Response> {
+        const priorities = await this.getPriority(dto.managementCompanyId);
+        if (!priorities.length) {
             throw new RMQException(PRIORITY_NOT_EXIST.message, PRIORITY_NOT_EXIST.status);
         }
+
+        const newDebtEntities = dto.spds.map(spd => {
+            const debt = this.getDebtForAdding(spd, priorities);
+            return new DebtEntity(debt);
+        });
+
+        const debts = await this.debtRepository.createMany(newDebtEntities);
+        console.log(debts[0].originalDebt)
+        return { debts }
+    }
+
+    private getDebtForAdding(spd: IAddDebt, priorities: IPriority[]) {
         const debts: IDebtDetail[] = [];
 
-        const spdAmount = dto.spdAmount.map(obj => obj.amount);
-        const totalSPDAmount = spdAmount.reduce((a, b) => a + b, 0);
-        let totalDebt = totalSPDAmount - dto.paymentAmount;
-
         // Проверка, есть ли все типы услуг, поступающие из ЕПД в таблице с правилами расчёта пени
-        for (const dd of dto.spdAmount) {
-            const current = filteredObjects.find(obj => obj.typeOfServiceIds.includes(dd.typeOfServiceId));
+        for (const dd of spd.spdAmount) {
+            const current = priorities.find(obj => obj.typeOfServiceIds.includes(dd.typeOfServiceId));
             if (!current) {
                 throw new RMQException(
                     PENALTY_CALCULATION_RULES_NOT_CONFIGURED.message(dd.typeOfServiceId),
@@ -218,22 +230,20 @@ export class DebtService {
             }
         }
 
-        filteredObjects = filteredObjects.sort((a, b) => a.priority - b.priority);
+        priorities = priorities.sort((a, b) => a.priority - b.priority);
 
-        for (const fObject of filteredObjects) {
-            const currentSPDAmounts = dto.spdAmount.filter(obj => fObject.typeOfServiceIds.includes(obj.typeOfServiceId));
+        for (const fObject of priorities) {
+            const currentSPDAmounts = spd.spdAmount.filter(obj => fObject.typeOfServiceIds.includes(obj.typeOfServiceId));
             const amounts = currentSPDAmounts.map(obj => obj.amount);
             const totalAmount = amounts.reduce((a, b) => a + b, 0);
-
             debts.push({
                 penaltyRuleId: fObject._id,
-                amount: totalDebt > 0 ? totalAmount - totalDebt : 0
+                amount: totalAmount
             })
-            totalDebt -= totalAmount;
         }
 
         const debt = {
-            singlePaymentDocumentId: dto.singlePaymentDocumentId,
+            singlePaymentDocumentId: spd.singlePaymentDocumentId,
             debtHistory: [{
                 outstandingDebt: debts,
                 date: new Date()
@@ -241,10 +251,8 @@ export class DebtService {
             originalDebt: debts,
             createdAt: new Date(),
         };
-        const newDebtEntity = new DebtEntity(debt);
-        const newDebt = await this.debtRepository.create(newDebtEntity);
 
-        return { debt: newDebt }
+        return debt;
     }
 
 }

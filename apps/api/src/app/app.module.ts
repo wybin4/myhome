@@ -25,6 +25,7 @@ import { EventController } from './controllers/event/event.controller';
 import { CommonController } from './controllers/reference/common.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshStrategy } from './strategies/refresh.strategy';
+import { PaymentController } from './controllers/payment/payment.controller';
 
 @Module({
   imports: [
@@ -48,7 +49,8 @@ import { RefreshStrategy } from './strategies/refresh.strategy';
       CBRController,
       ChatController,
       EventController,
-      CommonController
+      CommonController,
+      PaymentController
     ],
   providers: [
     SocketGateway, JwtStrategy, RefreshStrategy,

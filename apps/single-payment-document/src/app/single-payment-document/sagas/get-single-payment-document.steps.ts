@@ -165,6 +165,7 @@ export class GetSinglePaymentDocumentSagaStateStarted extends GetSinglePaymentDo
                 tempSum += temp;
 
                 detailInfo.push({
+                    typeOfServiceId: currentTypeOfService.id,
                     typeOfServiceName: currentTypeOfService.name,
                     unitName: currentUnit.name,
                     volume: {

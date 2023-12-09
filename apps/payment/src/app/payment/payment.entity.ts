@@ -10,6 +10,9 @@ export class PaymentEntity implements IPayment {
     singlePaymentDocumentId: number;
 
     @Column({ nullable: false })
+    amount: number;
+
+    @Column({ nullable: false })
     payedAt: Date;
 
     constructor(data?: Partial<PaymentEntity>) {
@@ -21,7 +24,8 @@ export class PaymentEntity implements IPayment {
     public get() {
         return {
             singlePaymentDocumentId: this.singlePaymentDocumentId,
-            payedAt: this.payedAt
+            payedAt: this.payedAt,
+            amount: this.amount
         }
     }
 

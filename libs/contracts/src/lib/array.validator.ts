@@ -14,13 +14,13 @@ export function ValidateNestedArray(className: any, validationOptions?: Validati
             validator: {
                 async validate(value: any): Promise<boolean> {
                     const items = value;
-                    const errors: string[] = [];
+                    const errors: Set<string> = new Set();
 
                     async function validateItem(item: any): Promise<boolean> {
                         const object = plainToInstance(className, item);
                         const objErrors = await validate(object);
                         if (objErrors.length > 0) {
-                            errors.push(objErrors.map((oe) => {
+                            errors.add(objErrors.map((oe) => {
                                 const constraintValues = Object.values(oe.constraints || "");
                                 return constraintValues.join('; ');
                             }).join("; "))
@@ -30,8 +30,10 @@ export function ValidateNestedArray(className: any, validationOptions?: Validati
                     }
 
                     const validations = await Promise.all(items.map(validateItem));
-                    if (errors.length > 0) {
-                        throw new Error(errors.join("; "))
+                    const uniqueErrors = Array.from(errors);
+
+                    if (uniqueErrors.length > 0) {
+                        throw new Error(uniqueErrors.join("; "))
                     }
 
                     return validations.filter(isValidated => !isValidated).length === 0;

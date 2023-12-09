@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post, Req, SetMetadata, UseGuards } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
-import { CorrectionAddPenaltyCalculationRule, CorrectionGetPenaltyCalculationRulesByMCId } from '@myhome/contracts';
-import { AddPenaltyCalculationRuleDto, GetPenaltyCalculationRulesByMCIdDto } from '../../dtos/correction/penalty.dto';
+import { CorrectionAddPenaltyCalculationRules, CorrectionGetPenaltyCalculationRulesByMCId, CorrectionGetPenaltyRules } from '@myhome/contracts';
+import { AddPenaltyCalculationRuleDto, GetPenaltyCalculationRulesByMCIdDto, GetPenaltyRulesDto } from '../../dtos/correction/penalty.dto';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
 import { IJWTPayload, UserRole } from '@myhome/interfaces';
 import { RoleGuard } from '../../guards/role.guard';
@@ -14,14 +14,14 @@ export class PenaltyController {
     @SetMetadata('role', UserRole.ManagementCompany)
     @UseGuards(JWTAuthGuard, RoleGuard)
     @HttpCode(201)
-    @Post('add-penalty-calculation-rule')
-    async addPenaltyCalculationRule(@Req() req: { user: IJWTPayload }, @Body() dto: AddPenaltyCalculationRuleDto) {
+    @Post('add-penalty-calculation-rules')
+    async addPenaltyCalculationRules(@Req() req: { user: IJWTPayload }, @Body() dto: AddPenaltyCalculationRuleDto) {
         try {
             const managementCompanyId = req.user.userId;
             return await this.rmqService.send<
-                CorrectionAddPenaltyCalculationRule.Request,
-                CorrectionAddPenaltyCalculationRule.Response
-            >(CorrectionAddPenaltyCalculationRule.topic, { ...dto, managementCompanyId });
+                CorrectionAddPenaltyCalculationRules.Request,
+                CorrectionAddPenaltyCalculationRules.Response
+            >(CorrectionAddPenaltyCalculationRules.topic, { ...dto, managementCompanyId });
         } catch (e) {
             CatchError(e);
         }
@@ -30,7 +30,7 @@ export class PenaltyController {
     @SetMetadata('role', UserRole.ManagementCompany)
     @UseGuards(JWTAuthGuard, RoleGuard)
     @HttpCode(200)
-    @Post('get-penalty-rules-by-mcid')
+    @Post('get-penalty-calculation-rules-by-mcid')
     async getPenaltyRulesByMCId(@Req() req: { user: IJWTPayload }, @Body() dto: GetPenaltyCalculationRulesByMCIdDto) {
         try {
             const managementCompanyId = req.user.userId;
@@ -38,6 +38,21 @@ export class PenaltyController {
                 CorrectionGetPenaltyCalculationRulesByMCId.Request,
                 CorrectionGetPenaltyCalculationRulesByMCId.Response
             >(CorrectionGetPenaltyCalculationRulesByMCId.topic, { ...dto, managementCompanyId });
+        } catch (e) {
+            CatchError(e);
+        }
+    }
+
+    @SetMetadata('role', UserRole.ManagementCompany)
+    @UseGuards(JWTAuthGuard, RoleGuard)
+    @HttpCode(200)
+    @Post('get-penalty-rules')
+    async getPenaltyRules(@Body() dto: GetPenaltyRulesDto) {
+        try {
+            return await this.rmqService.send<
+                CorrectionGetPenaltyRules.Request,
+                CorrectionGetPenaltyRules.Response
+            >(CorrectionGetPenaltyRules.topic, dto);
         } catch (e) {
             CatchError(e);
         }

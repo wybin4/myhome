@@ -1,8 +1,9 @@
+import { IAddPenaltyCalculationRules } from "@myhome/contracts";
+
 export class AddPenaltyCalculationRuleDto {
-    id?: number;
-    typeOfServiceIds!: number[];
-    penaltyRuleId!: string;
-    priority!: number;
+    penaltyRules: IAddPenaltyCalculationRules[];
 }
 
 export class GetPenaltyCalculationRulesByMCIdDto { }
+
+export class GetPenaltyRulesDto { }

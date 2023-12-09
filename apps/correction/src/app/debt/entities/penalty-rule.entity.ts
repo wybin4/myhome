@@ -13,7 +13,7 @@ export class PenaltyRuleEntity implements IPenaltyRule {
         this.penaltyCalculationRules = penaltyRule.penaltyCalculationRules;
     }
 
-    public async addCalculationRule(rule: IPenaltyCalculationRule) {
+    public addCalculationRule(rule: IPenaltyCalculationRule) {
         const calcRule = this.penaltyCalculationRules.find(obj => obj.managementCompanyId === rule.managementCompanyId);
         if (!calcRule) {
             this.penaltyCalculationRules.push(rule);

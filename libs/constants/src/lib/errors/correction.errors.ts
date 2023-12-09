@@ -12,8 +12,8 @@ export const PENALTY_CALCULATION_RULES_NOT_CONFIGURED = {
     message: (typeOfServiceId: number) => `Не настроены правила расчёта пени для услуги с id=${typeOfServiceId}`,
     status: HttpStatus.BAD_REQUEST
 }
-export const PENALTY_CALCULATION_WITH_PRIORITY_ALREADY_EXIST = {
-    message: (priority: number) => `Правило расчёта пени с приоритетом ${priority} уже существует`,
+export const PENALTY_CALCULATION_ALREADY_EXIST = {
+    message: "Такое правило расчёта пени уже существует",
     status: HttpStatus.BAD_REQUEST
 }
 export const CANT_GET_KEY_RATE = {

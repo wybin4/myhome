@@ -77,14 +77,15 @@ export * from './lib/single-payment-document/get-single-payment-documents-by-use
 export * from './lib/single-payment-document/check-single-payment-document';
 
 export * from './lib/correction/debt/correction.get-debt';
-export * from './lib/correction/debt/correction.add-debt';
+export * from './lib/correction/debt/correction.add-debts';
 export * from './lib/correction/debt/correction.update-debt';
 export * from './lib/correction/debt/correction.calculate-debts';
 export * from './lib/correction/deposit/correction.get-deposit';
 export * from './lib/correction/deposit/correction.add-deposit';
 export * from './lib/correction/deposit/correction.update-deposit';
-export * from './lib/correction/penalty/correction.add-penalty-calculation-rule';
+export * from './lib/correction/penalty/correction.add-penalty-calculation-rules';
 export * from './lib/correction/penalty/correction.get-penalty-calculation-rules-by-mcid';
+export * from './lib/correction/penalty/correction.get-penalty-rules';
 export * from './lib/correction/penalty/correction.add-penalty';
 export * from './lib/correction/correction.get-correction';
 export * from './lib/correction/cbr/correction.get-key-rate';

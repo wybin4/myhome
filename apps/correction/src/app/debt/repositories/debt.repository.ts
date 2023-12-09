@@ -11,26 +11,37 @@ export class DebtRepository {
     constructor(
         @InjectModel(Debt.name) private readonly debtModel: Model<Debt>
     ) { }
+
     async create(debt: DebtEntity) {
         const newDebt = new this.debtModel(debt);
         return await newDebt.save();
     }
+
+    async createMany(debts: DebtEntity[]) {
+        return await this.debtModel.insertMany(debts);
+    }
+
     async findById(_id: string) {
         return await this.debtModel.findById(_id).exec();
     }
+
     async findBySPDId(singlePaymentDocumentId: number): Promise<Debt> {
         return await this.debtModel.findOne({ singlePaymentDocumentId }).exec();
     }
+
     async findMany(ids: string[]): Promise<Debt[]> {
         const objectIds = ids.map(id => new Types.ObjectId(id));
         return await this.debtModel.find({ _id: { $in: objectIds } }).exec();
     }
+
     async delete(_id: string) {
         await this.debtModel.deleteOne({ _id }).exec();
     }
+
     async update({ _id, ...rest }: DebtEntity) {
         return await this.debtModel.updateOne({ _id }, { $set: { ...rest } }).exec();
     }
+
     async findSPDsWithOutstandingDebt(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, outstandingDebt: IDebtDetail[] }[]> {
         return await this.debtModel.aggregate([
             {

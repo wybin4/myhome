@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { PaymentEntity } from './payment.entity';
 
 @Injectable()
@@ -16,6 +16,10 @@ export class PaymentRepository {
 
     async findById(id: number) {
         return this.paymentRepository.findOne({ where: { id } });
+    }
+
+    async findBySPDIds(spdIds: number[]) {
+        return this.paymentRepository.find({ where: { singlePaymentDocumentId: In(spdIds) } });
     }
 
 }

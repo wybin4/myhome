@@ -1,9 +1,9 @@
-import { CheckSinglePaymentDocument, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByUser, ISubscriberAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
+import { CheckSinglePaymentDocument, CorrectionAddDebts, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByUser, IAddDebt, ISubscriberAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
 import { CalculationState, ITypeOfService, IUnit, UserRole } from "@myhome/interfaces";
-import { CANT_DELETE_DOCUMENT_DETAILS, CANT_GET_SPD, CANT_GET_SPDS, INCORRECT_USER_ROLE, RMQException, SUBSCRIBERS_NOT_EXIST, checkUser, getApartmentsAllInfoByUser, getCommon, getHouses, getHousesByMCId, getSubscribersAllInfo } from "@myhome/constants";
+import { CANT_GET_SPD, CANT_GET_SPDS, INCORRECT_USER_ROLE, RMQException, SUBSCRIBERS_NOT_EXIST, checkUser, getApartmentsAllInfoByUser, getCommon, getHouses, getHousesByMCId, getSubscribersAllInfo } from "@myhome/constants";
 import { GetSinglePaymentDocumentSaga } from "../sagas/get-single-payment-document.saga";
 import { PdfService } from "./pdf.service";
 import { ISpdHouse, ISpdManagementCompany, ISpdSubscriber } from "../interfaces/subscriber.interface";
@@ -143,7 +143,6 @@ export class SinglePaymentDocumentService {
                 subscriberIds, typesOfService, units, managementCompanyId, houseId
             );
         await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithAmount);
-
         // По subscriberIds получаем все их spdIds
         const subscriberSPDs = await this.singlePaymentDocumentRepository.getSPDIdsBySubscriberIds(subscriberIds);
         try {
@@ -169,6 +168,7 @@ export class SinglePaymentDocumentService {
                 monthName = [first, ...rest].join("");
 
                 return {
+                    id: obj.id,
                     month: monthName,
                     amount: this.pdfService.getFixedNumber(obj.amount),
                     penalty: this.pdfService.getFixedNumber(obj.penalty),
@@ -237,6 +237,20 @@ export class SinglePaymentDocumentService {
                 allMeterReadings.push(...meterReadingsData);
             }
 
+            const dataForDebts = allDetailsInfo.flatMap(di => {
+                const currSPD = allSPDs.find(spd => spd.subscriberId === di.subscriberId);
+                return {
+                    spdAmount: di.details.flatMap(d => {
+                        return {
+                            typeOfServiceId: d.typeOfServiceId,
+                            amount: d.totalAmount
+                        };
+                    }),
+                    singlePaymentDocumentId: currSPD.id
+                };
+            });
+            this.addDebts(dataForDebts, dto.managementCompanyId);
+
             const { pdfBuffer, fileName } = await this.pdfService.generatePdf(
                 spdHouses, spdManagementC, subscribers,
                 allDetailsInfo,
@@ -248,7 +262,17 @@ export class SinglePaymentDocumentService {
                 path: fileName,
                 createdAt: new Date()
             });
-            await this.totalRepository.create(newTotalEntity);
+            const total = await this.totalRepository.create(newTotalEntity);
+            const totalId = total.id;
+
+            this.generateSubscribersPdf(
+                spdHouses, spdManagementC, subscribers,
+                allDetailsInfo,
+                allSPDs, allSPDEntities,
+                allMeterReadings,
+                totalId
+            );
+
             return { pdfBuffer: pdfBuffer.toString('binary') };
         } else if (dto.subscriberIds) {
             let { subscribers } = await getSubscribersAllInfo(this.rmqService, dto.subscriberIds);
@@ -277,6 +301,21 @@ export class SinglePaymentDocumentService {
                 allSPDEntities.push(...SPDEntities);
                 allMeterReadings.push(...meterReadingsData);
             }
+
+            const dataForDebts = allDetailsInfo.flatMap(di => {
+                const currSPD = allSPDs.find(spd => spd.subscriberId === di.subscriberId);
+                return {
+                    spdAmount: di.details.flatMap(d => {
+                        return {
+                            typeOfServiceId: d.typeOfServiceId,
+                            amount: d.totalAmount
+                        };
+                    }),
+                    singlePaymentDocumentId: currSPD.id
+                };
+            });
+            this.addDebts(dataForDebts, dto.managementCompanyId);
+
 
             const { pdfBuffer, fileName } = await this.pdfService.generatePdf(
                 houses, spdManagementC, subscribers,
@@ -329,6 +368,23 @@ export class SinglePaymentDocumentService {
             .updateMany(newSPDEntities);
     }
 
+    private async addDebts(
+        spds: IAddDebt[],
+        managementCompanyId: number
+    ) {
+
+        try {
+            return await this.rmqService.send
+                <
+                    CorrectionAddDebts.Request,
+                    CorrectionAddDebts.Response
+                >
+                (CorrectionAddDebts.topic, { spds, managementCompanyId });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
+    }
+
     private async revertCalculateDetails(detailIds: number[]) {
         try {
             return await this.rmqService.send
@@ -338,7 +394,7 @@ export class SinglePaymentDocumentService {
                 >
                 (DeleteDocumentDetails.topic, { detailIds });
         } catch (e) {
-            throw new RMQException(CANT_DELETE_DOCUMENT_DETAILS.message, CANT_DELETE_DOCUMENT_DETAILS.status);
+            throw new RMQException(e.message, e.status);
         }
     }
 

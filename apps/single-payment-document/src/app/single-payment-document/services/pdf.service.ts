@@ -262,22 +262,24 @@ export class PdfService {
         bottom.getLow(operator, barcodeText, subscriber, spd, house, payment);
     }
 
-    async readFileToBuffer(files: { fileName: string; id: number }[]) {
-        const uploadDirectory = this.configService.get("UPLOAD_DIRECTORY") + "/";
-        const readFileAsync = promisify(fs.readFile);
-        const getStatAsync = promisify(fs.stat);
-        const promises = files.map(async (file) => {
-            try {
-                file.fileName = path.join(uploadDirectory, file.fileName);
-                const buffer = await readFileAsync(file.fileName);
-                const stat = await getStatAsync(file.fileName);
-                return { id: file.id, buffer, size: stat.size };
-            } catch (error) {
-                throw new RMQException("Ошибка при чтении файла", HttpStatus.BAD_REQUEST);
-            }
-        });
+    async readFileToBuffer(files: { fileName: string; id: number }[], withoutAttachments?: boolean) {
+        if (!withoutAttachments) {
+            const uploadDirectory = this.configService.get("UPLOAD_DIRECTORY") + "/";
+            const readFileAsync = promisify(fs.readFile);
+            const getStatAsync = promisify(fs.stat);
+            const promises = files.map(async (file) => {
+                try {
+                    file.fileName = path.join(uploadDirectory, file.fileName);
+                    const buffer = await readFileAsync(file.fileName);
+                    const stat = await getStatAsync(file.fileName);
+                    return { id: file.id, buffer, size: stat.size };
+                } catch (error) {
+                    throw new RMQException("Ошибка при чтении файла", HttpStatus.BAD_REQUEST);
+                }
+            });
 
-        return Promise.all(promises);
+            return Promise.all(promises);
+        } else return [];
     }
 
     private async uploadPdf(pdfBuffer: Buffer, uploadDirectory: string) {

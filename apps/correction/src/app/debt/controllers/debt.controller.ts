@@ -1,5 +1,5 @@
 import { DebtService } from '../services/debt.service';
-import { CorrectionAddDebts, CorrectionGetDebt, CorrectionCalculateDebts, CorrectionUpdateDebt } from '@myhome/contracts';
+import { CorrectionAddDebts, CorrectionGetDebts, CorrectionCalculateDebts, CorrectionUpdateDebt } from '@myhome/contracts';
 import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
@@ -22,10 +22,10 @@ export class DebtController {
     }
 
     @RMQValidate()
-    @RMQRoute(CorrectionGetDebt.topic)
-    async getDebt(@Body() dto: CorrectionGetDebt.Request) {
+    @RMQRoute(CorrectionGetDebts.topic)
+    async getDebts(@Body() dto: CorrectionGetDebts.Request) {
         try {
-            return await this.debtService.getDebt(dto);
+            return await this.debtService.getDebts(dto);
         }
         catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);

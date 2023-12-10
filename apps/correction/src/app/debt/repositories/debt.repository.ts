@@ -66,6 +66,30 @@ export class DebtRepository {
         ]).exec();
     }
 
+    async findSPDsWithOutstandingDebtAndOriginalDebt(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, outstandingDebt: IDebtDetail[], originalDebt: IDebtDetail[] }[]> {
+        return await this.debtModel.aggregate([
+            {
+                $match: {
+                    singlePaymentDocumentId: { $in: spdIds },
+                    'debtHistory.0.outstandingDebt': {
+                        $elemMatch: {
+                            'amount': { $ne: 0 }
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    singlePaymentDocumentId: '$singlePaymentDocumentId',
+                    outstandingDebt: {
+                        $arrayElemAt: ['$debtHistory.outstandingDebt', 0]
+                    },
+                    originalDebt: '$originalDebt'
+                },
+            },
+        ]).exec();
+    }
+
     async findSPDsWithDebtHistory(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, debtHistory: IDebtHistory[] }[]> {
         return await this.debtModel.aggregate([
             {

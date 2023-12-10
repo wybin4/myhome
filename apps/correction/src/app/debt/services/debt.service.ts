@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DebtRepository } from "../repositories/debt.repository";
-import { CorrectionAddDebts, CorrectionGetDebt, CorrectionCalculateDebts, CorrectionUpdateDebt, IAddDebt } from "@myhome/contracts";
+import { CorrectionAddDebts, CorrectionGetDebts, CorrectionCalculateDebts, CorrectionUpdateDebt, IAddDebt, GetSinglePaymentDocumentsByUser } from "@myhome/contracts";
 import { PenaltyRuleRepository } from "../repositories/penalty-rule.repository";
-import { CANT_GET_DEBT_BY_THIS_SPD_ID, DEBT_NOT_EXIST, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException, checkSPD } from "@myhome/constants";
-import { IDebtDetail, IDebtHistory, IGetCorrection, IPenaltyCalculationRule } from "@myhome/interfaces";
+import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_SPDS, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException, checkSPD } from "@myhome/constants";
+import { IDebtDetail, IDebtHistory, IGetCorrection, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
 import { DebtEntity } from "../entities/debt.entity";
 import { PenaltyService } from "./penalty.service";
 import { Debt } from "../models/debt.model";
@@ -51,13 +51,36 @@ export class DebtService {
         return { debts: subscribersDebt };
     }
 
-    public async getDebt({ id }: CorrectionGetDebt.Request) {
-        const debt = await this.debtRepository.findById(id);
-        if (!debt) {
-            throw new RMQException(DEBT_NOT_EXIST.message, DEBT_NOT_EXIST.status);
+    public async getDebts(dto: CorrectionGetDebts.Request): Promise<CorrectionGetDebts.Response> {
+        const { singlePaymentDocuments } = await this.getSPDsByOwner(dto.ownerId);
+        if (!singlePaymentDocuments && !singlePaymentDocuments.length) {
+            throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
         }
-        const gettedDebt = new DebtEntity(debt).get();
-        return { debt: gettedDebt };
+        const spdIds = singlePaymentDocuments.map(s => s.id);
+        const debts = await this.debtRepository.findSPDsWithOutstandingDebtAndOriginalDebt(spdIds);
+        return {
+            debts: debts.map(debt => {
+                return {
+                    singlePaymentDocumentId: parseInt(String(debt.singlePaymentDocumentId)),
+                    originalDebt: debt.originalDebt.map(od => od.amount).reduce((a, b) => a + b, 0),
+                    outstandingDebt: debt.outstandingDebt.map(od => od.amount).reduce((a, b) => a + b, 0),
+                };
+            })
+        };
+    }
+
+    private async getSPDsByOwner(ownerId: number) {
+        try {
+            return await this.rmqService.send<
+                GetSinglePaymentDocumentsByUser.Request,
+                GetSinglePaymentDocumentsByUser.Response
+            >(GetSinglePaymentDocumentsByUser.topic, {
+                userId: ownerId, userRole: UserRole.Owner,
+                withoutAttachments: true
+            });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
     }
 
     public async updateDebts(
@@ -126,9 +149,12 @@ export class DebtService {
         const lastDebtState: IDebtDetail[] = JSON.parse(JSON.stringify(debt.debtHistory[0].outstandingDebt));
         let paymentAmount = amount;
         for (const priority of priorities) {
-            const oldDebt = lastDebtState.find(obj => String(obj.penaltyRuleId) === String(priority._id));
+            const oldDebt = lastDebtState.find(obj => {
+                return String(obj.penaltyRuleId) === String(priority.penaltyCalculationRules._id)
+            });
             if (oldDebt && paymentAmount > 0) {
-                let currAmount = oldDebt.amount; const prevAmount = oldDebt.amount;
+                let currAmount = oldDebt.amount;
+                const prevAmount = oldDebt.amount;
                 currAmount -= paymentAmount;
                 if (currAmount < 0) {
                     currAmount = 0;
@@ -212,7 +238,6 @@ export class DebtService {
         });
 
         const debts = await this.debtRepository.createMany(newDebtEntities);
-        console.log(debts[0].originalDebt)
         return { debts }
     }
 

@@ -1,5 +1,5 @@
 import { UserRole } from "@myhome/interfaces";
-import { IsNumber, Validate } from "class-validator";
+import { IsBoolean, IsNumber, IsOptional, Validate } from "class-validator";
 import { IsValidEnumValue } from "../enum.validator";
 
 export namespace GetSinglePaymentDocumentsByUser {
@@ -11,6 +11,10 @@ export namespace GetSinglePaymentDocumentsByUser {
 
         @Validate(IsValidEnumValue, [UserRole])
         userRole!: UserRole;
+
+        @IsOptional()
+        @IsBoolean({ message: "Флаг должен быть правдой или ложью" })
+        withoutAttachments?: boolean;
     }
 
     export class Response {
@@ -31,8 +35,9 @@ export interface IGetSinglePaymentDocumentsByMCId {
 
 export interface IGetSinglePaymentDocumentsBySId {
     id: number;
-    apartmentName: string;
-    fileSize: number;
-    pdfBuffer: string;
+    apartmentName?: string;
+    mcName?: string;
+    fileSize?: number;
+    pdfBuffer?: string;
     createdAt: Date;
 }

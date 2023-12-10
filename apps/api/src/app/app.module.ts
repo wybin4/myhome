@@ -26,6 +26,7 @@ import { CommonController } from './controllers/reference/common.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshStrategy } from './strategies/refresh.strategy';
 import { PaymentController } from './controllers/payment/payment.controller';
+import { DebtController } from './controllers/correction/debt.controller';
 
 @Module({
   imports: [
@@ -50,7 +51,8 @@ import { PaymentController } from './controllers/payment/payment.controller';
       ChatController,
       EventController,
       CommonController,
-      PaymentController
+      PaymentController,
+      DebtController
     ],
   providers: [
     SocketGateway, JwtStrategy, RefreshStrategy,

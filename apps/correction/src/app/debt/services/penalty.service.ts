@@ -152,10 +152,15 @@ export class PenaltyService {
         let penalty = 0, dividers: { divider: number, days: number }[];
 
         for (const oDebt of debt) {
-            const currentRule = penaltyRules.find(obj => String(obj._id) === oDebt.penaltyRuleId).penaltyRule;
-            if (!currentRule) {
+            const rule = penaltyRules.find(obj => {
+                return obj.penaltyCalculationRules.find(pcr => {
+                    return String(pcr._id) === oDebt.penaltyRuleId
+                }) !== undefined;
+            });
+            if (!rule) {
                 throw new RMQException(CANT_GET_CURRENT_RULE.message(oDebt.penaltyRuleId), CANT_GET_CURRENT_RULE.status);
             }
+            const currentRule = rule.penaltyRule;
             // Если это часть долга, т.е. по долгу уже были выплаты
             if (!partOfDebt) {
                 dividers = this.divideDays(currentRule, difference); // Делим по периодам

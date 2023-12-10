@@ -1,15 +1,20 @@
-import { IDebt } from "@myhome/interfaces";
-import { IsString } from "class-validator";
+import { IsNumber } from "class-validator";
 
-export namespace CorrectionGetDebt {
-    export const topic = 'correction.get-debt.query';
+export namespace CorrectionGetDebts {
+    export const topic = 'correction.get-debts.query';
 
     export class Request {
-        @IsString({ message: "Id долга должен быть строкой" })
-        id!: string;
+        @IsNumber({}, { message: "Id владельца должен быть строкой" })
+        ownerId!: number;
     }
 
     export class Response {
-        debt!: IDebt;
+        debts!: IGetDebt[];
     }
+}
+
+export interface IGetDebt {
+    singlePaymentDocumentId: number;
+    originalDebt: number;
+    outstandingDebt: number;
 }

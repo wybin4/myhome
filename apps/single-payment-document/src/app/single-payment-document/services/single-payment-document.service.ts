@@ -1,4 +1,4 @@
-import { CheckSinglePaymentDocument, CorrectionAddDebts, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByUser, IAddDebt, ISubscriberAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
+import { AccountGetUsersByAnotherRole, CheckSinglePaymentDocument, CorrectionAddDebts, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByUser, IAddDebt, IGetProfileWithSubscriber, ISubscriberAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
@@ -27,6 +27,7 @@ export class SinglePaymentDocumentService {
         switch (dto.userRole) {
             case UserRole.Owner: {
                 const { apartments } = await getApartmentsAllInfoByUser(this.rmqService, dto.userId, dto.userRole);
+                const { users } = await this.getMCByOwner(dto.userId);
                 const subscriberIds = apartments.map(apartment => apartment.subscriberId);
                 const spds = await this.singlePaymentDocumentRepository.findBySIds(subscriberIds);
                 if (!spds) {
@@ -39,22 +40,35 @@ export class SinglePaymentDocumentService {
                     };
                 });
 
-                const readFiles = await this.pdfService.readFileToBuffer(files);
+                const readFiles = await this.pdfService.readFileToBuffer(files, dto.withoutAttachments);
 
-                return {
-                    singlePaymentDocuments: readFiles.map(file => {
-                        const currentSPD = spds.find(s => s.id === file.id);
-                        const currentApartment = apartments.find(s => s.subscriberId === currentSPD.subscriberId);
+                if (!dto.withoutAttachments) {
+                    return {
+                        singlePaymentDocuments: readFiles.map(file => {
+                            const currentSPD = spds.find(s => s.id === file.id);
+                            const currentApartment = apartments.find(s => s.subscriberId === currentSPD.subscriberId);
+                            const currentMC = users.find(user => user.subscribers.find(subscriber => subscriber.id === currentApartment.subscriberId));
 
-                        return {
-                            id: currentSPD.id,
-                            apartmentName: currentApartment.address,
-                            fileSize: file.size,
-                            pdfBuffer: (file.buffer).toString('base64'),
-                            createdAt: currentSPD.createdAt
-                        };
-                    })
-                };
+                            return {
+                                id: currentSPD.id,
+                                apartmentName: currentApartment.address,
+                                mcName: currentMC.user.name,
+                                fileSize: file.size,
+                                pdfBuffer: (file.buffer).toString('base64'),
+                                createdAt: currentSPD.createdAt,
+                            };
+                        })
+                    };
+                } else {
+                    return {
+                        singlePaymentDocuments: spds.map(spd => {
+                            return {
+                                id: spd.id,
+                                createdAt: spd.createdAt
+                            };
+                        })
+                    };
+                }
             }
             case UserRole.ManagementCompany: {
                 const { houses } = await getHousesByMCId(this.rmqService, dto.userId);
@@ -70,28 +84,62 @@ export class SinglePaymentDocumentService {
                     };
                 });
 
-                const readFiles = await this.pdfService.readFileToBuffer(files);
+                const readFiles = await this.pdfService.readFileToBuffer(files, dto.withoutAttachments);
 
-                return {
-                    singlePaymentDocuments: readFiles.map(file => {
-                        const currentSPD = spds.find(s => s.id === file.id);
-                        const currentHouse = houses.find(h => h.managementCompanyId === currentSPD.managementCompanyId);
+                if (!dto.withoutAttachments) {
+                    return {
+                        singlePaymentDocuments: readFiles.map(file => {
+                            const currentSPD = spds.find(s => s.id === file.id);
+                            const currentHouse = houses.find(h => h.managementCompanyId === currentSPD.managementCompanyId);
 
-                        return {
-                            id: currentSPD.id,
-                            houseId: currentHouse.id,
-                            city: currentHouse.city,
-                            street: currentHouse.street,
-                            houseName: currentHouse.houseNumber,
-                            fileSize: file.size,
-                            pdfBuffer: (file.buffer).toString('base64'),
-                            createdAt: currentSPD.createdAt
-                        };
-                    })
-                };
+                            return {
+                                id: currentSPD.id,
+                                houseId: currentHouse.id,
+                                city: currentHouse.city,
+                                street: currentHouse.street,
+                                houseName: currentHouse.houseNumber,
+                                fileSize: file.size,
+                                pdfBuffer: !dto.withoutAttachments ? (file.buffer).toString('base64') : "",
+                                createdAt: currentSPD.createdAt
+                            };
+                        })
+                    };
+                } else {
+                    return {
+                        singlePaymentDocuments: spds.map(spd => {
+                            const currentHouse = houses.find(h => h.managementCompanyId === spd.managementCompanyId);
+
+                            return {
+                                id: spd.id,
+                                houseId: currentHouse.id,
+                                city: currentHouse.city,
+                                street: currentHouse.street,
+                                houseName: currentHouse.houseNumber,
+                                fileSize: 0,
+                                pdfBuffer: "",
+                                createdAt: spd.createdAt
+                            };
+                        })
+                    };
+                }
             }
             default:
                 throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
+        }
+    }
+
+    private async getMCByOwner(ownerId: number) {
+        try {
+            const { users } = await this.rmqService.send<
+                AccountGetUsersByAnotherRole.Request,
+                AccountGetUsersByAnotherRole.Response
+            >(AccountGetUsersByAnotherRole.topic, {
+                userId: ownerId, userRole: UserRole.Owner
+            }) as unknown as { users: IGetProfileWithSubscriber[] };
+            return { users };
+
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
         }
     }
 

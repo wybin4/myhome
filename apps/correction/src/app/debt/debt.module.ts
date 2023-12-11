@@ -12,17 +12,19 @@ import { PenaltyController } from "./controllers/penalty.controller";
 import { PenaltyRule, PenaltyRuleSchema } from "./models/penalty-rule.model";
 import { PenaltyRuleRepository } from "./repositories/penalty-rule.repository";
 import { CBRController } from "./controllers/cbr.controller";
+import { RedisService } from "./services/redis.service";
 
 @Module({
     imports: [
         MongooseModule.forFeature([
             { name: Debt.name, schema: DebtSchema },
             { name: PenaltyRule.name, schema: PenaltyRuleSchema }
-        ]),
+        ])
     ],
     providers: [
         DebtService, DebtRepository,
-        PenaltyService, PenaltyRuleService, CBRService, PenaltyRuleRepository, PenaltyRuleSeeder
+        PenaltyService, PenaltyRuleService, CBRService, PenaltyRuleRepository, PenaltyRuleSeeder,
+        RedisService
     ],
     controllers: [DebtController, PenaltyController, CBRController],
     exports: [DebtRepository, PenaltyRuleRepository, PenaltyService, DebtService],

@@ -1,5 +1,5 @@
 import { SinglePaymentDocumentService } from './services/single-payment-document.service';
-import { GetSinglePaymentDocument, CheckSinglePaymentDocument, GetSinglePaymentDocumentsByUser } from '@myhome/contracts';
+import { GetSinglePaymentDocument, CheckSinglePaymentDocument, GetSinglePaymentDocumentsByUser, GetMCIdBySPDId } from '@myhome/contracts';
 import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
@@ -35,6 +35,16 @@ export class SinglePaymentDocumentController {
     async checkSinglePaymentDocument(@Body() dto: CheckSinglePaymentDocument.Request) {
         try {
             return await this.singlePaymentDocumentService.checkSinglePaymentDocument(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
+    }
+
+    @RMQValidate()
+    @RMQRoute(GetMCIdBySPDId.topic)
+    async getMCIdBySPD(@Body() dto: GetMCIdBySPDId.Request) {
+        try {
+            return await this.singlePaymentDocumentService.getMCIdBySPD(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

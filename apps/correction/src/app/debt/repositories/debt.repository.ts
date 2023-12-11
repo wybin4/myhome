@@ -71,11 +71,6 @@ export class DebtRepository {
             {
                 $match: {
                     singlePaymentDocumentId: { $in: spdIds },
-                    'debtHistory.0.outstandingDebt': {
-                        $elemMatch: {
-                            'amount': { $ne: 0 }
-                        }
-                    }
                 }
             },
             {

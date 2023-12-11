@@ -1,4 +1,4 @@
-import { AccountGetUsersByAnotherRole, CheckSinglePaymentDocument, CorrectionAddDebts, DeleteDocumentDetails, GetSinglePaymentDocument, GetSinglePaymentDocumentsByUser, IAddDebt, IGetProfileWithSubscriber, ISubscriberAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
+import { AccountGetUsersByAnotherRole, CheckSinglePaymentDocument, CorrectionAddDebts, DeleteDocumentDetails, GetMCIdBySPDId, GetSinglePaymentDocument, GetSinglePaymentDocumentsByUser, IAddDebt, IGetProfileWithSubscriber, ISubscriberAllInfo, ReferenceGetSubscribersByHouses } from "@myhome/contracts";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
@@ -48,11 +48,11 @@ export class SinglePaymentDocumentService {
                             const currentSPD = spds.find(s => s.id === file.id);
                             const currentApartment = apartments.find(s => s.subscriberId === currentSPD.subscriberId);
                             const currentMC = users.find(user => user.subscribers.find(subscriber => subscriber.id === currentApartment.subscriberId));
-
                             return {
                                 id: currentSPD.id,
                                 apartmentName: currentApartment.address,
                                 mcName: currentMC.user.name,
+                                mcCheckingAccount: currentMC.user.checkingAccount,
                                 fileSize: file.size,
                                 pdfBuffer: (file.buffer).toString('base64'),
                                 createdAt: currentSPD.createdAt,
@@ -150,6 +150,18 @@ export class SinglePaymentDocumentService {
         }
         const gettedSpd = new SinglePaymentDocumentEntity(singlePaymentDocument).get();
         return { singlePaymentDocument: gettedSpd };
+    }
+
+    async getMCIdBySPD({ id }: GetMCIdBySPDId.Request): Promise<GetMCIdBySPDId.Response> {
+        const singlePaymentDocument = await this.singlePaymentDocumentRepository.findById(id);
+        if (!singlePaymentDocument) {
+            throw new RMQException(CANT_GET_SPD.message(id), CANT_GET_SPD.status);
+        }
+        const singlePaymentDocumentTotal = await this.totalRepository.findById(singlePaymentDocument.totalId);
+        if (!singlePaymentDocument) {
+            throw new RMQException(CANT_GET_SPD.message(singlePaymentDocument.totalId), CANT_GET_SPD.status);
+        }
+        return { managementCompanyId: singlePaymentDocumentTotal.managementCompanyId };
     }
 
     private async getSinglePaymentDocumentForOneHouse(

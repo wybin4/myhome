@@ -1,9 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { PaymentRepository } from "./payment.repository";
-import { GetPaymentsByUser, GetSinglePaymentDocumentsByUser } from "@myhome/contracts";
+import { AcceptPayment, CorrectionUpdateDebt, GetPaymentsByUser, GetSinglePaymentDocumentsByUser } from "@myhome/contracts";
 import { UserRole } from "@myhome/interfaces";
 import { CANT_GET_SPDS, RMQException } from "@myhome/constants";
 import { RMQService } from "nestjs-rmq";
+import { PaymentEntity } from "./payment.entity";
 
 @Injectable()
 export class PaymentService {
@@ -11,6 +12,28 @@ export class PaymentService {
         private readonly paymentRepository: PaymentRepository,
         private readonly rmqService: RMQService
     ) { }
+
+    public async acceptPayment(dto: AcceptPayment.Request): Promise<AcceptPayment.Response> {
+        await this.updateDebt(dto.singlePaymentDocumentId, dto.amount);
+        const payment = new PaymentEntity({
+            singlePaymentDocumentId: dto.singlePaymentDocumentId,
+            amount: dto.amount,
+            payedAt: new Date()
+        });
+        const paymentEntity = await this.paymentRepository.create(payment);
+        return { payment: paymentEntity };
+    }
+
+    private async updateDebt(singlePaymentDocumentId: number, amount: number) {
+        try {
+            return await this.rmqService.send<
+                CorrectionUpdateDebt.Request,
+                CorrectionUpdateDebt.Response
+            >(CorrectionUpdateDebt.topic, { singlePaymentDocumentId, amount });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
+    }
 
     public async getPaymentsByUser(dto: GetPaymentsByUser.Request): Promise<GetPaymentsByUser.Response> {
         const { singlePaymentDocuments } = await this.getSPDsByUser(dto.userId, dto.userRole);

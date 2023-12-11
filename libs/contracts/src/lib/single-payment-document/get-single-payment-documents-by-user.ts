@@ -37,6 +37,7 @@ export interface IGetSinglePaymentDocumentsBySId {
     id: number;
     apartmentName?: string;
     mcName?: string;
+    mcCheckingAccount?: string;
     fileSize?: number;
     pdfBuffer?: string;
     createdAt: Date;

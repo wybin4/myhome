@@ -10,6 +10,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { getMongoConfig } from './configs/mongo.config';
 import { CorrectionService } from './correction.service';
 import { CorrectionController } from './correction.controller';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { CorrectionController } from './correction.controller';
       inject: [ConfigService],
     }),
     MongooseModule.forRootAsync(getMongoConfig()),
+    ScheduleModule.forRoot(),
     DebtModule,
     DepositModule
   ],

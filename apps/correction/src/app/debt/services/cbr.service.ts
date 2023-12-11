@@ -2,11 +2,27 @@ import { CANT_GET_KEY_RATE, RMQException } from "@myhome/constants";
 import { CorrectionGetKeyRate } from "@myhome/contracts";
 import { Injectable } from "@nestjs/common";
 import axios from 'axios';
+import { RedisService } from "./redis.service";
+import { Cron } from "@nestjs/schedule";
 
 @Injectable()
 export class CBRService {
+    constructor(
+        private readonly redisService: RedisService
+    ) { }
+
+    @Cron("0 10 * * *")
+    async getKeyRateByCron() {
+        await this.getKeyRate({});
+    }
+
     public async getKeyRate(dto: CorrectionGetKeyRate.Request) {
         const url = 'https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx?WSDL';
+
+        const keyRateFromCache = await this.redisService.getValue("keyRate");
+        if (keyRateFromCache) {
+            return keyRateFromCache;
+        }
 
         const currentDate = new Date();
         const lastMonthDate = new Date(currentDate);
@@ -19,7 +35,7 @@ export class CBRService {
 
         const headers = {
             'Content-Type': 'text/xml',
-            SOAPAction: url, 
+            SOAPAction: url,
         };
 
         const timeout = 5000;
@@ -31,8 +47,12 @@ export class CBRService {
                 period: new Date(Date.parse(rcdKR.DT)),
                 value: parseFloat(rcdKR.Rate),
             }));
+            const keyRateFromCBR = keyRates[0].value;
 
-            return keyRates[0].value;
+            await this.redisService.setValue("keyRate", keyRateFromCBR);
+            await this.redisService.expireValue("keyRate", 86400);
+
+            return keyRateFromCBR;
         } catch (error) {
             throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
         }

@@ -9,7 +9,7 @@ export interface IUser {
   name?: string;
   email: string;
   passwordHash: string;
-  checkingAcount?: string;
+  checkingAccount?: string;
   link?: string;
 }
 

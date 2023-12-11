@@ -8,9 +8,6 @@ export namespace CorrectionUpdateDebt {
         @IsNumber({}, { message: "Id ЕПД должен быть числом" })
         singlePaymentDocumentId!: number;
 
-        @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
-        managementCompanyId!: number;
-
         @IsNumber({}, { message: "Сумма платежа должна быть числом" })
         amount!: number;
 

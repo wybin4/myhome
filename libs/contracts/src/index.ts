@@ -75,6 +75,7 @@ export * from './lib/document-detail/document-detail.add-document-details';
 export * from './lib/single-payment-document/get-single-payment-document';
 export * from './lib/single-payment-document/get-single-payment-documents-by-user';
 export * from './lib/single-payment-document/check-single-payment-document';
+export * from './lib/single-payment-document/get-mcid-by-spd';
 
 export * from './lib/correction/debt/correction.get-debt';
 export * from './lib/correction/debt/correction.add-debts';
@@ -90,7 +91,8 @@ export * from './lib/correction/penalty/correction.add-penalty';
 export * from './lib/correction/correction.get-correction';
 export * from './lib/correction/cbr/correction.get-key-rate';
 
-export * from './lib/payment/payment.get-payment-link';
+export * from './lib/payment/payment.get-payments-by-user';
+export * from './lib/payment/payment.accept-payment';
 
 export * from './lib/event/voting/event.add-voting';
 export * from './lib/event/voting/event.update-voting';

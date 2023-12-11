@@ -2,7 +2,7 @@ import { IUser, UserRole } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { ADMIN_NOT_EXIST, OWNER_NOT_EXIST, MANAG_COMP_NOT_EXIST, INCORRECT_USER_ROLE, ADMINS_NOT_EXIST, MANAG_COMPS_NOT_EXIST, OWNERS_NOT_EXIST, RMQException, getUserIdsByAnotherRoleId, INCORRECT_ROLE_ACCESS } from "@myhome/constants";
-import { UserEntity } from "./user.entity";
+import { ManagementCompanyEntity, UserEntity } from "./user.entity";
 import { AccountGetAllUsers, AccountGetUsersByAnotherRole, IGetUserAndSubscriber } from "@myhome/contracts";
 import { AdminRepository, OwnerRepository, ManagementCompanyRepository } from "./user.repository";
 
@@ -78,7 +78,7 @@ export class UserService {
                     throw new RMQException(MANAG_COMPS_NOT_EXIST.message, MANAG_COMPS_NOT_EXIST.status);
                 }
                 for (const user of users) {
-                    profiles.push(new UserEntity(user).getPublicProfile());
+                    profiles.push(new ManagementCompanyEntity(user).getWithCheckingAccount());
                 }
                 return { profiles };
             }

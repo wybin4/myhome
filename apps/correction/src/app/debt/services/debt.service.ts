@@ -1,13 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DebtRepository } from "../repositories/debt.repository";
-import { CorrectionAddDebts, CorrectionGetDebts, CorrectionCalculateDebts, CorrectionUpdateDebt, IAddDebt, GetSinglePaymentDocumentsByUser } from "@myhome/contracts";
+import { CorrectionAddDebts, CorrectionGetDebts, CorrectionCalculateDebts, CorrectionUpdateDebt, IAddDebt, GetSinglePaymentDocumentsByUser, GetMCIdBySPDId } from "@myhome/contracts";
 import { PenaltyRuleRepository } from "../repositories/penalty-rule.repository";
-import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_SPDS, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException, checkSPD } from "@myhome/constants";
+import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_KEY_RATE, CANT_GET_SPDS, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
 import { IDebtDetail, IDebtHistory, IGetCorrection, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
 import { DebtEntity } from "../entities/debt.entity";
 import { PenaltyService } from "./penalty.service";
 import { Debt } from "../models/debt.model";
+import { CBRService } from "./cbr.service";
 
 export interface IPriority {
     typeOfServiceIds: number[], managementCompanyId: number, _id?: string, priority: number
@@ -20,6 +21,7 @@ export class DebtService {
         private readonly debtRepository: DebtRepository,
         private readonly penaltyRuleRepository: PenaltyRuleRepository,
         private readonly penaltyService: PenaltyService,
+        private readonly cbrService: CBRService,
     ) { }
 
     public async checkSubscriberDebts(subscriberSPDs: IGetCorrection) {
@@ -107,8 +109,8 @@ export class DebtService {
 
     // Функция уплаты долга или его части
     public async updateDebt(dto: CorrectionUpdateDebt.Request) {
-        await checkSPD(this.rmqService, dto.singlePaymentDocumentId);
-        const priorities = await this.getPriorityWithId(dto.managementCompanyId);
+        const { managementCompanyId } = await this.getMCIdBySPDId(dto.singlePaymentDocumentId);
+        const priorities = await this.getPriorityWithId(managementCompanyId);
         // Ищем соответствующий долг по SPDId
         const debt = await this.debtRepository.findBySPDId(dto.singlePaymentDocumentId);
         if (!debt) {
@@ -118,10 +120,35 @@ export class DebtService {
             );
         }
 
+        let keyRate = dto.keyRate;
+        if (!keyRate) {
+            try {
+                const today = new Date();
+                const lastMonth = new Date(today.setMonth(today.getMonth() - 1));
+                keyRate = await this.cbrService.getKeyRate({
+                    startDate: lastMonth,
+                    endDate: today
+                });
+            } catch (e) {
+                throw new RMQException(CANT_GET_KEY_RATE.message, CANT_GET_KEY_RATE.status);
+            }
+        }
+
         // Если есть что-то в массиве debt.debtHistory
         if (debt.debtHistory.length) {
-            return { debt: (await this.updateDebtHistory(debt, dto.amount, dto.keyRate, priorities)).debt };
+            return { debt: (await this.updateDebtHistory(debt, dto.amount, keyRate, priorities)).debt };
         } else return { debt: [] };
+    }
+
+    private async getMCIdBySPDId(singlePaymentDocumentId: number) {
+        try {
+            return await this.rmqService.send<
+                GetMCIdBySPDId.Request,
+                GetMCIdBySPDId.Response
+            >(GetMCIdBySPDId.topic, { id: singlePaymentDocumentId });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
     }
 
     private async updateDebtHistory(
@@ -150,7 +177,7 @@ export class DebtService {
         let paymentAmount = amount;
         for (const priority of priorities) {
             const oldDebt = lastDebtState.find(obj => {
-                return String(obj.penaltyRuleId) === String(priority.penaltyCalculationRules._id)
+                return String(obj.penaltyRuleId) === String(priority._id)
             });
             if (oldDebt && paymentAmount > 0) {
                 let currAmount = oldDebt.amount;

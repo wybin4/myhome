@@ -43,7 +43,7 @@ export class UserEntity implements IUser {
     return {
       id: this.id,
       email: this.email,
-      name: this.name
+      name: this.name,
     }
   }
 

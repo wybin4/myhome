@@ -25,8 +25,8 @@ export namespace ReferenceAddApartments {
     }
 
     export class Request {
-        @IsDefined({ message: "Массив домов должен существовать" })
-        @ArrayMinSize(1, { message: "Массив домов не должен быть пустым" })
+        @IsDefined({ message: "Массив квартир должен существовать" })
+        @ArrayMinSize(1, { message: "Массив квартир не должен быть пустым" })
         @ValidateNestedArray(ApartmentValidator)
         apartments!: IApartment[];
     }

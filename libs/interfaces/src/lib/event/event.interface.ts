@@ -3,9 +3,9 @@ import { IHouseNotification } from "./notification.interface";
 import { IOption, IVote, IVoting } from "./voting.interface";
 
 export interface IGetEvents {
-    notifications?: IGetHouseNotification[];
-    votings?: IGetVoting[];
-    appeals?: IGetAppeal[];
+    notifications: { notifications?: IGetHouseNotification[]; totalCount?: number };
+    votings: { votings?: IGetVoting[]; totalCount?: number };
+    appeals: { appeals?: IGetAppeal[]; totalCount?: number };
 }
 
 export interface IGetHouseNotification extends IHouseNotification {

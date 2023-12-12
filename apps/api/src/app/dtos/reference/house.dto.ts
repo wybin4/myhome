@@ -1,10 +1,10 @@
-import { IAddHouse, IMeta } from "@myhome/interfaces";
+import { IAddHouse } from "@myhome/interfaces";
+import { GetMetaDto } from "../meta.dto";
 
 export class AddHousesDto {
     houses: IAddHouse[];
 }
 
-export class GetHousesByUserDto {
+export class GetHousesByUserDto extends GetMetaDto {
     isAllInfo!: boolean;
-    meta?: IMeta;
 }

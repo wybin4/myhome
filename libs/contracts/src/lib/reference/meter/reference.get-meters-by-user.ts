@@ -1,11 +1,12 @@
 import { IsBoolean, IsNumber, IsOptional, Validate } from 'class-validator';
 import { IMeter, MeterType, UserRole } from '@myhome/interfaces';
 import { IsValidEnumValue } from '../../enum.validator';
+import { MetaRequest } from '../../meta.validator';
 
 export namespace ReferenceGetMetersByUser {
     export const topic = 'reference.get-meters-by-user.query';
 
-    export class Request {
+    export class Request extends MetaRequest {
         @IsNumber({}, { message: "Id пользователя должен быть числом" })
         userId!: number;
 

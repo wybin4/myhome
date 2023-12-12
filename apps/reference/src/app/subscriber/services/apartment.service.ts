@@ -74,9 +74,9 @@ export class ApartmentService {
 		}
 	}
 
-	async getApartmentsByUser({ userId, userRole, isAllInfo }: ReferenceGetApartmentsByUser.Request): Promise<ReferenceGetApartmentsByUser.Response> {
+	async getApartmentsByUser({ userId, userRole, isAllInfo, meta }: ReferenceGetApartmentsByUser.Request): Promise<ReferenceGetApartmentsByUser.Response> {
 		if (isAllInfo) {
-			const apartments = await this.apartmentRepository.findByUserAll(userId, userRole);
+			const { apartments, totalCount } = await this.apartmentRepository.findByUserAll(userId, userRole, meta);
 
 			return {
 				apartments: apartments.map(apartment => {
@@ -95,11 +95,12 @@ export class ApartmentService {
 								address: apartment.getAddress(currentHouse),
 							};
 					}
-				})
+				}),
+				totalCount
 			};
 		} else {
 			const { profile } = await checkUser(this.rmqService, userId, userRole);
-			const apartments = await this.apartmentRepository.findByUser(userId, userRole);
+			const { apartments, totalCount } = await this.apartmentRepository.findByUser(userId, userRole, meta);
 
 			return {
 				apartments: apartments.map(apartment => {
@@ -115,7 +116,8 @@ export class ApartmentService {
 								name: profile.name,
 							};
 					}
-				})
+				}),
+				totalCount
 			};
 		}
 	}

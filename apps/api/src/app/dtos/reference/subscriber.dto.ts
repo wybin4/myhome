@@ -1,4 +1,5 @@
-import { IAddSubscriber, IMeta } from "@myhome/interfaces";
+import { IAddSubscriber } from "@myhome/interfaces";
+import { GetMetaDto } from "../meta.dto";
 
 export class AddSubscribersDto {
     subscribers: IAddSubscriber[];
@@ -8,6 +9,5 @@ export class UpdateSubscriberDto {
     id: number;
 }
 
-export class GetSubscribersByUserDto {
-    meta?: IMeta;
+export class GetSubscribersByUserDto extends GetMetaDto {
 }

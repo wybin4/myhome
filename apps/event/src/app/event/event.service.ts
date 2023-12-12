@@ -15,28 +15,36 @@ export class EventService {
     ) { }
 
     public async getEvents(dto: EventGetEvents.Request): Promise<EventGetEvents.Response> {
-        const events: IGetEvents = { appeals: [], notifications: [], votings: [] };
+        const events: IGetEvents = {
+            appeals: { appeals: [], totalCount: 0 },
+            notifications: { notifications: [], totalCount: 0 },
+            votings: { votings: [], totalCount: 0 }
+        };
 
         for (const event of dto.events) {
             switch (event) {
                 case EventType.Appeal: {
-                    const data = await this.appealService.getAppeals(dto.userId, dto.userRole);
+                    const data = await this.appealService.getAppeals(dto.userId, dto.userRole, dto.meta);
                     if (data) {
-                        events.appeals = data.appeals;
+                        events.appeals.appeals = data.appeals;
+                        events.appeals.totalCount = data.totalCount;
                     }
                     break;
                 }
                 case EventType.Voting: {
-                    const data = await this.votingService.getVotings(dto.userId, dto.userRole);
+                    const data = await this.votingService.getVotings(dto.userId, dto.userRole, dto.meta);
                     if (data) {
-                        events.votings = data.votings;
+                        events.votings.votings = data.votings;
+                        events.votings.totalCount = data.totalCount;
                     }
                     break;
                 }
                 case EventType.Notification: {
-                    const data = await this.notificationService.getHouseNotifications(dto.userId, dto.userRole);
+                    const data = await this.notificationService.getHouseNotifications(dto.userId, dto.userRole, dto.meta);
                     if (data) {
-                        events.notifications = data.notifications;
+                        events.notifications.notifications = data.notifications;
+                        events.notifications.totalCount = data.totalCount;
+
                     }
                     break;
                 }

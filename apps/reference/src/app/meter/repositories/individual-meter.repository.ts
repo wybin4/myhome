@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThan, Not, Repository } from 'typeorm';
 import { IndividualMeterEntity } from '../entities/individual-meter.entity';
-import { MeterStatus } from '@myhome/interfaces';
-import { RMQException, UNPROCESSABLE_METER } from '@myhome/constants';
+import { IMeta, MeterStatus } from '@myhome/interfaces';
+import { RMQException, UNPROCESSABLE_METER, applyMeta } from '@myhome/constants';
 
 @Injectable()
 export class IndividualMeterRepository {
@@ -55,12 +55,13 @@ export class IndividualMeterRepository {
             },
         });
     }
-    async findByApartments(apartmentIds: number[]): Promise<IndividualMeterEntity[]> {
-        return await this.individualMeterRepository.find({
-            where: {
-                apartmentId: In(apartmentIds)
-            },
-        });
+    async findByApartments(apartmentIds: number[], meta: IMeta) {
+        let queryBuilder = this.individualMeterRepository.createQueryBuilder('individualMeter');
+        queryBuilder.where('individualMeter.apartmentId IN (:...apartmentIds)', { apartmentIds });
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<IndividualMeterEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+
+        return { meters: await queryBuilder.getMany(), totalCount };
     }
 
     async save(meters: IndividualMeterEntity[]): Promise<IndividualMeterEntity[]> {
@@ -81,13 +82,16 @@ export class IndividualMeterRepository {
         apartmentIds: number[],
         endOfPreviousMonth: Date,
         startOfCurrentMonth: Date,
-        endOfCurrentMonth: Date
+        endOfCurrentMonth: Date,
+        meta: IMeta
     ) {
-        const individualMeters = await this.individualMeterRepository
-            .createQueryBuilder('individualMeter')
-            .leftJoinAndSelect('individualMeter.individualMeterReadings', 'individualMeterReadings')
-            .where('individualMeter.apartmentId IN (:...apartmentIds)', { apartmentIds })
-            .getMany();
+        let queryBuilder = this.individualMeterRepository.createQueryBuilder('individualMeter');
+        queryBuilder.leftJoinAndSelect('individualMeter.individualMeterReadings', 'individualMeterReadings')
+            .where('individualMeter.apartmentId IN (:...apartmentIds)', { apartmentIds });
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<IndividualMeterEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+
+        const individualMeters = await queryBuilder.getMany();
 
         const currentMonthReadings = individualMeters.map((meter) => {
             if (meter.individualMeterReadings && meter.individualMeterReadings.length > 0) {
@@ -127,7 +131,7 @@ export class IndividualMeterRepository {
             };
         });
 
-        return result;
+        return { meters: result, totalCount };
     }
 
     // показания за последние 7 месяцев

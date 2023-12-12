@@ -22,14 +22,13 @@ export class SinglePaymentDocumentService {
         private readonly pdfService: PdfService
     ) { }
 
-    async getSinglePaymentDocumentsByUser(dto: GetSinglePaymentDocumentsByUser.Request):
-        Promise<GetSinglePaymentDocumentsByUser.Response> {
+    async getSinglePaymentDocumentsByUser(dto: GetSinglePaymentDocumentsByUser.Request): Promise<GetSinglePaymentDocumentsByUser.Response> {
         switch (dto.userRole) {
             case UserRole.Owner: {
                 const { apartments } = await getApartmentsAllInfoByUser(this.rmqService, dto.userId, dto.userRole);
                 const { users } = await this.getMCByOwner(dto.userId);
                 const subscriberIds = apartments.map(apartment => apartment.subscriberId);
-                const spds = await this.singlePaymentDocumentRepository.findBySIds(subscriberIds);
+                const { spds, totalCount } = await this.singlePaymentDocumentRepository.findBySIds(subscriberIds, dto.meta);
                 if (!spds) {
                     throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
                 }
@@ -57,7 +56,8 @@ export class SinglePaymentDocumentService {
                                 pdfBuffer: (file.buffer).toString('base64'),
                                 createdAt: currentSPD.createdAt,
                             };
-                        })
+                        }),
+                        totalCount
                     };
                 } else {
                     return {
@@ -66,13 +66,14 @@ export class SinglePaymentDocumentService {
                                 id: spd.id,
                                 createdAt: spd.createdAt
                             };
-                        })
+                        }),
+                        totalCount
                     };
                 }
             }
             case UserRole.ManagementCompany: {
                 const { houses } = await getHousesByMCId(this.rmqService, dto.userId);
-                const spds = await this.totalRepository.findByMCId(dto.userId);
+                const { spds, totalCount } = await this.totalRepository.findByMCId(dto.userId, dto.meta);
                 if (!spds) {
                     throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
                 }
@@ -102,7 +103,8 @@ export class SinglePaymentDocumentService {
                                 pdfBuffer: !dto.withoutAttachments ? (file.buffer).toString('base64') : "",
                                 createdAt: currentSPD.createdAt
                             };
-                        })
+                        }),
+                        totalCount
                     };
                 } else {
                     return {
@@ -119,7 +121,8 @@ export class SinglePaymentDocumentService {
                                 pdfBuffer: "",
                                 createdAt: spd.createdAt
                             };
-                        })
+                        }),
+                        totalCount
                     };
                 }
             }

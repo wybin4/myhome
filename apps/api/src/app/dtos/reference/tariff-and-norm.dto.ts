@@ -1,4 +1,5 @@
-import { IMeta, TariffAndNormType, TypeOfNorm } from "@myhome/interfaces";
+import { TariffAndNormType, TypeOfNorm } from "@myhome/interfaces";
+import { GetMetaDto } from "../meta.dto";
 
 export class AddTariffAndNormsDto {
     tariffAndNorms!: {
@@ -17,9 +18,8 @@ export class AddTariffAndNormsDto {
     type!: TariffAndNormType;
 }
 
-export class GetTariffsAndNormsByUserDto {
+export class GetTariffsAndNormsByUserDto extends GetMetaDto {
     type: TariffAndNormType;
-    meta?: IMeta;
 }
 
 export class UpdateTariffAndNormDto {

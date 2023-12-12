@@ -161,15 +161,15 @@ export class SubscriberService {
 		});
 	}
 
-	public async getSubscribersByUser({ userId, userRole }: ReferenceGetSubscribersByUser.Request):
+	public async getSubscribersByUser({ userId, userRole, meta }: ReferenceGetSubscribersByUser.Request):
 		Promise<ReferenceGetSubscribersByUser.Response> {
 		switch (userRole) {
 			case UserRole.Owner: {
-				const subscribers = await this.subscriberRepository.findByUser(userId, userRole);
-				return { subscribers };
+				const { subscribers, totalCount } = await this.subscriberRepository.findByUser(userId, userRole);
+				return { subscribers, totalCount };
 			}
 			case UserRole.ManagementCompany: {
-				const subscribers = await this.subscriberRepository.findByUser(userId, userRole);
+				const { subscribers, totalCount } = await this.subscriberRepository.findByUser(userId, userRole, meta);
 				const ownerIds = Array.from(new Set(subscribers.map(s => s.ownerId)));
 				const { profiles: ownerItems } = await checkUsers(this.rmqService, ownerIds, UserRole.Owner);
 
@@ -185,7 +185,8 @@ export class SubscriberService {
 							houseName: currentHouse.getAddress(),
 							apartmentName: currentApart.getAddress(currentHouse)
 						};
-					})
+					}),
+					totalCount
 				};
 			}
 		}

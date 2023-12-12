@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import { IGetCorrection } from '@myhome/interfaces';
+import { Repository } from 'typeorm';
+import { CalculationState, IGetCorrection, IMeta } from '@myhome/interfaces';
 import { SinglePaymentDocumentEntity } from '../entities/single-payment-document.entity';
+import { applyMeta } from '@myhome/constants';
 
 @Injectable()
 export class SinglePaymentDocumentRepository {
@@ -23,8 +24,13 @@ export class SinglePaymentDocumentRepository {
         return await this.singlePaymentDocumentRepository.findOne({ where: { id } });
     }
 
-    async findBySIds(subscriberIds: number[]) {
-        return await this.singlePaymentDocumentRepository.find({ where: { subscriberId: In(subscriberIds) } });
+    async findBySIds(subscriberIds: number[], meta: IMeta) {
+        let queryBuilder = this.singlePaymentDocumentRepository.createQueryBuilder('spd');
+        queryBuilder.where('spd.subscriberId IN (:...subscriberIds)', { subscriberIds })
+            .andWhere('spd.status = :status', { status: CalculationState.CorrectionsCalculated });
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<SinglePaymentDocumentEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+        return { spds: await queryBuilder.getMany(), totalCount };
     }
 
     async update(singlePaymentDocument: SinglePaymentDocumentEntity) {

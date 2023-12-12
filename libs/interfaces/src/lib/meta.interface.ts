@@ -3,4 +3,6 @@ export interface IMeta {
     limit: number;
     searchField?: string;
     searchLine?: string;
+    filterField?: string;
+    filterArray?: string[];
 }

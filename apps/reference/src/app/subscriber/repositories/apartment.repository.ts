@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { ApartmentEntity } from '../entities/apartment.entity';
-import { HOUSE_NOT_EXIST, RMQException } from '@myhome/constants';
-import { SubscriberStatus, UserRole } from '@myhome/interfaces';
+import { HOUSE_NOT_EXIST, RMQException, applyMeta } from '@myhome/constants';
+import { IMeta, SubscriberStatus, UserRole } from '@myhome/interfaces';
 
 @Injectable()
 export class ApartmentRepository {
@@ -88,38 +88,45 @@ export class ApartmentRepository {
             .getMany();
     }
 
-    async findByUser(userId: number, userRole: UserRole) {
+
+    async findByUser(userId: number, userRole: UserRole, meta: IMeta) {
+        let queryBuilder = this.apartmentRepository.createQueryBuilder('apartment');
         switch (userRole) {
-            case UserRole.ManagementCompany:
-                return await this.apartmentRepository.createQueryBuilder('apartment')
-                    .innerJoinAndSelect('apartment.house', 'house')
-                    .where('house.managementCompanyId = :managementCompanyId', { managementCompanyId: userId })
-                    .getMany();
-            case UserRole.Owner:
-                return await this.apartmentRepository
-                    .createQueryBuilder('apartment')
-                    .innerJoinAndSelect('apartment.subscriber', 'subscriber')
+            case UserRole.ManagementCompany: {
+                queryBuilder.innerJoinAndSelect('apartment.house', 'house')
+                    .where('house.managementCompanyId = :managementCompanyId', { managementCompanyId: userId });
+                const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<ApartmentEntity>(queryBuilder, meta);
+                queryBuilder = newQueryBuilder;
+                return { apartments: await queryBuilder.getMany(), totalCount };
+            }
+            case UserRole.Owner: {
+                queryBuilder.innerJoinAndSelect('apartment.subscriber', 'subscriber')
                     .where('subscriber.ownerId = :ownerId', { ownerId: userId })
-                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
-                    .getMany();
+                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active });
+                return { apartments: await queryBuilder.getMany(), totalCount: 0 };
+            }
         }
     }
 
-    async findByUserAll(userId: number, userRole: UserRole) {
+    async findByUserAll(userId: number, userRole: UserRole, meta: IMeta) {
+        let queryBuilder = this.apartmentRepository.createQueryBuilder('apartment');
         switch (userRole) {
-            case UserRole.ManagementCompany:
-                return await this.apartmentRepository.createQueryBuilder('apartment')
-                    .innerJoinAndSelect('apartment.house', 'house')
-                    .where('house.managementCompanyId = :managementCompanyId', { managementCompanyId: userId })
-                    .getMany();
-            case UserRole.Owner:
-                return await this.apartmentRepository
-                    .createQueryBuilder('apartment')
-                    .innerJoinAndSelect('apartment.house', 'house')
+            case UserRole.ManagementCompany: {
+                queryBuilder.innerJoinAndSelect('apartment.house', 'house')
+                    .where('house.managementCompanyId = :managementCompanyId', { managementCompanyId: userId });
+                const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<ApartmentEntity>(queryBuilder, meta);
+                queryBuilder = newQueryBuilder;
+                return { apartments: await queryBuilder.getMany(), totalCount };
+            }
+            case UserRole.Owner: {
+                queryBuilder.innerJoinAndSelect('apartment.house', 'house')
                     .innerJoinAndSelect('apartment.subscriber', 'subscriber')
                     .where('subscriber.ownerId = :ownerId', { ownerId: userId })
-                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
-                    .getMany();
+                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active });
+                const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<ApartmentEntity>(queryBuilder, meta);
+                queryBuilder = newQueryBuilder;
+                return { apartments: await queryBuilder.getMany(), totalCount };
+            }
         }
     }
 

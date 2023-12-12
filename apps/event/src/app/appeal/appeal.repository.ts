@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { AppealEntity } from './appeal.entity';
+import { applyMeta } from '@myhome/constants';
+import { IMeta } from '@myhome/interfaces';
 
 @Injectable()
 export class AppealRepository {
@@ -18,12 +20,21 @@ export class AppealRepository {
         return await this.appealRepository.findOne({ where: { id } });
     }
 
-    async findByMCId(managementCompanyId: number) {
-        return await this.appealRepository.find({ where: { managementCompanyId } });
+    async findByMCId(managementCompanyId: number, meta: IMeta) {
+        let queryBuilder = this.appealRepository.createQueryBuilder('appeal');
+        queryBuilder.where('appeal.managementCompanyId = :managementCompanyId', { managementCompanyId });
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<AppealEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+        return { appeals: await queryBuilder.getMany(), totalCount };
     }
 
-    async findBySIds(subscriberIds: number[]) {
-        return await this.appealRepository.find({ where: { subscriberId: In(subscriberIds) } });
+
+    async findBySIds(subscriberIds: number[], meta: IMeta) {
+        let queryBuilder = this.appealRepository.createQueryBuilder('appeal');
+        queryBuilder.where('spd.subscriberId IN (:...subscriberIds)', { subscriberIds });
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<AppealEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+        return { appeals: await queryBuilder.getMany(), totalCount };
     }
 
     async update(appeal: AppealEntity) {

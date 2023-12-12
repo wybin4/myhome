@@ -1,11 +1,12 @@
 import { UserRole } from "@myhome/interfaces";
 import { IsBoolean, IsNumber, IsOptional, Validate } from "class-validator";
 import { IsValidEnumValue } from "../enum.validator";
+import { MetaRequest, MetaResponse } from "../meta.validator";
 
 export namespace GetSinglePaymentDocumentsByUser {
     export const topic = 'single-payment-document.get-single-payment-documents-by-user.query';
 
-    export class Request {
+    export class Request extends MetaRequest {
         @IsNumber({}, { message: "Id пользователя должен быть числом" })
         userId!: number;
 
@@ -17,7 +18,7 @@ export namespace GetSinglePaymentDocumentsByUser {
         withoutAttachments?: boolean;
     }
 
-    export class Response {
+    export class Response extends MetaResponse{
         singlePaymentDocuments!: IGetSinglePaymentDocumentsByMCId[] | IGetSinglePaymentDocumentsBySId[];
     }
 }

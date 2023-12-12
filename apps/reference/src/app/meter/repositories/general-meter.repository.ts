@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThan, Not, Repository } from 'typeorm';
 import { GeneralMeterEntity } from '../entities/general-meter.entity';
-import { MeterStatus } from '@myhome/interfaces';
-import { RMQException, UNPROCESSABLE_METER } from '@myhome/constants';
+import { IMeta, MeterStatus } from '@myhome/interfaces';
+import { RMQException, UNPROCESSABLE_METER, applyMeta } from '@myhome/constants';
 
 @Injectable()
 export class GeneralMeterRepository {
@@ -128,13 +128,16 @@ export class GeneralMeterRepository {
         startOfPreviousMonth: Date,
         endOfPreviousMonth: Date,
         startOfCurrentMonth: Date,
-        endOfCurrentMonth: Date
+        endOfCurrentMonth: Date,
+        meta: IMeta
     ) {
-        const generalMeters = await this.generalMeterRepository
-            .createQueryBuilder('generalMeter')
-            .leftJoinAndSelect('generalMeter.generalMeterReadings', 'generalMeterReadings')
-            .where('generalMeter.houseId in (:...houseIds)', { houseIds })
-            .getMany();
+        let queryBuilder = this.generalMeterRepository.createQueryBuilder('generalMeter');
+        queryBuilder.leftJoinAndSelect('generalMeter.generalMeterReadings', 'generalMeterReadings')
+            .where('generalMeter.houseId in (:...houseIds)', { houseIds });
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<GeneralMeterEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+
+        const generalMeters = await queryBuilder.getMany();
 
         const currentMonthGeneralMeterReadings = generalMeters.map((meter) => {
             if (meter.generalMeterReadings && meter.generalMeterReadings.length > 0) {
@@ -173,7 +176,7 @@ export class GeneralMeterRepository {
             };
         });
 
-        return result;
+        return { meters: result, totalCount };
     }
 
     async findNIAndNPReadingsByHId(
@@ -201,11 +204,12 @@ export class GeneralMeterRepository {
         return result;
     }
 
-    async findManyByHouses(houseIds: number[]): Promise<GeneralMeterEntity[]> {
-        return await this.generalMeterRepository.find({
-            where: {
-                houseId: In(houseIds)
-            },
-        });
+    async findManyByHouses(houseIds: number[], meta: IMeta) {
+        let queryBuilder = this.generalMeterRepository.createQueryBuilder('generalMeter');
+        queryBuilder.leftJoinAndSelect('generalMeter.generalMeterReadings', 'generalMeterReadings')
+            .where('generalMeter.houseId in (:...houseIds)', { houseIds });
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<GeneralMeterEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+        return { meters: await queryBuilder.getMany(), totalCount };
     }
 }

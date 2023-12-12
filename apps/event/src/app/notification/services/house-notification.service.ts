@@ -4,7 +4,7 @@ import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { HouseNotificationEntity } from "../entities/house-notification.entity";
 import { HouseNotificationRepository } from "../repositories/house-notification.repository";
-import { IGetHouseNotification, IHouse, IHouseNotification, ServiceNotificationType, UserRole } from "@myhome/interfaces";
+import { IGetHouseNotification, IHouse, IHouseNotification, IMeta, ServiceNotificationType, UserRole } from "@myhome/interfaces";
 import { ServiceNotificationService } from "./service-notification.service";
 
 @Injectable()
@@ -15,23 +15,23 @@ export class HouseNotificationService {
         private readonly rmqService: RMQService,
     ) { }
 
-    public async getHouseNotifications(userId: number, userRole: UserRole): Promise<{ notifications: IGetHouseNotification[] }> {
+    public async getHouseNotifications(userId: number, userRole: UserRole, meta: IMeta): Promise<{ notifications: IGetHouseNotification[]; totalCount?: number }> {
         switch (userRole) {
             case UserRole.Owner:
-                return await this.getNotificationsForOwner(userId);
+                return await this.getNotificationsForOwner(userId, meta);
             case UserRole.ManagementCompany:
-                return await this.getNotificationsForMC(userId);
+                return await this.getNotificationsForMC(userId, meta);
             default:
                 throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
         }
     }
 
-    private async getNotificationsForOwner(userId: number): Promise<{ notifications: IGetHouseNotification[] }> {
+    private async getNotificationsForOwner(userId: number, meta: IMeta): Promise<{ notifications: IGetHouseNotification[]; totalCount?: number }> {
         const { houses } = await getHousesByOId(this.rmqService, userId);
         const mcIds = Array.from(new Set(houses.map(h => h.managementCompanyId)));
         const { profiles } = await checkUsers(this.rmqService, mcIds, UserRole.ManagementCompany);
 
-        const { notifications } = await this.getNotificationsGeneral(houses);
+        const { notifications, totalCount } = await this.getNotificationsGeneral(houses, meta);
 
         return {
             notifications: notifications.map(notification => {
@@ -42,14 +42,15 @@ export class HouseNotificationService {
                     name: currentMC.name,
                     ...notification
                 };
-            })
+            }),
+            totalCount
         }
     }
 
-    private async getNotificationsForMC(userId: number): Promise<{ notifications: IGetHouseNotification[] }> {
+    private async getNotificationsForMC(userId: number, meta: IMeta): Promise<{ notifications: IGetHouseNotification[]; totalCount?: number }> {
         const { houses } = await getHousesByMCId(this.rmqService, userId);
 
-        const { notifications } = await this.getNotificationsGeneral(houses);
+        const { notifications, totalCount } = await this.getNotificationsGeneral(houses, meta);
 
         return {
             notifications: notifications.map(notification => {
@@ -58,22 +59,23 @@ export class HouseNotificationService {
                     name: `${currentHouse.city}, ${currentHouse.street} ${currentHouse.houseNumber}`,
                     ...notification
                 };
-            })
+            }),
+            totalCount
         }
     }
 
-    private async getNotificationsGeneral(houses: IHouse[]) {
+    private async getNotificationsGeneral(houses: IHouse[], meta: IMeta) {
         if (!houses) {
             throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
         }
         const houseIds = houses.map(house => house.id);
 
-        const notifications = await this.houseNotificationRepository.findByHouseIds(houseIds);
+        const { notifications, totalCount } = await this.houseNotificationRepository.findByHouseIds(houseIds, meta);
         if (!notifications) {
             return;
         }
 
-        return { notifications };
+        return { notifications, totalCount };
     }
 
     public async addHouseNotification(dto: EventAddHouseNotification.Request):

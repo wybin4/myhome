@@ -1,6 +1,6 @@
 import { RMQException, INCORRECT_USER_ROLE, HOUSES_NOT_EXIST, checkUsers, getHouseAllInfo, getHousesByOId, getHousesByMCId } from "@myhome/constants";
 import { EventAddVoting, EventUpdateVoting } from "@myhome/contracts";
-import { UserRole, IGetVoting, IHouse, VotingStatus, IGetOption } from "@myhome/interfaces";
+import { UserRole, IGetVoting, IHouse, VotingStatus, IGetOption, IMeta } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { OptionEntity } from "./entities/option.entity";
@@ -56,23 +56,23 @@ export class VotingService {
         return { vote: newVote };
     }
 
-    async getVotings(userId: number, userRole: UserRole): Promise<{ votings: IGetVoting[] }> {
+    async getVotings(userId: number, userRole: UserRole, meta: IMeta): Promise<{ votings: IGetVoting[], totalCount?: number }> {
         switch (userRole) {
             case UserRole.Owner:
-                return await this.getVotingsForOwner(userId);
+                return await this.getVotingsForOwner(userId, meta);
             case UserRole.ManagementCompany:
-                return await this.getVotingsForMC(userId);
+                return await this.getVotingsForMC(userId, meta);
             default:
                 throw new RMQException(INCORRECT_USER_ROLE.message, INCORRECT_USER_ROLE.status);
         }
     }
 
-    private async getVotingsForOwner(userId: number): Promise<{ votings: IGetVoting[] }> {
+    private async getVotingsForOwner(userId: number, meta: IMeta): Promise<{ votings: IGetVoting[], totalCount?: number }> {
         const { houses } = await getHousesByOId(this.rmqService, userId);
         const mcIds = Array.from(new Set(houses.map(h => h.managementCompanyId)));
         const { profiles } = await checkUsers(this.rmqService, mcIds, UserRole.ManagementCompany);
 
-        const votings = await this.getVotingsGeneral(userId, houses);
+        const { votings, totalCount } = await this.getVotingsGeneral(userId, houses, meta);
 
         return {
             votings: votings.map(voting => {
@@ -83,13 +83,14 @@ export class VotingService {
                     name: currentMC.name,
                     ...voting
                 };
-            })
+            }),
+            totalCount
         };
     }
 
-    private async getVotingsForMC(userId: number): Promise<{ votings: IGetVoting[] }> {
+    private async getVotingsForMC(userId: number, meta: IMeta): Promise<{ votings: IGetVoting[], totalCount?: number }> {
         const { houses } = await getHousesByMCId(this.rmqService, userId);
-        const votings = await this.getVotingsGeneral(userId, houses);
+        const { votings, totalCount } = await this.getVotingsGeneral(userId, houses, meta);
 
         return {
             votings: votings.map((voting) => {
@@ -109,33 +110,40 @@ export class VotingService {
                     ...voting,
                 };
             }),
+            totalCount
         };
     }
 
 
-    private async getVotingsGeneral(userId: number, houses: IHouse[]) {
+    private async getVotingsGeneral(userId: number, houses: IHouse[], meta: IMeta) {
         if (!houses) {
             throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
         }
         const houseIds = houses.map(h => h.id);
 
-        const votings = await this.votingRepository.findVotingsByHouseIds(houseIds);
+        const { votings, totalCount } = await this.votingRepository.findVotingsByHouseIds(houseIds, meta);
 
         if (votings.length) {
-            return votings.map(voting => {
-                const newOptions = voting.options.map((o) => {
+            return {
+                votings: votings.map(voting => {
+                    const newOptions = voting.options.map((o) => {
+                        return {
+                            ...o,
+                            numberOfVotes: o.votes.length,
+                        };
+                    });
                     return {
-                        ...o,
-                        numberOfVotes: o.votes.length,
+                        ...voting.get(),
+                        options: newOptions
                     };
-                });
-                return {
-                    ...voting.get(),
-                    options: newOptions
-                };
-            });
+                }),
+                totalCount
+            };
         } else {
-            return [];
+            return {
+                votings: [],
+                totalCount
+            };
         }
     }
 }

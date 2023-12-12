@@ -1,15 +1,15 @@
 import { IAddMeter } from "@myhome/contracts";
-import { IMeta, MeterType } from "@myhome/interfaces";
+import { MeterType } from "@myhome/interfaces";
+import { GetMetaDto } from "../meta.dto";
 
 export class AddMetersDto {
     meters: IAddMeter[];
     meterType: MeterType;
 }
 
-export class GetMetersByUserDto {
+export class GetMetersByUserDto extends GetMetaDto {
     meterType!: MeterType;
     isNotAllInfo?: boolean;
-    meta?: IMeta;
 }
 
 export class UpdateMeterDto {

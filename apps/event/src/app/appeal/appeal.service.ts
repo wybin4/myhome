@@ -4,7 +4,7 @@ import { AppealRepository } from "./appeal.repository";
 import { getSubscriber, checkUser, RMQException, INCORRECT_USER_ROLE, checkUsers, getSubscribersAllInfo, getSubscribersByOId, getApartment, getTypeOfService, getMeters, getMeter, getTypesOfService, APPEAL_NOT_EXIST, addMeter, updateMeter, METERS_NOT_EXIST } from "@myhome/constants";
 import { EventAddAppeal, EventUpdateAppeal } from "@myhome/contracts";
 import { AppealEntity } from "./appeal.entity";
-import { AddIndividualMeterData, AppealStatus, AppealType, IAppealEntity, IGetAppeal, IMeter, IMeterWithTypeOfService, ITypeOfService, MeterType, ServiceNotificationType, UserRole, VerifyIndividualMeterData } from "@myhome/interfaces";
+import { AddIndividualMeterData, AppealStatus, AppealType, IAppealEntity, IGetAppeal, IMeta, IMeter, IMeterWithTypeOfService, ITypeOfService, MeterType, ServiceNotificationType, UserRole, VerifyIndividualMeterData } from "@myhome/interfaces";
 import { ServiceNotificationService } from "../notification/services/service-notification.service";
 import path from "path";
 import * as fs from "fs";
@@ -20,12 +20,12 @@ export class AppealService {
         private readonly configService: ConfigService
     ) { }
 
-    public async getAppeals(userId: number, userRole: UserRole): Promise<{ appeals: IGetAppeal[] }> {
+    public async getAppeals(userId: number, userRole: UserRole, meta: IMeta): Promise<{ appeals: IGetAppeal[]; totalCount?: number }> {
         switch (userRole) {
             case UserRole.Owner: {
                 const { subscribers } = await getSubscribersByOId(this.rmqService, userId);
                 const subscriberIds = subscribers.map(s => s.id);
-                const appeals = await this.appealRepository.findBySIds(subscriberIds);
+                const { appeals, totalCount } = await this.appealRepository.findBySIds(subscriberIds, meta);
                 if (!appeals) {
                     return;
                 }
@@ -55,10 +55,12 @@ export class AppealService {
                                 attachment: currentFile ? currentFile.file : undefined
                             };
                         })
+                    ,
+                    totalCount
                 };
             }
             case UserRole.ManagementCompany: {
-                const appeals = await this.appealRepository.findByMCId(userId);
+                const { appeals, totalCount } = await this.appealRepository.findByMCId(userId, meta);
 
                 if (!appeals) {
                     return;
@@ -85,7 +87,8 @@ export class AppealService {
                                 data: this.getText(appeal, "get", currentMeter, currentTOS).text,
                                 attachment: currentFile ? currentFile.file : undefined
                             };
-                        })
+                        }),
+                    totalCount
                 };
             }
             default:

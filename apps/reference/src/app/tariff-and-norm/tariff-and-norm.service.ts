@@ -1,6 +1,5 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { CommonHouseNeedTariffRepository, IGenericTariffAndNormRepository, MunicipalTariffRepository, NormRepository, SeasonalityFactorRepository, SocialNormRepository } from "./base-tariff-and-norm.repository";
-import { RMQService } from "nestjs-rmq";
 import { NormEntity, SeasonalityFactorEntity, MunicipalTariffEntity, SocialNormEntity, BaseTariffAndNormEntity } from "./entities/base-tariff-and-norm.entity";
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
 import { CommonHouseNeedTariffData, IBaseTariffAndNorm, ICommonHouseNeedTariff, IHouse, ITypeOfService, IUnit, MunicipalTariffData, NormData, SocialNormData, TariffAndNormType, UserRole } from "@myhome/interfaces";
@@ -19,7 +18,6 @@ export class TariffAndNormService {
         private readonly municipalTariffRepository: MunicipalTariffRepository,
         private readonly socialNormRepository: SocialNormRepository,
         private readonly commonHouseNeedTariffRepository: CommonHouseNeedTariffRepository,
-        private readonly rmqService: RMQService,
         private readonly typeOfServiceRepository: TypeOfServiceRepository,
         private readonly unitRepository: UnitRepository,
         private readonly houseService: HouseService,

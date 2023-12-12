@@ -44,24 +44,25 @@ export class HouseService {
 
 	async getHousesByUser(dto: ReferenceGetHousesByUser.Request): Promise<ReferenceGetHousesByUser.Response> {
 		if (dto.isAllInfo) {
-			const houseItems = await this.houseRepository.findByUser(dto.userId, dto.userRole);
-			if (!houseItems.length) {
+			const { houses, totalCount } = await this.houseRepository.findByUser(dto.userId, dto.userRole, dto.meta);
+			if (!houses.length) {
 				throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
 			}
 			return {
-				houses: houseItems.map(house => {
+				houses: houses.map(house => {
 					return {
 						...house,
 						name: house.getAddress()
 					};
-				})
+				}),
+				totalCount
 			};
 		} else {
-			const houseItems = await this.houseRepository.findByUser(dto.userId, dto.userRole);
-			if (!houseItems.length) {
+			const { houses, totalCount } = await this.houseRepository.findByUser(dto.userId, dto.userRole, dto.meta);
+			if (!houses.length) {
 				throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
 			}
-			return { houses: houseItems };
+			return { houses: houses, totalCount };
 		}
 	}
 

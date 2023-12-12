@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SinglePaymentDocumentTotalEntity } from '../entities/total.entity';
+import { applyMeta } from '@myhome/constants';
+import { IMeta } from '@myhome/interfaces';
 
 @Injectable()
 export class SinglePaymentDocumentTotalRepository {
@@ -22,8 +24,12 @@ export class SinglePaymentDocumentTotalRepository {
         return await this.singlePaymentDocumentTotalRepository.findOne({ where: { id } });
     }
 
-    async findByMCId(managementCompanyId: number) {
-        return await this.singlePaymentDocumentTotalRepository.find({ where: { managementCompanyId } });
+    async findByMCId(managementCompanyId: number, meta: IMeta) {
+        let queryBuilder = this.singlePaymentDocumentTotalRepository.createQueryBuilder('spd');
+        queryBuilder.where('appeal.managementCompanyId = :managementCompanyId', { managementCompanyId });
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<SinglePaymentDocumentTotalEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+        return { spds: await queryBuilder.getMany(), totalCount };
     }
 
 }

@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { VotingEntity } from '../entities/voting.entity';
+import { applyMeta } from '@myhome/constants';
+import { IMeta } from '@myhome/interfaces';
 
 @Injectable()
 export class VotingRepository {
@@ -18,11 +20,13 @@ export class VotingRepository {
         return await this.votingRepository.findOne({ where: { id } });
     }
 
-    async findVotingsByHouseIds(houseIds: number[]) {
-        return await this.votingRepository.createQueryBuilder('voting')
-            .innerJoinAndSelect('voting.options', 'options')
+    async findVotingsByHouseIds(houseIds: number[], meta: IMeta) {
+        let queryBuilder = this.votingRepository.createQueryBuilder('voting');
+        queryBuilder.innerJoinAndSelect('voting.options', 'options')
             .leftJoinAndSelect('options.votes', 'votes')
-            .where('voting.houseId IN (:...houseIds)', { houseIds })
-            .getMany();
+            .where('voting.houseId IN (:...houseIds)', { houseIds });
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<VotingEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+        return { votings: await queryBuilder.getMany(), totalCount };
     }
 }

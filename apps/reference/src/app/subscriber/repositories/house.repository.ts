@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { HouseEntity } from '../entities/house.entity';
-import { SubscriberStatus, UserRole } from '@myhome/interfaces';
+import { IMeta, SubscriberStatus, UserRole } from '@myhome/interfaces';
+import { applyMeta } from '@myhome/constants';
 
 @Injectable()
 export class HouseRepository {
@@ -23,18 +24,22 @@ export class HouseRepository {
         return await this.houseRepository.findOne({ where: { id } });
     }
 
-    async findByUser(userId: number, userRole: UserRole) {
+    async findByUser(userId: number, userRole: UserRole, meta: IMeta) {
+        let queryBuilder = this.houseRepository.createQueryBuilder('house');
         switch (userRole) {
-            case UserRole.ManagementCompany:
-                return await this.houseRepository.find({ where: { managementCompanyId: userId } });
-            case UserRole.Owner:
-                return await this.houseRepository
-                    .createQueryBuilder('house')
-                    .innerJoinAndSelect('house.apartments', 'apartment')
+            case UserRole.ManagementCompany: {
+                queryBuilder.where('house.managementCompanyId = :managementCompanyId', { managementCompanyId: userId });
+                const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<HouseEntity>(queryBuilder, meta);
+                queryBuilder = newQueryBuilder;
+                return { houses: await queryBuilder.getMany(), totalCount };
+            }
+            case UserRole.Owner: {
+                queryBuilder.innerJoinAndSelect('house.apartments', 'apartment')
                     .innerJoinAndSelect('apartment.subscriber', 'subscriber')
                     .where('subscriber.ownerId = :ownerId', { ownerId: userId })
-                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
-                    .getMany();
+                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active });
+                return { houses: await queryBuilder.getMany(), totalCount: 0 };
+            }
         }
     }
 

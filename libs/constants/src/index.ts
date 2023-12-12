@@ -30,3 +30,5 @@ export * from './lib/rmq-requests/single-payment-document/check-single-payment-d
 export * from './lib/rmq-requests/notification.request';
 
 export * from './lib/generics/get-object.generic';
+
+export * from './lib/meta.builder';

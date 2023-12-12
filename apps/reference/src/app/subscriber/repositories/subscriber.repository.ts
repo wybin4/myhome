@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { SubscriberEntity } from '../entities/subscriber.entity';
-import { SubscriberStatus, UserRole } from '@myhome/interfaces';
-import { APART_NOT_EXIST, RMQException } from '@myhome/constants';
+import { IMeta, SubscriberStatus, UserRole } from '@myhome/interfaces';
+import { APART_NOT_EXIST, RMQException, applyMeta } from '@myhome/constants';
 
 @Injectable()
 export class SubscriberRepository {
@@ -57,17 +57,20 @@ export class SubscriberRepository {
             .getMany();
     }
 
-    async findByUser(userId: number, userRole: UserRole) {
+    async findByUser(userId: number, userRole: UserRole, meta?: IMeta) {
+        let queryBuilder = this.subscriberRepository.createQueryBuilder('subscriber');
         switch (userRole) {
-            case UserRole.ManagementCompany:
-                return await this.subscriberRepository.createQueryBuilder('subscriber')
-                    .innerJoinAndSelect('subscriber.apartment', 'apartment')
+            case UserRole.ManagementCompany: {
+                queryBuilder.innerJoinAndSelect('subscriber.apartment', 'apartment')
                     .innerJoinAndSelect('apartment.house', 'house')
                     .where('house.managementCompanyId = :managementCompanyId', { managementCompanyId: userId })
-                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active })
-                    .getMany();
+                    .andWhere('subscriber.status = :status', { status: SubscriberStatus.Active });
+                const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<SubscriberEntity>(queryBuilder, meta);
+                queryBuilder = newQueryBuilder;
+                return { subscribers: await queryBuilder.getMany(), totalCount };
+            }
             case UserRole.Owner:
-                return await this.subscriberRepository.find({ where: { ownerId: userId } });
+                return { subscribers: await this.subscriberRepository.find({ where: { ownerId: userId } }) };
         }
     }
 

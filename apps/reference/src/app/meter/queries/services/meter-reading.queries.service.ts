@@ -1,4 +1,4 @@
-import { IGeneralMeterReading, IGetMeterReading, IGetMeterReadings, IIndividualMeterReading, IMeter, IMeterReading, INorm, MeterStatus, MeterType, TypeOfNorm } from "@myhome/interfaces";
+import { IGeneralMeterReading, IGetMeterReading, IGetMeterReadings, IIndividualMeterReading, IMeta, IMeter, IMeterReading, INorm, MeterStatus, MeterType, TypeOfNorm } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { IGetHouseAllInfo, ReferenceGetIndividualMeterReadings, ReferenceGetMeterReadingsByHID } from "@myhome/contracts";
 import { getGenericObject, METER_READING_NOT_EXIST, RMQException, INCORRECT_METER_TYPE, NORMS_NOT_EXIST } from "@myhome/constants";
@@ -120,15 +120,18 @@ export class MeterReadingQueriesService {
 
     public async getMeterReadings(
         meterType: MeterType,
-        start: number, end: number,
+        start: number, end: number, meta: IMeta,
         houseIds?: number[], apartmentIds?: number[]
     ): Promise<{
-        meter: IMeter,
-        reading: {
-            previous: IMeterReading | undefined;
-            current: IMeterReading | undefined;
-        }
-    }[]> {
+        meters: {
+            meter: IMeter,
+            reading: {
+                previous: IMeterReading | undefined;
+                current: IMeterReading | undefined;
+            }
+        }[],
+        totalCount?: number
+    }> {
         const {
             startOfPreviousMonth, endOfPreviousMonth,
             startOfCurrentMonth, endOfCurrentMonth
@@ -141,7 +144,7 @@ export class MeterReadingQueriesService {
                         startOfPreviousMonth,
                         endOfPreviousMonth,
                         startOfCurrentMonth,
-                        endOfCurrentMonth
+                        endOfCurrentMonth, meta
                     );
             case (MeterType.Individual):
                 return await this.individualMeterRepository.
@@ -149,7 +152,7 @@ export class MeterReadingQueriesService {
                         apartmentIds,
                         endOfPreviousMonth,
                         startOfCurrentMonth,
-                        endOfCurrentMonth
+                        endOfCurrentMonth, meta
                     );
             default:
                 throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);

@@ -1,6 +1,6 @@
-import { EventType, IMeta } from "@myhome/interfaces";
+import { EventType } from "@myhome/interfaces";
+import { GetMetaDto } from "../meta.dto";
 
-export class GetEventsDto {
+export class GetEventsDto extends GetMetaDto {
     events!: EventType[];
-    meta?: IMeta;
 }

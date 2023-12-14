@@ -14,7 +14,7 @@ export class ServiceNotificationController {
     @RMQRoute(EventGetServiceNotifications.topic)
     async getServiceNotifications(@Body() dto: EventGetServiceNotifications.Request) {
         try {
-            return this.serviceNotificationService.getServiceNotifications(dto);
+            return await this.serviceNotificationService.getServiceNotifications(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -24,7 +24,7 @@ export class ServiceNotificationController {
     @RMQRoute(EventAddServiceNotification.topic)
     async addServiceNotification(@Body() dto: EventAddServiceNotification.Request) {
         try {
-            return this.serviceNotificationService.addServiceNotification(dto);
+            return await this.serviceNotificationService.addServiceNotification(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -34,7 +34,7 @@ export class ServiceNotificationController {
     @RMQRoute(EventAddServiceNotifications.topic)
     async addServiceNotifications(@Body() dto: EventAddServiceNotifications.Request) {
         try {
-            return this.serviceNotificationService.addServiceNotifications(dto);
+            return await this.serviceNotificationService.addServiceNotifications(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -44,7 +44,7 @@ export class ServiceNotificationController {
     @RMQRoute(EventUpdateServiceNotification.topic)
     async updateServiceNotification(@Body() dto: EventUpdateServiceNotification.Request) {
         try {
-            return this.serviceNotificationService.updateServiceNotification(dto);
+            return await this.serviceNotificationService.updateServiceNotification(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -54,7 +54,7 @@ export class ServiceNotificationController {
     @RMQRoute(EventUpdateAllServiceNotifications.topic)
     async updateAllServiceNotifications(@Body() dto: EventUpdateAllServiceNotifications.Request) {
         try {
-            return this.serviceNotificationService.updateAllServiceNotifications(dto);
+            return await this.serviceNotificationService.updateAllServiceNotifications(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

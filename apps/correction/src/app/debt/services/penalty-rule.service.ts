@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PenaltyRuleRepository } from "../repositories/penalty-rule.repository";
 import { RMQException, PENALTY_CALCULATION_ALREADY_EXIST, TYPES_OF_SERVICE_NOT_EXIST, getTypesOfService, getAllTypesOfService, PENALTY_RULES_NOT_EXIST } from "@myhome/constants";
-import { CorrectionAddPenaltyCalculationRules, CorrectionGetPenaltyRules, IAddPenaltyCalculationRules } from "@myhome/contracts";
+import { CorrectionGetPenaltyCalculationRulesByMCId, CorrectionAddPenaltyCalculationRules, CorrectionGetPenaltyRules, IAddPenaltyCalculationRules } from "@myhome/contracts";
 import { RMQService } from "nestjs-rmq";
 
 @Injectable()
@@ -27,14 +27,15 @@ export class PenaltyRuleService {
         return await this.penaltyRuleRepository.findAll();
     }
 
-    public async getPenaltyCalculationRulesByMCId(managementCompanyId: number) {
+    public async getPenaltyCalculationRulesByMCId(dto: CorrectionGetPenaltyCalculationRulesByMCId.Request):
+        Promise<CorrectionGetPenaltyCalculationRulesByMCId.Response> {
         const { typesOfService } = await getAllTypesOfService(this.rmqService);
 
-        const rules = await this.penaltyRuleRepository.findByMCId(managementCompanyId);
+        const rules = await this.penaltyRuleRepository.findByMCId(dto.managementCompanyId);
         return {
             penaltyRules: rules.reduce((accumulator, rule) => {
                 const currentMCId = rule.penaltyCalculationRules.find(
-                    (r) => r.managementCompanyId === managementCompanyId
+                    (r) => r.managementCompanyId === dto.managementCompanyId
                 );
 
                 const ruleItems = currentMCId
@@ -94,7 +95,7 @@ export class PenaltyRuleService {
         if (result) {
             throw new RMQException(PENALTY_CALCULATION_ALREADY_EXIST.message, PENALTY_CALCULATION_ALREADY_EXIST.status);
         }
- 
+
 
         await this.penaltyRuleRepository.updateMany(
             grouped.map(g => {

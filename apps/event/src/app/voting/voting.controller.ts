@@ -14,7 +14,7 @@ export class VotingController {
     @RMQRoute(EventAddVoting.topic)
     async addVoting(@Body() dto: EventAddVoting.Request) {
         try {
-            return this.votingService.addVoting(dto);
+            return await this.votingService.addVoting(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -24,7 +24,7 @@ export class VotingController {
     @RMQRoute(EventUpdateVoting.topic)
     async updateVoting(@Body() dto: EventUpdateVoting.Request) {
         try {
-            return this.votingService.updateVoting(dto);
+            return await this.votingService.updateVoting(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

@@ -1,7 +1,7 @@
 import { HouseRepository } from '../repositories/house.repository';
 import { HouseEntity } from '../entities/house.entity';
 import { IHouse } from '@myhome/interfaces';
-import { HOUSES_NOT_EXIST, RMQException, checkMCIds, getGenericObjects } from '@myhome/constants';
+import { HOUSES_NOT_EXIST, checkMCIds, getGenericObjects } from '@myhome/constants';
 import { ReferenceAddHouses, ReferenceGetHouses, ReferenceGetHousesByUser } from '@myhome/contracts';
 import { Injectable } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
@@ -45,23 +45,17 @@ export class HouseService {
 	async getHousesByUser(dto: ReferenceGetHousesByUser.Request): Promise<ReferenceGetHousesByUser.Response> {
 		if (dto.isAllInfo) {
 			const { houses, totalCount } = await this.houseRepository.findByUser(dto.userId, dto.userRole, dto.meta);
-			if (!houses.length) {
-				throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
-			}
 			return {
 				houses: houses.map(house => {
 					return {
 						...house,
 						name: house.getAddress()
 					};
-				}),
+				}) || [],
 				totalCount
 			};
 		} else {
 			const { houses, totalCount } = await this.houseRepository.findByUser(dto.userId, dto.userRole, dto.meta);
-			if (!houses.length) {
-				throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
-			}
 			return { houses: houses, totalCount };
 		}
 	}

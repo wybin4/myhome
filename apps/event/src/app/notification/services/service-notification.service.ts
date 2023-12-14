@@ -21,7 +21,7 @@ export class ServiceNotificationService {
             dto.userId,
             dto.userRole
         );
-        if (!notifications.length) {
+        if (!notifications || !notifications.length) {
             return;
         }
         return { notifications };

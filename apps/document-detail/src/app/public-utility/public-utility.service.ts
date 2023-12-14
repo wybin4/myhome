@@ -19,7 +19,7 @@ export class PublicUtilityService {
         if (!tariffs || !tariffs.length) {
             throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
-        
+
         for (const meterReading of meterReadings) {
             result.push({
                 subscriberId: meterReading.subscriberId,
@@ -81,8 +81,8 @@ export class PublicUtilityService {
     }
 
     private async getPublicUtilityTariffs(managementCompanyId: number) {
-        const { tariffs } = await getAllTariffs(this.rmqService, managementCompanyId, TariffAndNormType.MunicipalTariff);
-        return { tariffs: tariffs as IMunicipalTariff[] };
+        const { tariffAndNorms } = await getAllTariffs(this.rmqService, managementCompanyId, TariffAndNormType.MunicipalTariff);
+        return { tariffs: tariffAndNorms as IMunicipalTariff[] };
     }
 
     private async getPUAmount(meterReadings: IGetMeterReading[], tariffs: Array<IMunicipalTariff>) {

@@ -26,6 +26,9 @@ export class SinglePaymentDocumentService {
         switch (dto.userRole) {
             case UserRole.Owner: {
                 const { apartments } = await getApartmentsAllInfoByUser(this.rmqService, dto.userId, dto.userRole);
+                if (dto.meta) {
+                    dto.meta.limit = dto.meta.limit * apartments.length;
+                }
                 const { users } = await this.getMCByOwner(dto.userId);
                 const subscriberIds = apartments.map(apartment => apartment.subscriberId);
                 const { spds, totalCount } = await this.singlePaymentDocumentRepository.findBySIds(subscriberIds, dto.meta);
@@ -205,6 +208,7 @@ export class SinglePaymentDocumentService {
             await saga.getState().calculateDetails(
                 subscriberIds, typesOfService, units, managementCompanyId, houseId
             );
+       
         await this.singlePaymentDocumentRepository.updateMany(singlePaymentDocumentsWithAmount);
         // По subscriberIds получаем все их spdIds
         const subscriberSPDs = await this.singlePaymentDocumentRepository.getSPDIdsBySubscriberIds(subscriberIds);

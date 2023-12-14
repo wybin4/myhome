@@ -1,54 +1,25 @@
-import { IsNumber, IsOptional, Validate } from 'class-validator';
-import { ICommonHouseNeedTariff, IMeta, IMunicipalTariff, INorm, ISeasonalityFactor, ISocialNorm, TariffAndNormType } from '@myhome/interfaces';
+import { IsNumber, Validate } from 'class-validator';
+import { IBaseTariffAndNorm, TariffAndNormType } from '@myhome/interfaces';
 import { IsValidEnumValue } from '../../enum.validator';
-import { MetaValidator } from '../../meta.validator';
-import { ValidateNestedArray } from '../../array.validator';
+import { MetaRequest, MetaResponse } from '../../meta.validator';
 
 export namespace ReferenceGetTariffsOrNormsByUser {
     export const topic = 'reference.get-tariffs-and-norms-by-user.query';
 
-    export class Request {
+    export class Request extends MetaRequest {
         @IsNumber({}, { message: "Id управляющей компании должен быть числом" })
         managementCompanyId!: number;
 
         @Validate(IsValidEnumValue, [TariffAndNormType])
         type!: TariffAndNormType;
-
-        @IsOptional()
-        @ValidateNestedArray(MetaValidator)
-        meta?: IMeta;
     }
 
-    export class Response {
-        tariffAndNorms!: GetTariffsOrNormsByMCIdType[];
+    export class Response extends MetaResponse {
+        tariffAndNorms!: IGetTariffAndNorm[];
     }
 }
-
-export interface IGetNormByMCId extends INorm {
+export interface IGetTariffAndNorm extends IBaseTariffAndNorm {
     typeOfServiceName: string;
-    unitName: string;
+    unitName?: string;
+    houseName?: string;
 }
-
-export interface IGetMunicipalTariffByMCId extends IMunicipalTariff {
-    typeOfServiceName: string;
-    unitName: string;
-}
-
-export interface IGetSocialNormByMCId extends ISocialNorm {
-    typeOfServiceName: string;
-    unitName: string;
-}
-
-export interface IGetSeasonalityFactorByMCId extends ISeasonalityFactor {
-    typeOfServiceName: string;
-}
-
-export interface IGetCommonHouseNeedTariffByMCId extends ICommonHouseNeedTariff {
-    typeOfServiceName: string;
-    unitName: string;
-    houseName: string;
-}
-
-export type GetTariffsOrNormsByMCIdType = IGetNormByMCId
-    | IGetMunicipalTariffByMCId | IGetSocialNormByMCId
-    | IGetSeasonalityFactorByMCId | IGetCommonHouseNeedTariffByMCId;

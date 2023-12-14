@@ -71,7 +71,7 @@ export class PenaltyRuleRepository {
     }
 
     async findByMCId(
-        managementCompanyId: number,
+        managementCompanyId: number
     ): Promise<PenaltyRule[]> {
         return await this.penaltyRuleModel.aggregate([
             {

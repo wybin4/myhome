@@ -23,9 +23,9 @@ export class PenaltyController {
 
     @RMQValidate()
     @RMQRoute(CorrectionGetPenaltyCalculationRulesByMCId.topic)
-    async getPenaltyCalculationRulesByMCId(@Body() { managementCompanyId }: CorrectionGetPenaltyCalculationRulesByMCId.Request) {
+    async getPenaltyCalculationRulesByMCId(@Body() dto: CorrectionGetPenaltyCalculationRulesByMCId.Request) {
         try {
-            return await this.penaltyRuleService.getPenaltyCalculationRulesByMCId(managementCompanyId);
+            return await this.penaltyRuleService.getPenaltyCalculationRulesByMCId(dto);
         }
         catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);

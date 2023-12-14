@@ -172,6 +172,9 @@ export class SubscriberService {
 				const { subscribers, totalCount } = await this.subscriberRepository.findByUser(userId, userRole, meta);
 				const ownerIds = Array.from(new Set(subscribers.map(s => s.ownerId)));
 				const { profiles: ownerItems } = await checkUsers(this.rmqService, ownerIds, UserRole.Owner);
+				if (!ownerItems) {
+					return { subscribers: [], totalCount };
+				}
 
 				return {
 					subscribers: subscribers.map(subscriber => {
@@ -185,7 +188,7 @@ export class SubscriberService {
 							houseName: currentHouse.getAddress(),
 							apartmentName: currentApart.getAddress(currentHouse)
 						};
-					}),
+					}) || [],
 					totalCount
 				};
 			}

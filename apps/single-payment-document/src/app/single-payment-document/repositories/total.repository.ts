@@ -26,7 +26,7 @@ export class SinglePaymentDocumentTotalRepository {
 
     async findByMCId(managementCompanyId: number, meta: IMeta) {
         let queryBuilder = this.singlePaymentDocumentTotalRepository.createQueryBuilder('spd');
-        queryBuilder.where('appeal.managementCompanyId = :managementCompanyId', { managementCompanyId });
+        queryBuilder.where('spd.managementCompanyId = :managementCompanyId', { managementCompanyId });
         const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<SinglePaymentDocumentTotalEntity>(queryBuilder, meta);
         queryBuilder = newQueryBuilder;
         return { spds: await queryBuilder.getMany(), totalCount };

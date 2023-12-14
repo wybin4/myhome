@@ -153,7 +153,7 @@ export class PenaltyService {
 
         for (const oDebt of debt) {
             const rule = penaltyRules.find(obj => {
-                return String(obj._id) === oDebt.penaltyRuleId;
+                return String(obj._id) === String(oDebt.penaltyRuleId);
             });
             if (!rule) {
                 throw new RMQException(CANT_GET_CURRENT_RULE.message(oDebt.penaltyRuleId), CANT_GET_CURRENT_RULE.status);

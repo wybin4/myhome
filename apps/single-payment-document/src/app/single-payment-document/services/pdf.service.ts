@@ -72,11 +72,11 @@ export class PdfService {
             const currentSubscriber = subscribers.find(obj => obj.id === meterReadings.subscriberId);
             const currentHouse = houses.find(obj => obj.id === currentSubscriber.houseId);
 
-            const reading: ISpdReading[] = [];
+            const reading: ISpdReading[][] = [];
             for (const meterReading of meterReadings.readings) {
                 const individualReadingString = meterReading.individualReadings.reading;
                 const commonReadingString = meterReading.commonReadings.reading;
-                reading.push(
+                reading.push([
                     { reading: meterReading.typeOfServiceName, readingAlign: 'left' },
                     { reading: individualReadingString, readingAlign: 'left' },
                     { reading: this.getFixed(meterReading.individualReadings.difference, 3), readingAlign: 'right' },
@@ -87,13 +87,14 @@ export class PdfService {
                     { reading: commonReadingString, readingAlign: 'left' },
                     { reading: this.getFixed(meterReading.commonReadings.difference, 3), readingAlign: 'right' },
                     { reading: this.getFixed(meterReading.totalVolume, 3), readingAlign: 'right' },
-                )
+                ])
             }
             allReadings.push({
                 readings: reading,
                 subscriberId: currentSubscriber.id
             });
         };
+
         return allReadings;
     }
 
@@ -107,11 +108,11 @@ export class PdfService {
         for (const meterReadings of meterReadingsData) {
             const currentSubscriber = subscribers.find(obj => obj.id === meterReadings.subscriberId);
 
-            const reading: ISpdReading[] = [];
+            const reading: ISpdReading[][] = [];
             for (const meterReading of meterReadings.readings) {
                 const individualReadingString = meterReading.individualReadings.reading;
                 const commonReadingString = meterReading.commonReadings.reading;
-                reading.push(
+                reading.push([
                     { reading: meterReading.typeOfServiceName, readingAlign: 'left' },
                     { reading: individualReadingString, readingAlign: 'left' },
                     { reading: this.getFixed(meterReading.individualReadings.difference, 3), readingAlign: 'right' },
@@ -122,7 +123,7 @@ export class PdfService {
                     { reading: commonReadingString, readingAlign: 'left' },
                     { reading: this.getFixed(meterReading.commonReadings.difference, 3), readingAlign: 'right' },
                     { reading: this.getFixed(meterReading.totalVolume, 3), readingAlign: 'right' },
-                )
+                ])
             }
             allReadings.push({
                 readings: reading,
@@ -251,7 +252,7 @@ export class PdfService {
     private getDocForOne(
         subscriber: ISpdSubscriber, spd: ISpd,
         barcode: ISpdBarcode, barcodeText: string, qr: ISpdQR, operator: ISpdOperator,
-        services: ISpdService[], readings: ISpdReading[], house: ISpdHouse,
+        services: ISpdService[], readings: ISpdReading[][], house: ISpdHouse,
         payment: ISpdPayment, managementC: ISpdManagementCompany,
         doc: PDFKit.PDFDocument
     ) {
@@ -695,7 +696,7 @@ class Bottom {
         private readonly arial: string, private readonly arialBold: string,
         private doc: PDFKit.PDFDocument,
         private readonly services: ISpdService[],
-        private readonly readings: ISpdReading[]
+        private readonly readings: ISpdReading[][]
     ) {
         this.arial = arial;
         this.arialBold = arialBold;
@@ -906,17 +907,19 @@ class Bottom {
         this.getReadingTableCap(currentY); // 6 сегмент
         currentY += 64;
         if (this.readings.length) {
-            this.getReadingRows(currentY, this.readings);
-            currentY += this.heightOfReadingCol; // 7 сегмент
+            this.readings.map(reading => {
+                this.getReadingRows(currentY, reading);
+                currentY += this.heightOfReadingCol; // 7 сегмент
+            })
         }
-
+        
         // 8 сегмент
         const year = payment.payedAt.toLocaleString("default", { year: "numeric" });
         const month = payment.payedAt.toLocaleString("default", { month: "2-digit" });
         const day = payment.payedAt.toLocaleString("default", { day: "2-digit" });
         const paymentDate = day + "." + month + "." + year;
         this.doc.fontSize(13).font(this.arial)
-            .text(`Последняя плата внесена ${paymentDate} г. - ${payment.amount} руб.`, this.startX, currentY + 2);
+            .text(`Последняя плата внесена ${paymentDate} г. - ${payment.amount} руб.`, this.startX, currentY + 2); // ИСПРАВИТЬ!!
 
         return this.doc;
     }

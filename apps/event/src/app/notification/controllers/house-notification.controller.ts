@@ -14,7 +14,7 @@ export class HouseNotificationController {
     @RMQRoute(EventAddHouseNotification.topic)
     async addHouseNotification(@Body() dto: EventAddHouseNotification.Request) {
         try {
-            return this.houseNotificationService.addHouseNotification(dto);
+            return await this.houseNotificationService.addHouseNotification(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

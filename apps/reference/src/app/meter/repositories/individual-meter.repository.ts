@@ -142,7 +142,7 @@ export class IndividualMeterRepository {
             .andWhere('individualMeter.status = :status', { status: MeterStatus.Active })
             .orderBy('individualMeterReadings.readAt', 'DESC')
             .getMany();
-
+ 
         const readings = individualMeters.map(meter => ({
             meterId: meter.id,
             meterStatus: meter.status,

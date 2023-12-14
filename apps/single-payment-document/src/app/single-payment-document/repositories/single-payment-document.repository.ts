@@ -35,7 +35,7 @@ export class SinglePaymentDocumentRepository {
 
     async update(singlePaymentDocument: SinglePaymentDocumentEntity) {
         const { id, ...rest } = singlePaymentDocument;
-        return this.singlePaymentDocumentRepository.update(id, rest);
+        return await this.singlePaymentDocumentRepository.update(id, rest);
     }
 
     async updateMany(singlePaymentDocuments: SinglePaymentDocumentEntity[]) {

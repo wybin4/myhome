@@ -1,9 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { FindOneOptions, FindOptionsWhere, In, ObjectLiteral, Repository } from "typeorm";
+import { FindOneOptions, FindOptionsWhere, ObjectLiteral, Repository } from "typeorm";
 import { MunicipalTariffEntity, NormEntity, SeasonalityFactorEntity, SocialNormEntity } from "./entities/base-tariff-and-norm.entity";
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
-import { TypeOfNorm } from "@myhome/interfaces";
+import { IMeta, TypeOfNorm } from "@myhome/interfaces";
+import { applyMeta } from "@myhome/constants";
 
 interface BaseTariffAndNorm extends ObjectLiteral {
     id: number;
@@ -11,7 +12,7 @@ interface BaseTariffAndNorm extends ObjectLiteral {
 
 export abstract class IGenericTariffAndNormRepository<T extends BaseTariffAndNorm> {
     abstract findById(id: number): Promise<T>;
-    abstract findByMCId(managementCompanyId: number): Promise<T[]>;
+    abstract findByMCId(managementCompanyId: number, meta: IMeta): Promise<{ tariffAndNorms: T[]; totalCount: number; }>;
     abstract create(item: T): Promise<T>;
     abstract createMany(items: T[]): Promise<T[]>;
     abstract delete(id: number): Promise<void>;
@@ -38,11 +39,12 @@ export class GenericTariffAndNormRepository<T extends BaseTariffAndNorm> impleme
         return await this.repository.findOne(findOptions);
     }
 
-    async findByMCId(managementCompanyId: number): Promise<T[]> {
-        const findOptions: FindOneOptions<T> = {
-            where: { managementCompanyId } as unknown as FindOptionsWhere<T>,
-        };
-        return await this.repository.find(findOptions);
+    async findByMCId(managementCompanyId: number, meta: IMeta): Promise<{ tariffAndNorms: T[]; totalCount: number; }> {
+        let queryBuilder = this.repository.createQueryBuilder('tariffAndNorm');
+        queryBuilder.where('tariffAndNorm.managementCompanyId = :managementCompanyId', { managementCompanyId });
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<T>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+        return { tariffAndNorms: await queryBuilder.getMany(), totalCount };
     }
 
     async delete(id: number): Promise<void> {
@@ -122,11 +124,11 @@ export class CommonHouseNeedTariffRepository extends GenericTariffAndNormReposit
         });
     }
 
-    async findByHouseIds(houseIds: number[]): Promise<CommonHouseNeedTariffEntity[]> {
-        return await this.сommonHouseNeedTariffRepository.find({
-            where: {
-                houseId: In(houseIds)
-            },
-        });
+    async findByHouseIds(houseIds: number[], meta: IMeta): Promise<{ tariffAndNorms: CommonHouseNeedTariffEntity[], totalCount: number }> {
+        let queryBuilder = this.сommonHouseNeedTariffRepository.createQueryBuilder('tariffAndNorm');
+        queryBuilder.where('tariffAndNorm.houseId IN (:...houseIds)', { houseIds });
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<CommonHouseNeedTariffEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+        return { tariffAndNorms: await queryBuilder.getMany(), totalCount };
     }
 }

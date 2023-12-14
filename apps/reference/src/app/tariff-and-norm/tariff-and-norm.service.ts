@@ -2,8 +2,8 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { CommonHouseNeedTariffRepository, IGenericTariffAndNormRepository, MunicipalTariffRepository, NormRepository, SeasonalityFactorRepository, SocialNormRepository } from "./base-tariff-and-norm.repository";
 import { NormEntity, SeasonalityFactorEntity, MunicipalTariffEntity, SocialNormEntity, BaseTariffAndNormEntity } from "./entities/base-tariff-and-norm.entity";
 import { CommonHouseNeedTariffEntity } from "./entities/house-tariff.entity";
-import { CommonHouseNeedTariffData, IBaseTariffAndNorm, ICommonHouseNeedTariff, IHouse, ITypeOfService, IUnit, MunicipalTariffData, NormData, SocialNormData, TariffAndNormType, UserRole } from "@myhome/interfaces";
-import { IAddTariffAndNorm, ReferenceAddTariffsOrNorms, ReferenceGetAllTariffs, ReferenceUpdateTariffOrNorm } from "@myhome/contracts";
+import { CommonHouseNeedTariffData, IBaseTariffAndNorm, IMeta, ITypeOfService, IUnit, MunicipalTariffData, NormData, SocialNormData, TariffAndNormType, UserRole } from "@myhome/interfaces";
+import { ReferenceGetTariffsOrNormsByUser, IAddTariffAndNorm, ReferenceAddTariffsOrNorms, ReferenceGetAllTariffs, ReferenceUpdateTariffOrNorm, IGetTariffAndNorm } from "@myhome/contracts";
 import { UNIT_NOT_EXIST, INCORRECT_PARAM, INCORRECT_TARIFF_AND_NORM_TYPE, TARIFF_AND_NORM_NOT_EXIST, TARIFFS_NOT_EXIST, RMQException, HOUSES_NOT_EXIST, TYPES_OF_SERVICE_NOT_EXIST, UNITS_NOT_EXIST } from "@myhome/constants";
 import { TypeOfServiceRepository } from "../common/repositories/type-of-service.repository";
 import { UnitRepository } from "../common/repositories/unit.repository";
@@ -23,116 +23,114 @@ export class TariffAndNormService {
         private readonly houseService: HouseService,
     ) { }
 
-    public async getTariffsAndNormsByUser(
-        managementCompanyId: number,
-        type: TariffAndNormType
-    ) {
-        let tItems: CommonHouseNeedTariffEntity[], gettedTNs: ICommonHouseNeedTariff[];
-        let houses: IHouse[], houseIds: number[], units: IUnit[];
-
+    public async getTariffsAndNormsByUser(dto: ReferenceGetTariffsOrNormsByUser.Request):
+        Promise<ReferenceGetTariffsOrNormsByUser.Response> {
         const typesOfService = await this.typeOfServiceRepository.findAll();
         if (!typesOfService && !typesOfService.length) {
             throw new RMQException(TYPES_OF_SERVICE_NOT_EXIST.message, TYPES_OF_SERVICE_NOT_EXIST.status);
         }
 
-        const enrich = (items: IBaseTariffAndNorm[]) => {
-            return items.map(item => {
-                const currentTypeOfService = typesOfService.find(tos => tos.id === item.typeOfServiceId);
-                return {
-                    ...item,
-                    typeOfServiceName: currentTypeOfService.name
-                }
-            })
+        const enrich = (items: {
+            tariffAndNorms: IBaseTariffAndNorm[]; totalCount: number
+        }): { tariffAndNorms: IGetTariffAndNorm[]; totalCount: number; } => {
+            return {
+                tariffAndNorms: items.tariffAndNorms.map(item => {
+                    const currentTypeOfService = typesOfService.find(tos => tos.id === item.typeOfServiceId);
+                    return {
+                        ...item,
+                        typeOfServiceName: currentTypeOfService.name
+                    }
+                }),
+                totalCount: items.totalCount
+            }
         };
 
-        const enrichWithUnit = async (items: (IBaseTariffAndNorm & { unitId: number })[]) => {
+        const enrichWithUnit = async (items: {
+            tariffAndNorms: (IBaseTariffAndNorm & { unitId: number })[];
+            totalCount: number
+        }): Promise<{ tariffAndNorms: IGetTariffAndNorm[]; totalCount: number; }> => {
             const units = await this.unitRepository.findAll();
             if (!units && !units.length) {
                 throw new RMQException(UNITS_NOT_EXIST.message, UNITS_NOT_EXIST.status);
             }
 
-            return items.map(item => {
-                const currentTypeOfService = typesOfService.find(tos => tos.id === item.typeOfServiceId);
-                const currentUnit = units.find(u => u.id === item.unitId);
-                return {
-                    ...item,
-                    typeOfServiceName: currentTypeOfService.name,
-                    unitName: currentUnit.name,
-                }
-            })
+            return {
+                tariffAndNorms: items.tariffAndNorms.map(item => {
+                    const currentTypeOfService = typesOfService.find(tos => tos.id === item.typeOfServiceId);
+                    const currentUnit = units.find(u => u.id === item.unitId);
+                    return {
+                        ...item,
+                        typeOfServiceName: currentTypeOfService.name,
+                        unitName: currentUnit.name,
+                    }
+                }),
+                totalCount: items.totalCount
+            }
         };
 
-        switch (type) {
+        switch (dto.type) {
             case TariffAndNormType.Norm:
-                return {
-                    tariffAndNorms: await enrichWithUnit(
-                        await this.genericGetTariffsAndNormsByMCId<NormEntity>
-                            (
-                                this.normRepository,
-                                managementCompanyId, (item) => new NormEntity(item),
-                                'Нормы'
-                            )
-                    )
-                };
+                return await enrichWithUnit(
+                    await this.genericGetTariffsAndNormsByMCId<NormEntity>
+                        (
+                            this.normRepository,
+                            dto.managementCompanyId, dto.meta, (item) => new NormEntity(item),
+                            'Нормы'
+                        )
+                );
             case TariffAndNormType.SeasonalityFactor:
-                return {
-                    tariffAndNorms: enrich(
-                        await this.genericGetTariffsAndNormsByMCId<SeasonalityFactorEntity>
-                            (
-                                this.seasonalityFactorRepository,
-                                managementCompanyId,
-                                (item) => new SeasonalityFactorEntity(item),
-                                'Сезонные факторы'
-                            )
-                    )
-                };
+                return enrich(
+                    await this.genericGetTariffsAndNormsByMCId<SeasonalityFactorEntity>
+                        (
+                            this.seasonalityFactorRepository,
+                            dto.managementCompanyId, dto.meta,
+                            (item) => new SeasonalityFactorEntity(item),
+                            'Сезонные факторы'
+                        )
+                );
             case TariffAndNormType.MunicipalTariff:
-                return {
-                    tariffAndNorms: await enrichWithUnit(
-                        await this.genericGetTariffsAndNormsByMCId<MunicipalTariffEntity>
-                            (
-                                this.municipalTariffRepository,
-                                managementCompanyId,
-                                (item) => new MunicipalTariffEntity(item),
-                                'Муниципальные тарифы'
-                            )
-                    )
-                };
+                return await enrichWithUnit(
+                    await this.genericGetTariffsAndNormsByMCId<MunicipalTariffEntity>
+                        (
+                            this.municipalTariffRepository,
+                            dto.managementCompanyId, dto.meta,
+                            (item) => new MunicipalTariffEntity(item),
+                            'Муниципальные тарифы'
+                        )
+                );
             case TariffAndNormType.SocialNorm:
-                return {
-                    tariffAndNorms: await enrichWithUnit(
-                        await this.genericGetTariffsAndNormsByMCId<SocialNormEntity>
-                            (
-                                this.socialNormRepository,
-                                managementCompanyId,
-                                (item) => new SocialNormEntity(item),
-                                'Социальные нормы'
-                            )
-                    )
-                };
-            case TariffAndNormType.CommonHouseNeedTariff:
-                ({ houses } = await this.houseService.getHousesByUser({
-                    userId: managementCompanyId,
+                return await enrichWithUnit(
+                    await this.genericGetTariffsAndNormsByMCId<SocialNormEntity>
+                        (
+                            this.socialNormRepository,
+                            dto.managementCompanyId, dto.meta,
+                            (item) => new SocialNormEntity(item),
+                            'Социальные нормы'
+                        )
+                );
+            case TariffAndNormType.CommonHouseNeedTariff: {
+                const { houses } = await this.houseService.getHousesByUser({
+                    userId: dto.managementCompanyId,
                     userRole: UserRole.ManagementCompany,
                     isAllInfo: false
-                }));
+                });
                 if (!houses && !houses.length) {
                     throw new RMQException(HOUSES_NOT_EXIST.message, HOUSES_NOT_EXIST.status);
                 }
-                houseIds = houses.map(house => house.id);
+                const houseIds = houses.map(house => house.id);
 
-                units = await this.unitRepository.findAll();
+                const units = await this.unitRepository.findAll();
                 if (!units && !units.length) {
                     throw new RMQException(UNITS_NOT_EXIST.message, UNITS_NOT_EXIST.status);
                 }
 
-                tItems = await this.commonHouseNeedTariffRepository.findByHouseIds(houseIds);
-                if (!tItems && !tItems.length) {
+                const { tariffAndNorms, totalCount } = await this.commonHouseNeedTariffRepository.findByHouseIds(houseIds, dto.meta);
+                if (!tariffAndNorms && !tariffAndNorms.length) {
                     throw new RMQException(
-                        `Тарифы на общедомовые для управляющей компании с id=${managementCompanyId} не существуют`,
+                        `Тарифы на общедомовые для управляющей компании с id=${dto.managementCompanyId} не существуют`,
                         HttpStatus.NOT_FOUND);
                 }
-                gettedTNs = tItems.map(item => {
+                const gettedTNs = tariffAndNorms.map(item => {
                     const newItem = new CommonHouseNeedTariffEntity(item);
                     const currentTypeOfService = typesOfService.find(tos => tos.id === item.typeOfServiceId);
                     const currentUnit = units.find(u => u.id === item.unitId);
@@ -145,27 +143,28 @@ export class TariffAndNormService {
                         houseName: `${currentHouse.city}, ${currentHouse.street}, д. ${currentHouse.houseNumber}`
                     }
                 });
-                return { tariffAndNorms: gettedTNs };
+                return { tariffAndNorms: gettedTNs, totalCount }
+            };
             default:
-                throw new RMQException(`Такие сущности для управляющей компании с id=${managementCompanyId} не существуют`, HttpStatus.CONFLICT);
+                throw new RMQException(`Такие сущности для управляющей компании с id=${dto.managementCompanyId} не существуют`, HttpStatus.CONFLICT);
         }
     }
 
     private async genericGetTariffsAndNormsByMCId<T extends BaseTariffAndNormEntity>(
         repository: IGenericTariffAndNormRepository<T>,
-        managementCompanyId: number,
+        managementCompanyId: number, meta: IMeta,
         createInstance: (item: T) => T,
         errorText: string,
-    ): Promise<T[]> {
-        const tItems = await repository.findByMCId(managementCompanyId);
-        if (!tItems && !tItems.length) {
+    ) {
+        const { tariffAndNorms, totalCount } = await repository.findByMCId(managementCompanyId, meta);
+        if (!tariffAndNorms && !tariffAndNorms.length) {
             throw new RMQException(
                 `${errorText} для управляющей компании с id=${managementCompanyId} не существуют`,
                 HttpStatus.NOT_FOUND);
         }
 
-        const gettedTNs = tItems.map(item => createInstance(item));
-        return gettedTNs;
+        const gettedTNs = tariffAndNorms.map(item => createInstance(item));
+        return { tariffAndNorms: gettedTNs, totalCount };
     }
 
     private async genericGetTariffAndNorm<T extends BaseTariffAndNormEntity>(
@@ -292,7 +291,7 @@ export class TariffAndNormService {
                 if (!dto.norm) {
                     throw new RMQException(INCORRECT_PARAM + 'norm', HttpStatus.BAD_REQUEST);
                 }
-                return this.genericUpdateTariffAndNorm<NormEntity>(
+                return await this.genericUpdateTariffAndNorm<NormEntity>(
                     this.normRepository,
                     dto, (item) => new NormEntity(item),
                 )
@@ -303,7 +302,7 @@ export class TariffAndNormService {
                 if (!dto.coefficient) {
                     throw new RMQException(INCORRECT_PARAM + 'coefficient', HttpStatus.BAD_REQUEST);
                 }
-                return this.genericUpdateTariffAndNorm<SeasonalityFactorEntity>(
+                return await this.genericUpdateTariffAndNorm<SeasonalityFactorEntity>(
                     this.seasonalityFactorRepository,
                     dto, (item) => new SeasonalityFactorEntity(item),
                 )
@@ -314,7 +313,7 @@ export class TariffAndNormService {
                 if (!dto.supernorm) {
                     throw new RMQException(INCORRECT_PARAM + 'supernorm', HttpStatus.BAD_REQUEST);
                 }
-                return this.genericUpdateTariffAndNorm<MunicipalTariffEntity>(
+                return await this.genericUpdateTariffAndNorm<MunicipalTariffEntity>(
                     this.municipalTariffRepository,
                     dto, (item) => new MunicipalTariffEntity(item),
                 )
@@ -325,7 +324,7 @@ export class TariffAndNormService {
                 if (!dto.amount) {
                     throw new RMQException(INCORRECT_PARAM + 'amount', HttpStatus.BAD_REQUEST);
                 }
-                return this.genericUpdateTariffAndNorm<SocialNormEntity>(
+                return await this.genericUpdateTariffAndNorm<SocialNormEntity>(
                     this.socialNormRepository,
                     dto, (item) => new SocialNormEntity(item),
                 )
@@ -361,17 +360,17 @@ export class TariffAndNormService {
         ]);
     }
 
-    public async getAllTariffs(dto: ReferenceGetAllTariffs.Request) {
+    public async getAllTariffs(dto: ReferenceGetAllTariffs.Request): Promise<ReferenceGetAllTariffs.Response> {
         switch (dto.type) {
             case TariffAndNormType.MunicipalTariff:
                 try {
-                    return { tariffs: await this.municipalTariffRepository.findByMCId(dto.managementCompanyId) };
+                    return await this.municipalTariffRepository.findByMCId(dto.managementCompanyId, undefined);
                 } catch (e) {
                     throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
                 }
             case TariffAndNormType.CommonHouseNeedTariff:
                 try {
-                    return { tariffs: await this.commonHouseNeedTariffRepository.findByHouseId(dto.houseId) };
+                    return { tariffAndNorms: await this.commonHouseNeedTariffRepository.findByHouseId(dto.houseId) };
                 } catch (e) {
                     throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
                 }

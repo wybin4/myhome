@@ -12,9 +12,9 @@ export class TariffAndNormController {
 
     @RMQValidate()
     @RMQRoute(ReferenceGetTariffsOrNormsByUser.topic)
-    async getTariffsAndNormsByUser(@Body() { managementCompanyId, type }: ReferenceGetTariffsOrNormsByUser.Request) {
+    async getTariffsAndNormsByUser(@Body() dto: ReferenceGetTariffsOrNormsByUser.Request) {
         try {
-            return this.tariffAndNormService.getTariffsAndNormsByUser(managementCompanyId, type);
+            return await this.tariffAndNormService.getTariffsAndNormsByUser(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -24,7 +24,7 @@ export class TariffAndNormController {
     @RMQRoute(ReferenceAddTariffsOrNorms.topic)
     async addTariffAndNorms(@Body() dto: ReferenceAddTariffsOrNorms.Request) {
         try {
-            return this.tariffAndNormService.addTariffAndNorms(dto);
+            return await this.tariffAndNormService.addTariffAndNorms(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -34,7 +34,7 @@ export class TariffAndNormController {
     @RMQRoute(ReferenceUpdateTariffOrNorm.topic)
     async updateTariffAndNorm(@Body() dto: ReferenceUpdateTariffOrNorm.Request) {
         try {
-            return this.tariffAndNormService.updateTariffAndNorm(dto);
+            return await this.tariffAndNormService.updateTariffAndNorm(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -44,7 +44,7 @@ export class TariffAndNormController {
     @RMQRoute(ReferenceGetAllTariffs.topic)
     async getAllTariffs(@Body() dto: ReferenceGetAllTariffs.Request) {
         try {
-            return this.tariffAndNormService.getAllTariffs(dto);
+            return await this.tariffAndNormService.getAllTariffs(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

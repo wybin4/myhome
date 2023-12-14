@@ -38,8 +38,8 @@ export class UserController {
         AccountGetAllUsers.Request,
         AccountGetAllUsers.Response
       >(AccountGetAllUsers.topic, {
-        userRole: dto.userRole,
-        requesterRole: req.user.userRole
+        requesterRole: req.user.userRole,
+        ...dto
       });
     } catch (e) {
       CatchError(e);

@@ -61,8 +61,7 @@ export class AppealService {
             }
             case UserRole.ManagementCompany: {
                 const { appeals, totalCount } = await this.appealRepository.findByMCId(userId, meta);
-
-                if (!appeals) {
+                if (!appeals || !appeals.length) {
                     return;
                 }
                 const { meters, typesOfService } = await this.getMeterData(appeals);

@@ -71,7 +71,7 @@ export class HouseNotificationService {
         const houseIds = houses.map(house => house.id);
 
         const { notifications, totalCount } = await this.houseNotificationRepository.findByHouseIds(houseIds, meta);
-        if (!notifications) {
+        if (!notifications || !notifications.length) {
             return;
         }
 

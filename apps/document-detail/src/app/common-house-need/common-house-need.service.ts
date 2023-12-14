@@ -42,7 +42,7 @@ export class CommonHouseNeedService {
         if (!tariffs || !tariffs.length) {
             throw new RMQException(TARIFFS_NOT_EXIST, HttpStatus.NOT_FOUND);
         }
-        
+
         for (const apartmentEntity of apartments) {
             const temp: IGetDocumentDetail[] = [];
             const meterData: IGetMeterData[] = [];
@@ -96,11 +96,11 @@ export class CommonHouseNeedService {
     }
 
     private async getCommonHouseNeedTariffs(managementCompanyId: number) {
-        const { tariffs } = await getAllTariffs(
+        const { tariffAndNorms } = await getAllTariffs(
             this.rmqService,
             managementCompanyId,
             TariffAndNormType.CommonHouseNeedTariff
         );
-        return { tariffs: tariffs as ICommonHouseNeedTariff[] };
+        return { tariffs: tariffAndNorms as ICommonHouseNeedTariff[] };
     }
 }

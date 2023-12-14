@@ -1,7 +1,7 @@
 import { Validate } from 'class-validator';
 import { IGetUser, UserRole } from '@myhome/interfaces';
 import { IsValidEnumValue } from '../enum.validator';
-import { MetaRequest } from '../meta.validator';
+import { MetaRequest, MetaResponse } from '../meta.validator';
 
 export namespace AccountGetAllUsers {
   export const topic = 'account.get-all-users.query';
@@ -14,7 +14,7 @@ export namespace AccountGetAllUsers {
     requesterRole!: UserRole;
   }
 
-  export class Response {
+  export class Response extends MetaResponse {
     profiles!: IGetUser[];
   }
 }

@@ -1,8 +1,9 @@
-import { IUser } from "@myhome/interfaces";
+import { IMeta, IUser } from "@myhome/interfaces";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, FindOptionsWhere, In, ObjectLiteral } from "typeorm";
 import { AdminEntity, ManagementCompanyEntity, OwnerEntity } from "./user.entity";
+import { applyMeta } from "@myhome/constants";
 
 export abstract class IUserRepository<T extends IUser> {
     abstract findByIds(ids: number[]): Promise<T[]>;
@@ -86,8 +87,11 @@ export class OwnerRepository extends UserRepository<OwnerEntity> {
         private readonly ownerRepository: Repository<OwnerEntity>,
     ) { super(ownerRepository); }
 
-    async findAll() {
-        return await this.ownerRepository.find();
+    async findAll(meta: IMeta) {
+        let queryBuilder = this.ownerRepository.createQueryBuilder("owner");
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<OwnerEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+        return { owners: await queryBuilder.getMany(), totalCount };
     }
 }
 
@@ -98,8 +102,11 @@ export class ManagementCompanyRepository extends UserRepository<ManagementCompan
         private readonly managementCompanyRepository: Repository<ManagementCompanyEntity>,
     ) { super(managementCompanyRepository); }
 
-    async findAll() {
-        return await this.managementCompanyRepository.find();
+    async findAll(meta: IMeta) {
+        let queryBuilder = this.managementCompanyRepository.createQueryBuilder("managementCompany");
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<ManagementCompanyEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+        return { managementCompanies: await queryBuilder.getMany(), totalCount };
     }
 }
 

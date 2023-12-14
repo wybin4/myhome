@@ -225,8 +225,7 @@ export class MeterReadingQueriesService {
     private async findReadingsByAIdsAndPeriod(apartmentIds: number[], start: number, end: number) {
         const currentDate = new Date();
         const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), start);
-        const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, end);
-
+        const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), end + 1);
         return await this.individualMeterRepository.findActiveReadingsByAIdsAndPeriod(
             apartmentIds,
             startOfMonth,

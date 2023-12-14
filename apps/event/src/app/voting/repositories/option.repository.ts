@@ -36,6 +36,6 @@ export class OptionRepository {
 
     async update(option: OptionEntity) {
         await this.optionRepository.update(option.id, option);
-        return this.findById(option.id);
+        return await this.findById(option.id);
     }
 }

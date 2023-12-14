@@ -11,7 +11,7 @@ import { Debt } from "../models/debt.model";
 import { CBRService } from "./cbr.service";
 
 export interface IPriority {
-    typeOfServiceIds: number[], managementCompanyId: number, _id?: string, priority: number
+    typeOfServiceIds: number[], managementCompanyId: number, _id?: string, priority: number; penaltyRuleId: string;
 }
 
 @Injectable()
@@ -60,6 +60,7 @@ export class DebtService {
         }
         const spdIds = singlePaymentDocuments.map(s => s.id);
         const debts = await this.debtRepository.findSPDsWithOutstandingDebtAndOriginalDebt(spdIds);
+
         return {
             debts: debts.map(debt => {
                 return {
@@ -171,7 +172,7 @@ export class DebtService {
         }
         debt.debtHistory[0].originalPenalty = penalty;
         debt.debtHistory[0].outstandingPenalty = penalty;
-
+   
         // Получить новую сумму долга вычитанием из предыдущей debtHistory пришедшей суммы по приоритету
         const lastDebtState: IDebtDetail[] = JSON.parse(JSON.stringify(debt.debtHistory[0].outstandingDebt));
         let paymentAmount = amount;
@@ -209,18 +210,25 @@ export class DebtService {
         if (!penaltyRuleGroups.length) {
             throw new RMQException(PENALTY_RULES_NOT_EXIST.message, PENALTY_RULES_NOT_EXIST.status);
         }
-        const penaltyCalcRuleGroups = penaltyRuleGroups.map(obj => obj.penaltyCalculationRules);
-        const filteredObjects: IPriority[] = [];
+        const penaltyCalcRuleGroups = penaltyRuleGroups.map(obj => { return { penaltyCalcRule: obj.penaltyCalculationRules, id: obj._id }; });
+        const filteredObjects: { typeOfServiceIds: number[], managementCompanyId: number, _id?: string, priority: number; penaltyRuleId: string }[] = [];
         for (const level of penaltyCalcRuleGroups) {
-            const filteredLevel = level.filter(obj => obj.managementCompanyId === managementCompanyId);
-            filteredObjects.push(...filteredLevel);
+            const filteredLevel = level.penaltyCalcRule.find(obj => obj.managementCompanyId === managementCompanyId);
+            if (filteredLevel) {
+                filteredObjects.push({
+                    typeOfServiceIds: filteredLevel.typeOfServiceIds,
+                    managementCompanyId: filteredLevel.managementCompanyId,
+                    priority: filteredLevel.priority,
+                    penaltyRuleId: level.id,
+                });
+            }
         }
         return filteredObjects;
     }
 
     private async getPriorityWithId(managementCompanyId: number) {
         const penaltyRuleGroups = await this.penaltyRuleRepository.findAll();
-
+  
         if (!penaltyRuleGroups.length) {
             throw new RMQException(PENALTY_RULES_NOT_EXIST.message, PENALTY_RULES_NOT_EXIST.status);
         }
@@ -289,7 +297,7 @@ export class DebtService {
             const amounts = currentSPDAmounts.map(obj => obj.amount);
             const totalAmount = amounts.reduce((a, b) => a + b, 0);
             debts.push({
-                penaltyRuleId: fObject._id,
+                penaltyRuleId: fObject.penaltyRuleId,
                 amount: totalAmount
             })
         }

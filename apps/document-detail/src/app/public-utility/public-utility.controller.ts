@@ -14,7 +14,7 @@ export class PublicUtilityController {
     @RMQRoute(GetPublicUtilities.topic)
     async getPublicUtility(@Body() dto: GetPublicUtilities.Request) {
         try {
-            return this.publicUtilityService.getPublicUtility(dto);
+            return await this.publicUtilityService.getPublicUtility(dto);
         }
         catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);

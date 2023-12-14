@@ -14,7 +14,7 @@ export class ChatController {
     @RMQRoute(GetChats.topic)
     async getChats(@Body() dto: GetChats.Request) {
         try {
-            return this.chatService.getChats(dto);
+            return await this.chatService.getChats(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -24,7 +24,7 @@ export class ChatController {
     @RMQRoute(GetReceivers.topic)
     async getReceivers(@Body() dto: GetReceivers.Request) {
         try {
-            return this.chatService.getReceivers(dto);
+            return await this.chatService.getReceivers(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -34,7 +34,7 @@ export class ChatController {
     @RMQRoute(AddChat.topic)
     async addChat(@Body() dto: AddChat.Request) {
         try {
-            return this.chatService.addChat(dto);
+            return await this.chatService.addChat(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -44,7 +44,7 @@ export class ChatController {
     @RMQRoute(AddMessage.topic)
     async addMessage(@Body() dto: AddMessage.Request) {
         try {
-            return this.chatService.addMessage(dto);
+            return await this.chatService.addMessage(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }
@@ -54,7 +54,7 @@ export class ChatController {
     @RMQRoute(ReadMessages.topic)
     async readMessages(@Body() dto: ReadMessages.Request) {
         try {
-            return this.chatService.readMessages(dto);
+            return await this.chatService.readMessages(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

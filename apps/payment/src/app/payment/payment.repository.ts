@@ -11,15 +11,15 @@ export class PaymentRepository {
     ) { }
 
     async create(Payment: PaymentEntity) {
-        return this.paymentRepository.save(Payment);
+        return await this.paymentRepository.save(Payment);
     }
 
     async findById(id: number) {
-        return this.paymentRepository.findOne({ where: { id } });
+        return await this.paymentRepository.findOne({ where: { id } });
     }
 
     async findBySPDIds(spdIds: number[]) {
-        return this.paymentRepository.find({ where: { singlePaymentDocumentId: In(spdIds) } });
+        return await this.paymentRepository.find({ where: { singlePaymentDocumentId: In(spdIds) } });
     }
 
 }

@@ -129,11 +129,11 @@ export class UserService {
 
     async getAllUsers(dto: AccountGetAllUsers.Request): Promise<AccountGetAllUsers.Response> {
         if (dto.userRole === UserRole.ManagementCompany && dto.requesterRole === UserRole.Admin) {
-            const managementCompanies = await this.managementCompanyRepository.findAll();
-            return { profiles: managementCompanies.map(mc => mc.getWithCheckingAccount()) };
+            const { managementCompanies, totalCount } = await this.managementCompanyRepository.findAll(dto.meta);
+            return { profiles: managementCompanies.map(mc => mc.getWithCheckingAccount()) || [], totalCount };
         } else if (dto.userRole === UserRole.Owner && dto.requesterRole === UserRole.ManagementCompany) {
-            const owners = await this.ownerRepository.findAll();
-            return { profiles: owners.map(mc => mc.getPublicProfile()) };
+            const { owners, totalCount } = await this.ownerRepository.findAll(dto.meta);
+            return { profiles: owners.map(mc => mc.getPublicProfile()) || [], totalCount };
         } else {
             throw new RMQException(INCORRECT_ROLE_ACCESS.message, INCORRECT_ROLE_ACCESS.status);
         }

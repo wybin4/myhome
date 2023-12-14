@@ -7,7 +7,7 @@ export interface ISpdReadingPart {
 }
 
 export interface ISpdReadings {
-    readings: ISpdReading[]; subscriberId: number;
+    readings: ISpdReading[][]; subscriberId: number;
 }
 
 export interface ISpdReading {

@@ -14,7 +14,7 @@ export class EventController {
     @RMQRoute(EventGetEvents.topic)
     async getEvents(@Body() dto: EventGetEvents.Request) {
         try {
-            return this.eventService.getEvents(dto);
+            return await this.eventService.getEvents(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

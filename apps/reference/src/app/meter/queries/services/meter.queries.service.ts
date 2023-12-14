@@ -87,7 +87,7 @@ export class MeterQueriesService {
             };
         } else {
             const { meters, totalCount } = await this.meterReadingQueriesService.getMeterReadings(
-                MeterType.Individual, 15, 25, undefined, apartmentIds
+                MeterType.Individual, 15, 25, meta, undefined, apartmentIds
             ); // ИСПРАВИТЬ
 
             const { typesOfService, units } = await this.commonService.getCommon();

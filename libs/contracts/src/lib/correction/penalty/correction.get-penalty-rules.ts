@@ -4,9 +4,14 @@ export namespace CorrectionGetPenaltyRules {
     export class Request { }
 
     export class Response {
-        penaltyRules!: {
-            id: string;
-            name: string;
-        }[];
+        penaltyRules!: IGetPenaltyRule[];
     }
+}
+
+export interface IGetPenaltyRule {
+    id: string;
+    name: string;
+    designation: string;
+    start: number;
+    end: number;
 }

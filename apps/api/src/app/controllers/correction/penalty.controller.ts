@@ -43,8 +43,7 @@ export class PenaltyController {
         }
     }
 
-    @SetMetadata('role', UserRole.ManagementCompany)
-    @UseGuards(JWTAuthGuard, RoleGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-penalty-rules')
     async getPenaltyRules(@Body() dto: GetPenaltyRulesDto) {

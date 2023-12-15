@@ -14,11 +14,26 @@ export class PenaltyRuleService {
     public async getPenaltyRules(): Promise<CorrectionGetPenaltyRules.Response> {
         const penaltyRules = await this.getAllPenaltyRules();
         return {
-            penaltyRules: penaltyRules.map(pr => {
-                return {
-                    id: pr._id,
-                    name: pr.description
-                };
+            penaltyRules: penaltyRules.flatMap(pr => {
+                if (pr.penaltyRule) {
+                    return pr.penaltyRule.map(curr => {
+                        return {
+                            id: pr._id,
+                            name: pr.description,
+                            designation: curr.designation,
+                            start: curr.start,
+                            end: curr.end > 1000 ? undefined : curr.end
+                        };
+                    })
+                } else {
+                    return {
+                        id: pr._id,
+                        name: pr.description,
+                        designation: "",
+                        start: 0,
+                        end: 0
+                    };
+                }
             })
         }
     }

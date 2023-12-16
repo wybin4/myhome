@@ -27,6 +27,19 @@ services:
     volumes:
       - ./mongo-data-4.4:/data/db
 ```
+docker-compose.yml для redis:
+```
+version: '3'
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+```
 Поднять docker-compose.yml можно `docker-compose up -d` в папке с файлом
 
 Требования к nodejs: node-16

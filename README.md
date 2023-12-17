@@ -25,7 +25,7 @@
 - Node >= 20
 - Docker
 
-docker-compose.yml для rmq:
+docker-compose.yml для RabbitMQ:
 ```
 version: '3.1'
 services:
@@ -36,7 +36,7 @@ services:
       - "15672:15672"
       - "5672:5672"
 ```
-docker-compose.yml для mongo:
+docker-compose.yml для MongoDB:
 ```
 version: '3'
 services:
@@ -52,7 +52,24 @@ services:
     volumes:
       - ./mongo-data-4.4:/data/db
 ```
-docker-compose.yml для redis:
+docker-compose.yml для MySQL:
+```
+version: '3.1'
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=admin
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+```
+docker-compose.yml для Redis:
 ```
 version: '3'
 services:

@@ -1,5 +1,30 @@
 # myhome
 
+## Описание
+Этот репозиторий содержит бэкенд-часть проекта MyHome, построенного на микросервисной архитектуре из 10 сервисов.
+
+### `Сервисы`
+- `api`
+- `account`
+- `reference`
+- `event`
+- `email`
+- `chat`
+- `correction`
+- `document-detail`
+- `single-payment-document`
+- `payment`
+
+### `Инфраструктура`
+- `MySQL`
+- `MongoDB`
+- `RabbitMQ`
+- `Redis`
+
+## Требования
+- Node >= 20
+- Docker
+
 docker-compose.yml для rmq:
 ```
 version: '3.1'
@@ -41,8 +66,6 @@ services:
       - ./redis-data:/data
 ```
 Поднять docker-compose.yml можно `docker-compose up -d` в папке с файлом
-
-Требования к nodejs: node-16
 
 Запуск проекта:
 1. `git clone https://github.com/wybin4/myhome.git`

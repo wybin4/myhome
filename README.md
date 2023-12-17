@@ -67,7 +67,7 @@ services:
 ```
 Поднять docker-compose.yml можно `docker-compose up -d` в папке с файлом
 
-Запуск проекта:
+## Запуск проекта
 1. `git clone https://github.com/wybin4/myhome.git`
 2. `npx nx@latest init`
 3. `npm install --location=global nx @nrwl/cli`
@@ -78,7 +78,7 @@ services:
 
 Отдельный запуск сервиса `nx run reference:serve:development`, `nx run account:serve:development` или `nx run api:serve:development`
 
-Создание mysql-схем:
+## Создание mysql-схем
 ```
 CREATE SCHEMA `account`;
 CREATE SCHEMA `reference`;

@@ -44,7 +44,6 @@ export class EventService {
                     if (data) {
                         events.notifications.notifications = data.notifications;
                         events.notifications.totalCount = data.totalCount;
-
                     }
                     break;
                 }
@@ -52,7 +51,6 @@ export class EventService {
                     throw new RMQException("Неверно выбран тип события", HttpStatus.BAD_REQUEST);
             }
         }
-
         return { events };
     }
 }

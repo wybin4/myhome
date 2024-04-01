@@ -1,6 +1,31 @@
 # myhome
 
-docker-compose.yml для rmq:
+## Описание
+Этот репозиторий содержит бэкенд-часть проекта MyHome, построенного на микросервисной архитектуре из 10 сервисов.
+
+### `Сервисы`
+- `api`
+- `account`
+- `reference`
+- `event`
+- `email`
+- `chat`
+- `correction`
+- `document-detail`
+- `single-payment-document`
+- `payment`
+
+### `Инфраструктура`
+- `MySQL`
+- `MongoDB`
+- `RabbitMQ`
+- `Redis`
+
+## Требования
+- Node >= 20
+- Docker
+
+docker-compose.yml для RabbitMQ:
 ```
 version: '3.1'
 services:
@@ -11,7 +36,7 @@ services:
       - "15672:15672"
       - "5672:5672"
 ```
-docker-compose.yml для mongo:
+docker-compose.yml для MongoDB:
 ```
 version: '3'
 services:
@@ -27,11 +52,39 @@ services:
     volumes:
       - ./mongo-data-4.4:/data/db
 ```
+docker-compose.yml для MySQL:
+```
+version: '3.1'
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=admin
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+```
+docker-compose.yml для Redis:
+```
+version: '3'
+services:
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis-data:/data
+```
 Поднять docker-compose.yml можно `docker-compose up -d` в папке с файлом
 
-Требования к nodejs: node-16
-
-Запуск проекта:
+## Запуск проекта
 1. `git clone https://github.com/wybin4/myhome.git`
 2. `npx nx@latest init`
 3. `npm install --location=global nx @nrwl/cli`
@@ -42,7 +95,7 @@ services:
 
 Отдельный запуск сервиса `nx run reference:serve:development`, `nx run account:serve:development` или `nx run api:serve:development`
 
-Создание mysql-схем:
+## Создание mysql-схем
 ```
 CREATE SCHEMA `account`;
 CREATE SCHEMA `reference`;
@@ -50,7 +103,5 @@ CREATE SCHEMA `document_detail`;
 CREATE SCHEMA `correction`;
 CREATE SCHEMA `single_payment_document`;
 CREATE SCHEMA `payment`;
-CREATE SCHEMA `voting`;
-CREATE SCHEMA `appeal`;
-CREATE SCHEMA `notification`;
+CREATE SCHEMA `event`;
 ```

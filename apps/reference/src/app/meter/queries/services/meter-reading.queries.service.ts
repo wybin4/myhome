@@ -1,6 +1,6 @@
 import { IGeneralMeterReading, IGetMeterReading, IGetMeterReadings, IIndividualMeterReading, IMeta, IMeter, IMeterReading, INorm, MeterStatus, MeterType, TypeOfNorm } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { IGetHouseAllInfo, ReferenceGetIndividualMeterReadings, ReferenceGetMeterReadingsByHID } from "@myhome/contracts";
+import { IGetHouseAllInfo, ReferenceGetIndividualMeterReadings, ReferenceGetMeterReadingsByHID, ReferenceGetMeterReadingsByUser } from "@myhome/contracts";
 import { getGenericObject, METER_READING_NOT_EXIST, RMQException, INCORRECT_METER_TYPE, NORMS_NOT_EXIST } from "@myhome/constants";
 import { HouseService } from "../../../subscriber/services/house.service";
 import { SubscriberService, IApartmentAndSubscriber } from "../../../subscriber/services/subscriber.service";
@@ -69,6 +69,48 @@ export class MeterReadingQueriesService {
                             METER_READING_NOT_EXIST
                         )
                 };
+            default:
+                throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);
+        }
+
+    }
+
+    public async getMeterReadingsByUser(dto: ReferenceGetMeterReadingsByUser.Request): Promise<ReferenceGetMeterReadingsByUser.Response> {
+        switch (dto.meterType) {
+            case (MeterType.General): {
+                const readings = await this.generalMeterReadingRepository.findByMeterId(dto.meterId);
+                if (readings.length >= 2) {
+                    const resultReadings = [];
+                    for (let i = 0; i < readings.length; i++) {
+                        const consumption = i < readings.length - 1 ? readings[i].reading - readings[i + 1].reading : readings[i].reading;
+                        const resultReading = { ...readings[i], consumption };
+                        resultReadings.push(resultReading);
+                    }
+                    return { readings: resultReadings };
+                } else if (readings.length === 1) {
+                    const resultReading = { ...readings[0], consumption: readings[0].reading };
+                    return { readings: [resultReading] };
+                } else {
+                    return { readings: [] };
+                }
+            }
+            case (MeterType.Individual): {
+                const readings = await this.individualMeterReadingRepository.findByMeterId(dto.meterId);
+                if (readings.length >= 2) {
+                    const resultReadings = [];
+                    for (let i = 0; i < readings.length; i++) {
+                        const consumption = i < readings.length - 1 ? readings[i].reading - readings[i + 1].reading : readings[i].reading;
+                        const resultReading = { ...readings[i], consumption };
+                        resultReadings.push(resultReading);
+                    }
+                    return { readings: resultReadings };
+                } else if (readings.length === 1) {
+                    const resultReading = { ...readings[0], consumption: readings[0].reading };
+                    return { readings: [resultReading] };
+                } else {
+                    return { readings: [] };
+                }
+            }
             default:
                 throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);
         }

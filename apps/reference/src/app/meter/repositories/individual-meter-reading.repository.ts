@@ -33,4 +33,8 @@ export class IndividualMeterReadingRepository {
         return await this.individualMeterReadingRepository.findOne({ where: { id } });
     }
 
+    async findByMeterId(meterId: number) {
+        return await this.individualMeterReadingRepository.find({ where: { individualMeterId: meterId } });
+    }
+
 }

@@ -22,4 +22,8 @@ export class GeneralMeterReadingRepository {
         return await this.generalMeterReadingRepository.findOne({ where: { id } });
     }
 
+    async findByMeterId(meterId: number) {
+        return await this.generalMeterReadingRepository.find({ where: { generalMeterId: meterId } });
+    }
+
 }

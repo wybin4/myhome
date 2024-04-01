@@ -33,6 +33,7 @@ export * from './lib/reference/meter/reference.expire-meter';
 export * from './lib/reference/meter/reference.add-meters';
 export * from './lib/reference/meter/reference.get-meters';
 export * from './lib/reference/meter/reference.get-meters-by-user';
+export * from './lib/reference/meter/reference.get-meter-readings';
 export * from './lib/reference/meter/reference.update-meter';
 export * from './lib/reference/meter/reference.add-meter-reading';
 export * from './lib/reference/meter/reference.get-individual-meter-readings';

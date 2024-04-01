@@ -8,8 +8,13 @@ export class AddMetersDto {
 }
 
 export class GetMetersByUserDto extends GetMetaDto {
-    meterType!: MeterType;
+    meterType: MeterType;
     isNotAllInfo?: boolean;
+}
+
+export class GetMeterReadingsByUserDto {
+    meterType: MeterType;
+    meterId: number;
 }
 
 export class UpdateMeterDto {

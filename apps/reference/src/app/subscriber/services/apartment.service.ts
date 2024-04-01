@@ -86,13 +86,13 @@ export class ApartmentService {
 							return {
 								...apartment.get(),
 								subscriberId: 0,
-								address: currentHouse.getAddress(),
+								address: currentHouse.getAddress(false),
 							};
 						case UserRole.Owner:
 							return {
 								...apartment.get(),
 								subscriberId: apartment.subscriber.id,
-								address: apartment.getAddress(currentHouse),
+								address: apartment.getAddress(currentHouse, false),
 							};
 					}
 				}),

@@ -47,19 +47,17 @@ export interface IGetMeterByAID {
     id: number;
     typeOfServiceId: number;
     typeOfServiceName: string;
+    typeOfServiceEngName: string;
     unitName: string;
-    readings: {
-        current: number;
-        previous: number;
-        previousReadAt: Date;
-    }
     factoryNumber: string;
     verifiedAt: Date;
     issuedAt: Date;
+    currentReading: number;
 }
 
 export interface IGetMeters extends IMeter {
     typeOfServiceName: string;
+    typeOfServiceEngName: string;
     address: string;
     subscriberId?: number;
 }

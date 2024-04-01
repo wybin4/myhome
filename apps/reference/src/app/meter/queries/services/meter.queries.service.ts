@@ -63,14 +63,22 @@ export class MeterQueriesService {
     }
 
     private async getMetersByOID(ownerId: number, isNotAllInfo: boolean, meta: IMeta):
-        Promise<{ meters: IGetMeterByAIDs[] | IGetMeters[]; totalCount?: number }> {
+        Promise<{ meters: IGetMeterByAIDs[] | IGetMeters[] }> {
+
         const { apartments } = await this.apartmentService.getApartmentsByUser({
             userId: ownerId, userRole: UserRole.Owner, isAllInfo: true
         }) as { apartments: IGetApartmentWithInfo[] };
         const apartmentIds = apartments.map(a => a.id);
+        if (!apartmentIds.length) {
+            return { meters: [] };
+        }
+       
 
         if (isNotAllInfo) {
-            const { meters, totalCount } = await this.getMetersByApartments(apartmentIds, meta);
+            const { meters } = await this.getMetersByApartments(apartmentIds, meta);
+            if (!meters || !meters.length) {
+                return { meters: [] };
+            }
             const { typesOfService } = await this.typeOfServiceService.getAll();
             return {
                 meters: meters.map(meter => {
@@ -79,17 +87,16 @@ export class MeterQueriesService {
                     return {
                         ...meter,
                         typeOfServiceName: currentTOS.name,
+                        typeOfServiceEngName: currentTOS.engName,
                         address: currentApartment.address,
                         subscriberId: currentApartment.subscriberId
                     }
-                }),
-                totalCount
+                })
             };
         } else {
-            const { meters, totalCount } = await this.meterReadingQueriesService.getMeterReadings(
+            const { meters } = await this.meterReadingQueriesService.getMeterReadings(
                 MeterType.Individual, 15, 25, meta, undefined, apartmentIds
             ); // ИСПРАВИТЬ
-
             const { typesOfService, units } = await this.commonService.getCommon();
 
             return {
@@ -110,17 +117,13 @@ export class MeterQueriesService {
                                 verifiedAt: meter.meter.verifiedAt,
                                 issuedAt: meter.meter.issuedAt,
                                 typeOfServiceName: currentTypeOfService.name,
+                                typeOfServiceEngName: currentTypeOfService.engName,
                                 unitName: currentUnit.name,
-                                readings: {
-                                    current: meter.reading.current ? meter.reading.current.reading : 0,
-                                    previous: meter.reading.previous ? meter.reading.previous.reading : 0,
-                                    previousReadAt: meter.reading.previous ? meter.reading.previous.readAt : undefined
-                                }
+                                currentReading: meter.reading.current ? meter.reading.current.reading : 0,
                             };
                         })
                     }
                 }),
-                totalCount
             };
         }
     }
@@ -147,6 +150,7 @@ export class MeterQueriesService {
                             return {
                                 ...meter.get(),
                                 typeOfServiceName: currentTOS.name,
+                                typeOfServiceEngName: currentTOS.engName,
                                 address: this.houseService.getAddress(currentHouse)
                             };
                         }),
@@ -198,6 +202,7 @@ export class MeterQueriesService {
                                 return {
                                     ...meter.get(),
                                     typeOfServiceName: currentTOS.name,
+                                    typeOfServiceEngName: currentTOS.engName,
                                     address: currentApartment.name
                                 };
                             }),

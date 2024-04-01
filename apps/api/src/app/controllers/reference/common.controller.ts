@@ -8,7 +8,7 @@ import { JWTAuthGuard } from '../../guards/jwt.guard';
 export class CommonController {
     constructor(private readonly rmqService: RMQService) { }
 
-    @UseGuards(JWTAuthGuard)
+    // @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-all-types-of-service')
     async getAllTypesOfService() {

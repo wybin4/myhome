@@ -6,5 +6,6 @@ export interface IUnit {
 export interface ITypeOfService {
     id?: number;
     name: string;
+    engName: string;
     unitId: number;
 }

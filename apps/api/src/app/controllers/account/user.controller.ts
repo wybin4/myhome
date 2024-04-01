@@ -46,7 +46,7 @@ export class UserController {
     }
   }
 
-  @UseGuards(JWTAuthGuard)
+  // @UseGuards(JWTAuthGuard)
   @HttpCode(200)
   @Post('get-users-by-another-role')
   async getOwnersByMCId(

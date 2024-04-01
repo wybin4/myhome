@@ -45,7 +45,7 @@ export class IndividualMeterRepository {
     async update(meter: IndividualMeterEntity) {
         await this.individualMeterRepository.update(meter.id, meter);
         return await this.findById(meter.id);
-    }
+    }z
     async findExpiredIndividualMeters(): Promise<IndividualMeterEntity[]> {
         const currentDate = new Date();
         return await this.individualMeterRepository.find({

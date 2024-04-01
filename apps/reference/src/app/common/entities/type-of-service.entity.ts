@@ -14,6 +14,9 @@ export class TypeOfServiceEntity implements ITypeOfService {
     name: string;
 
     @Column({ nullable: false })
+    engName: string;
+
+    @Column({ nullable: false })
     unitId: number;
 
     @OneToMany(() => CommonHouseNeedTariffEntity, (commonHouseNeedTariff) => commonHouseNeedTariff.typeOfService)
@@ -47,7 +50,8 @@ export class TypeOfServiceEntity implements ITypeOfService {
         return {
             id: this.id,
             name: this.name,
-            unitId: this.unitId,
+            engName: this.engName,
+            unitId: this.unitId
         }
     }
 }

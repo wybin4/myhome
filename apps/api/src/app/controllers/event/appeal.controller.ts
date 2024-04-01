@@ -15,7 +15,7 @@ export class AppealController {
     constructor(private readonly rmqService: RMQService) { }
 
     @SetMetadata('role', UserRole.Owner)
-    @UseGuards(JWTAuthGuard, RoleGuard)
+    // @UseGuards(JWTAuthGuard, RoleGuard)
     @UseInterceptors(FileInterceptor("file"))
     @HttpCode(201)
     @Post('add-appeal')

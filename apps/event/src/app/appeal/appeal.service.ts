@@ -26,7 +26,7 @@ export class AppealService {
                 const { subscribers } = await getSubscribersByOId(this.rmqService, userId);
                 const subscriberIds = subscribers.map(s => s.id);
                 const { appeals, totalCount } = await this.appealRepository.findBySIds(subscriberIds, meta);
-                if (!appeals) {
+                if (!appeals || !appeals.length) {
                     return;
                 }
 

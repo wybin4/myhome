@@ -45,7 +45,7 @@ export class IndividualMeterRepository {
     async update(meter: IndividualMeterEntity) {
         await this.individualMeterRepository.update(meter.id, meter);
         return await this.findById(meter.id);
-    }z
+    } z
     async findExpiredIndividualMeters(): Promise<IndividualMeterEntity[]> {
         const currentDate = new Date();
         return await this.individualMeterRepository.find({
@@ -80,9 +80,6 @@ export class IndividualMeterRepository {
     // просто показания за последние месяцы
     async findReadingsByAIdsAndPeriod(
         apartmentIds: number[],
-        endOfPreviousMonth: Date,
-        startOfCurrentMonth: Date,
-        endOfCurrentMonth: Date,
         meta: IMeta
     ) {
         let queryBuilder = this.individualMeterRepository.createQueryBuilder('individualMeter');
@@ -93,40 +90,15 @@ export class IndividualMeterRepository {
 
         const individualMeters = await queryBuilder.getMany();
 
-        const currentMonthReadings = individualMeters.map((meter) => {
-            if (meter.individualMeterReadings && meter.individualMeterReadings.length > 0) {
-                return meter.individualMeterReadings.find((reading) =>
-                    reading.readAt >= startOfCurrentMonth && reading.readAt <= endOfCurrentMonth
-                );
-            } else {
-                return undefined;
-            }
-        });
-
-        // предыдущее показание могло быть за любой месяц
-        const previousMonthReadings = individualMeters.map((meter) => {
-            if (meter.individualMeterReadings && meter.individualMeterReadings.length > 0) {
-                return meter.individualMeterReadings.find((reading) =>
-                    reading.readAt <= endOfPreviousMonth
-                );
-            } else {
-                return undefined;
-            }
-        });
 
         const result = individualMeters.map((meter) => {
-            const current = currentMonthReadings.find((currentReading) =>
-                currentReading ? currentReading.individualMeterId === meter.id : undefined
-            );
-            const previous = previousMonthReadings.find((previousReading) =>
-                previousReading ? previousReading.individualMeterId === meter.id : undefined
-            );
+            const readings = meter.individualMeterReadings.slice(0, 2);
 
             return {
                 meter: meter.get(),
                 reading: {
-                    current: current ? current : undefined,
-                    previous: previous ? previous : undefined,
+                    current: readings.length ? readings[0] : undefined,
+                    previous: readings.length > 1 ? readings[1] : undefined,
                 }
             };
         });
@@ -142,7 +114,7 @@ export class IndividualMeterRepository {
             .andWhere('individualMeter.status = :status', { status: MeterStatus.Active })
             .orderBy('individualMeterReadings.readAt', 'DESC')
             .getMany();
- 
+
         const readings = individualMeters.map(meter => ({
             meterId: meter.id,
             meterStatus: meter.status,

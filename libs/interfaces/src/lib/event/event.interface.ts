@@ -3,8 +3,7 @@ import { IHouseNotification } from "./notification.interface";
 import { IOption, IVote, IVoting } from "./voting.interface";
 
 export interface IGetEvents {
-    notifications: { notifications?: IGetHouseNotification[]; totalCount?: number };
-    votings: { votings?: IGetVoting[]; totalCount?: number };
+    notificationsAndVotings: { notificationsAndVotings?: IGetVoting[]; totalCount?: number };
     appeals: { appeals?: IGetAppeal[]; totalCount?: number };
 }
 
@@ -17,6 +16,13 @@ export interface IGetAppeal extends IAppealEntity {
     address?: string;
     personalAccount?: string;
     attachment?: string;
+}
+
+export interface IGetNotificationAndVoting {
+    voting?: IGetVoting;
+    notification?: IGetHouseNotification;
+    createdAt: Date;
+    eventType: EventTypeResponse;
 }
 
 export interface IGetVoting extends IVoting {
@@ -34,8 +40,12 @@ export interface IGetOption extends IOption {
     votes: IVote[];
 }
 
-export enum EventType {
+export enum EventTypeRequest {
     Appeal = "Appeal",
+    NotificationAndVoting = "NotificationAndVoting"
+}
+
+export enum EventTypeResponse {
     Notification = "Notification",
     Voting = "Voting"
 }

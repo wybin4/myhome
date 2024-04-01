@@ -95,7 +95,7 @@ export class MeterQueriesService {
             };
         } else {
             const { meters } = await this.meterReadingQueriesService.getMeterReadings(
-                MeterType.Individual, 15, 25, meta, undefined, apartmentIds
+                MeterType.Individual, meta, undefined, apartmentIds
             ); // ИСПРАВИТЬ
             const { typesOfService, units } = await this.commonService.getCommon();
 
@@ -158,7 +158,7 @@ export class MeterQueriesService {
                     };
                 } else {
                     const { meters, totalCount } = await this.meterReadingQueriesService.getMeterReadings(
-                        MeterType.General, 15, 25, meta, houseIds, undefined
+                        MeterType.General, meta, houseIds, undefined
                     ); // ИСПРАВИТЬ
 
                     return {
@@ -210,7 +210,7 @@ export class MeterQueriesService {
                     };
                 } else {
                     const { meters, totalCount } = await this.meterReadingQueriesService.getMeterReadings(
-                        MeterType.Individual, 15, 25, meta, undefined, apartmentIds
+                        MeterType.Individual, meta, undefined, apartmentIds
                     ); // ИСПРАВИТЬ
 
                     return {

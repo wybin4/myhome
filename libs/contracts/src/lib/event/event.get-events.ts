@@ -1,6 +1,6 @@
-import { EventType, IGetEvents, UserRole } from "@myhome/interfaces";
-import { IsArray, IsNumber, Validate } from "class-validator";
-import { IsValidEnumArray, IsValidEnumValue } from "../enum.validator";
+import { EventTypeRequest, IGetEvents, UserRole } from "@myhome/interfaces";
+import { IsNumber, Validate } from "class-validator";
+import { IsValidEnumValue } from "../enum.validator";
 import { MetaRequest } from "../meta.validator";
 
 export namespace EventGetEvents {
@@ -13,9 +13,8 @@ export namespace EventGetEvents {
         @Validate(IsValidEnumValue, [UserRole])
         userRole!: UserRole;
 
-        @IsArray({ message: "Тип событий должен быть массивом" })
-        @Validate(IsValidEnumArray, [EventType])
-        events!: EventType[];
+        @Validate(IsValidEnumValue, [EventTypeRequest])
+        eventType!: EventTypeRequest;
     }
 
     export class Response {

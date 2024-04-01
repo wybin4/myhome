@@ -125,10 +125,6 @@ export class GeneralMeterRepository {
 
     async findReadingsByHIdsAndPeriod(
         houseIds: number[],
-        startOfPreviousMonth: Date,
-        endOfPreviousMonth: Date,
-        startOfCurrentMonth: Date,
-        endOfCurrentMonth: Date,
         meta: IMeta
     ) {
         let queryBuilder = this.generalMeterRepository.createQueryBuilder('generalMeter');
@@ -139,39 +135,14 @@ export class GeneralMeterRepository {
 
         const generalMeters = await queryBuilder.getMany();
 
-        const currentMonthGeneralMeterReadings = generalMeters.map((meter) => {
-            if (meter.generalMeterReadings && meter.generalMeterReadings.length > 0) {
-                return meter.generalMeterReadings.find((reading) => {
-                    return reading.readAt >= startOfCurrentMonth && reading.readAt <= endOfCurrentMonth;
-                });
-            } else {
-                return undefined;
-            }
-        });
-
-        const previousMonthGeneralMeterReadings = generalMeters.map((meter) => {
-            if (meter.generalMeterReadings && meter.generalMeterReadings.length > 0) {
-                return meter.generalMeterReadings.find((reading) => {
-                    return reading.readAt >= startOfPreviousMonth && reading.readAt <= endOfPreviousMonth;
-                });
-            } else {
-                return undefined;
-            }
-        });
-
         const result = generalMeters.map((meter) => {
-            const current = currentMonthGeneralMeterReadings.find((currentReading) =>
-                currentReading ? currentReading.generalMeterId === meter.id : undefined
-            );
-            const previous = previousMonthGeneralMeterReadings.find((previousReading) =>
-                previousReading ? previousReading.generalMeterId === meter.id : undefined
-            );
+            const readings = meter.generalMeterReadings.slice(0, 2);
 
             return {
                 meter: meter.get(),
                 reading: {
-                    current: current ? current : undefined,
-                    previous: previous ? previous : undefined,
+                    current: readings.length ? readings[0] : undefined,
+                    previous: readings.length > 1 ? readings[1] : undefined,
                 }
             };
         });

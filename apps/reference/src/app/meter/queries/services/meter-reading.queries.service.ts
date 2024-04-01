@@ -161,8 +161,7 @@ export class MeterReadingQueriesService {
     }
 
     public async getMeterReadings(
-        meterType: MeterType,
-        start: number, end: number, meta: IMeta,
+        meterType: MeterType, meta: IMeta,
         houseIds?: number[], apartmentIds?: number[]
     ): Promise<{
         meters: {
@@ -174,27 +173,16 @@ export class MeterReadingQueriesService {
         }[],
         totalCount?: number
     }> {
-        const {
-            startOfPreviousMonth, endOfPreviousMonth,
-            startOfCurrentMonth, endOfCurrentMonth
-        } = this.meterReadingCalculationsService.getPeriods(start, end);
         switch (meterType) {
             case (MeterType.General):
                 return await this.generalMeterRepository.
                     findReadingsByHIdsAndPeriod(
-                        houseIds,
-                        startOfPreviousMonth,
-                        endOfPreviousMonth,
-                        startOfCurrentMonth,
-                        endOfCurrentMonth, meta
+                        houseIds, meta
                     );
             case (MeterType.Individual):
                 return await this.individualMeterRepository.
                     findReadingsByAIdsAndPeriod(
-                        apartmentIds,
-                        endOfPreviousMonth,
-                        startOfCurrentMonth,
-                        endOfCurrentMonth, meta
+                        apartmentIds, meta
                     );
             default:
                 throw new RMQException(INCORRECT_METER_TYPE, HttpStatus.CONFLICT);

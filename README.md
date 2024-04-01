@@ -103,7 +103,5 @@ CREATE SCHEMA `document_detail`;
 CREATE SCHEMA `correction`;
 CREATE SCHEMA `single_payment_document`;
 CREATE SCHEMA `payment`;
-CREATE SCHEMA `voting`;
-CREATE SCHEMA `appeal`;
-CREATE SCHEMA `notification`;
+CREATE SCHEMA `event`;
 ```

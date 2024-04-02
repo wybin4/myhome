@@ -39,20 +39,25 @@ export class AppealService {
                     UserRole.ManagementCompany
                 );
 
-                const files = await this.getFileFromAppeals(appeals);
-
                 return {
                     appeals: appeals
                         .map(appeal => {
                             const currentMC = profiles.find(p => p.id === appeal.managementCompanyId);
                             const { currentMeter, currentTOS } = this.getCurrentMeterData(appeal, typesOfService, meters);
-                            const currentFile = files.find(f => f.id === appeal.id);
-
+                            let attachment: string;
+                            switch (appeal.typeOfAppeal) {
+                                case (AppealType.AddIndividualMeter):
+                                    attachment = (JSON.parse(appeal.data) as AddIndividualMeterData).attachment;
+                                    break;
+                                case (AppealType.VerifyIndividualMeter):
+                                    attachment = (JSON.parse(appeal.data) as VerifyIndividualMeterData).attachment;
+                                    break;
+                            }
                             return {
                                 name: currentMC.name,
                                 ...appeal,
                                 data: this.getText(appeal, "get", currentMeter, currentTOS).text,
-                                attachment: currentFile ? currentFile.file : undefined
+                                attachment
                             };
                         })
                     ,
@@ -101,9 +106,9 @@ export class AppealService {
         const meterIds = Array.from(new Set(appeals.filter(a => a.typeOfAppeal === AppealType.VerifyIndividualMeter)
             .map(a => JSON.parse(a.data).meterId)));
 
-        if (!meterIds.length) {
+        if (!meterIds.length && !typeOfServiceIds.length) {
             return { meters: undefined, typesOfService: undefined };
-        } else {
+        } else if (meterIds.length) {
             const { meters } = await getMeters(this.rmqService, meterIds, MeterType.Individual);
             if (!meters.length) {
                 throw new RMQException(METERS_NOT_EXIST.message, METERS_NOT_EXIST.status);
@@ -119,6 +124,9 @@ export class AppealService {
             const { typesOfService } = typeOfServiceIds.length ? await getTypesOfService(this.rmqService, typeOfServiceIds) : undefined;
 
             return { meters, typesOfService };
+        } else if (typeOfServiceIds.length) {
+            const { typesOfService } = await getTypesOfService(this.rmqService, typeOfServiceIds);
+            return { meters: undefined, typesOfService };
         }
     }
 
@@ -129,7 +137,9 @@ export class AppealService {
         if (!meters && !typesOfService) {
             return { currentMeter: undefined, currentTOS: undefined };
         } else if (!meters && typesOfService) {
-            return { currentMeter: undefined, currentTOS: undefined };
+            const currentTOS = typesOfService.find(tos =>
+                tos.id === JSON.parse(appeal.data).typeOfServiceId);
+            return { currentMeter: undefined, currentTOS };
         }
         const currentMeter = meters.find(m =>
             m.id === JSON.parse(appeal.data).meterId);
@@ -143,53 +153,47 @@ export class AppealService {
     }
 
     public async addAppeal(dto: EventAddAppeal.Request): Promise<EventAddAppeal.Response> {
-        let realAttachment: string, meter: IMeterWithTypeOfService, typeOfService: ITypeOfService;
-
+        let meter: IMeterWithTypeOfService, typeOfService: ITypeOfService;
         const { profile: mc } = await checkUser(this.rmqService, dto.managementCompanyId, UserRole.ManagementCompany);
         await getSubscriber(this.rmqService, dto.subscriberId);
 
         const getResult = async (
             appealDto: EventAddAppeal.Request,
             meter?: IMeter,
-            typeOfService?: ITypeOfService,
-            attachment?: string
+            typeOfService?: ITypeOfService
         ) => {
             const appeal = await this.createAppealEntity(appealDto, meter, typeOfService);
+
             return {
                 appeal: {
                     name: mc.name,
                     ...appeal,
-                    data: this.getText(appeal, "add", meter, typeOfService).text,
-                    attachment
+                    data: this.getText(appeal, "add", meter, typeOfService).text
                 }
             };
         };
 
         switch (dto.typeOfAppeal) {
             case AppealType.AddIndividualMeter: {
-                const data = dto.data as AddIndividualMeterData;
-                await getApartment(this.rmqService, data.apartmentId);
-                ({ typeOfService } = await getTypeOfService(this.rmqService, data.typeOfServiceId));
+                await getApartment(this.rmqService, dto.apartmentId);
+                ({ typeOfService } = await getTypeOfService(this.rmqService, dto.typeOfServiceId));
 
-                realAttachment = data.attachment;
-                const fileName = await this.uploadAttachment(data.attachment);
-                data.attachment = fileName;
+                const fileName = await this.uploadAttachment(dto.attachment);
+                dto.attachment = fileName;
 
                 break;
             }
             case AppealType.VerifyIndividualMeter: {
-                const data = dto.data as VerifyIndividualMeterData;
-                ({ meter } = await getMeter(this.rmqService, data.meterId, MeterType.Individual));
+                ({ meter } = await getMeter(this.rmqService, dto.meterId, MeterType.Individual));
                 typeOfService = meter.typeOfService;
 
-                realAttachment = data.attachment;
-                const fileName = await this.uploadAttachment(data.attachment);
-                data.attachment = fileName;
+                const fileName = await this.uploadAttachment(dto.attachment);
+                dto.attachment = fileName;
 
                 break;
             }
         }
-        return await getResult(dto, meter, typeOfService, realAttachment);
+        return await getResult(dto, meter, typeOfService);
     }
 
     public async updateAppeal(dto: EventUpdateAppeal.Request): Promise<EventUpdateAppeal.Response> {
@@ -245,17 +249,20 @@ export class AppealService {
 
         return { appeal };
     }
+
     private async createAppealEntity(
         dtoAppeal: EventAddAppeal.Request,
         meter?: IMeter,
         typeOfService?: ITypeOfService
     ) {
+        const { managementCompanyId, typeOfAppeal, subscriberId, ...rest } = dtoAppeal;
+
         const newAppealEntity = new AppealEntity({
-            managementCompanyId: dtoAppeal.managementCompanyId,
-            typeOfAppeal: dtoAppeal.typeOfAppeal,
-            subscriberId: dtoAppeal.subscriberId,
+            managementCompanyId: managementCompanyId,
+            typeOfAppeal: typeOfAppeal,
+            subscriberId: subscriberId,
             createdAt: new Date(),
-            data: JSON.stringify(dtoAppeal.data),
+            data: JSON.stringify(rest),
         });
 
         const appeal = await this.appealRepository.create(newAppealEntity);

@@ -39,11 +39,11 @@ export class MeterQueriesService {
                 };
             };
             case (MeterType.Individual): {
-                const meters = await this.generalMeterRepository.findByIdsWithTOS(ids);
+                const meters = await this.individualMeterRepository.findByIdsWithTOS(ids);
                 if (!meters) {
                     throw new RMQException(METERS_NOT_EXIST.message, METERS_NOT_EXIST.status);
                 }
-                const newMeters = meters.map(m => new GeneralMeterEntity(m));
+                const newMeters = meters.map(m => new IndividualMeterEntity(m));
                 return {
                     meters: newMeters
                 };
@@ -72,7 +72,6 @@ export class MeterQueriesService {
         if (!apartmentIds.length) {
             return { meters: [] };
         }
-       
 
         if (isNotAllInfo) {
             const { meters } = await this.getMetersByApartments(apartmentIds, meta);

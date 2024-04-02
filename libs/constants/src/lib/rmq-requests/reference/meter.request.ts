@@ -54,7 +54,7 @@ export async function getMeters(rmqService: RMQService, meterIds: number[], mete
 
 export async function getMeter(rmqService: RMQService, id: number, meterType: MeterType) {
     const { meters } = await getMeters(rmqService, [id], meterType);
-    if (!meters) return;
+    if (!meters || !meters.length) return;
     return { meter: meters[0] };
 }
 

@@ -1,11 +1,16 @@
-import { AppealData, AppealStatus, AppealType } from "@myhome/interfaces";
+import { AppealStatus } from "@myhome/interfaces";
 
 export class AddAppealDto {
-    managementCompanyId: number;
-    typeOfAppeal: AppealType;
-    subscriberId: number;
-    status?: AppealStatus;
-    data: AppealData;
+    managementCompanyId: string;
+    typeOfAppeal: string;
+    subscriberId: string;
+    typeOfServiceId?: string;
+    apartmentId?: string;
+    factoryNumber?: string;
+    issuedAt?: string;
+    verifiedAt?: string;
+    meterId?: string;
+    text?: string;
 }
 
 export class UpdateAppealDto {

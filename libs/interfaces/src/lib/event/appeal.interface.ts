@@ -7,10 +7,6 @@ export interface IAppeal {
     status: AppealStatus;
 }
 
-export interface IAppealData extends IAppeal {
-    data: AppealData;
-}
-
 export interface IAppealEntity extends IAppeal {
     data: string;
 }

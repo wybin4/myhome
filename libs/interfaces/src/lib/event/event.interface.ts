@@ -3,7 +3,7 @@ import { IHouseNotification } from "./notification.interface";
 import { IOption, IVote, IVoting } from "./voting.interface";
 
 export interface IGetEvents {
-    notificationsAndVotings: { notificationsAndVotings?: IGetVoting[]; totalCount?: number };
+    notificationsAndVotings: { notificationsAndVotings?: IGetNotificationAndVoting[]; totalCount?: number };
     appeals: { appeals?: IGetAppeal[]; totalCount?: number };
 }
 

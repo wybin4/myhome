@@ -23,7 +23,6 @@ export class EventService {
 
         const results: IGetNotificationAndVoting[] = [];
         let totalCount = 0;
-        try {
         if (eventType && eventType.filterArray) {
             if (eventType.filterArray.includes("Notification")) {
                     const notifications = await this.notificationService.getHouseNotifications(dto.userId, dto.userRole, metaWithoutEventType);
@@ -35,32 +34,29 @@ export class EventService {
                     totalCount += notifications.totalCount;
                 }
             if (eventType.filterArray.includes("Voting")) {
-                    const votings = await this.votingService.getVotings(dto.userId, dto.userRole, metaWithoutEventType);
-                    results.push(...votings.votings.map(voting => ({
-                        voting,
-                        createdAt: voting.createdAt,
-                        eventType: EventTypeResponse.Voting,
-                    })));
-                    totalCount += votings.totalCount;
-                }
-            } else {
-                const [notifications, votings] = await Promise.all([
-                    this.notificationService.getHouseNotifications(dto.userId, dto.userRole, metaWithoutEventType),
-                    this.votingService.getVotings(dto.userId, dto.userRole, metaWithoutEventType)
-                ]);
-                results.push(...notifications.notifications.map(notification => ({
-                    notification,
-                    createdAt: notification.createdAt,
-                    eventType: EventTypeResponse.Notification,
-                })), ...votings.votings.map(voting => ({
+                const votings = await this.votingService.getVotings(dto.userId, dto.userRole, metaWithoutEventType);
+                results.push(...votings.votings.map(voting => ({
                     voting,
                     createdAt: voting.createdAt,
                     eventType: EventTypeResponse.Voting,
                 })));
-                totalCount = notifications.totalCount + votings.totalCount;
+                totalCount += votings.totalCount;
             }
-        } catch (e) {
-            console.log(e)
+        } else {
+            const [notifications, votings] = await Promise.all([
+                this.notificationService.getHouseNotifications(dto.userId, dto.userRole, metaWithoutEventType),
+                this.votingService.getVotings(dto.userId, dto.userRole, metaWithoutEventType)
+            ]);
+            results.push(...notifications.notifications.map(notification => ({
+                notification,
+                createdAt: notification.createdAt,
+                eventType: EventTypeResponse.Notification,
+            })), ...votings.votings.map(voting => ({
+                voting,
+                createdAt: voting.createdAt,
+                eventType: EventTypeResponse.Voting,
+            })));
+            totalCount = notifications.totalCount + votings.totalCount;
         }
 
         results.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());

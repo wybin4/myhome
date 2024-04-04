@@ -18,7 +18,6 @@ export class MeterController {
         @Req() req: { user: IJWTPayload },
         @Body() dto: GetMetersByUserDto
     ) {
-        console.log()
         try {
             return await this.rmqService.send<
                 ReferenceGetMetersByUser.Request,

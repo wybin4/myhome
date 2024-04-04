@@ -1,7 +1,7 @@
 import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { RMQService } from "nestjs-rmq";
 import { Injectable } from "@nestjs/common";
-import { GetChats, EventGetServiceNotifications, AddMessage, ReadMessages, AddChat, EventAddServiceNotifications, EventUpdateServiceNotification, EventUpdateAllServiceNotifications } from "@myhome/contracts";
+import { GetChats, EventGetUnreadServiceNotifications, AddMessage, ReadMessages, AddChat, EventUpdateAllServiceNotifications, EventAddServiceNotifications, EventAddServiceNotification } from "@myhome/contracts";
 import { Server, Socket } from "socket.io";
 import { WSAuthMiddleware } from "./ws.middleware";
 import { JwtService } from "@nestjs/jwt";
@@ -36,19 +36,27 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     async handleConnection(socket: Socket) {
-        this.getNotifications(socket);
+        this.hasUnreadNotifications(socket);
         this.getChats(socket);
     }
 
-    async getNotifications(socket: Socket) {
+    async hasUnreadNotifications(socket: Socket) {
         try {
-            const notifications = await this.rmqService.send<
-                EventGetServiceNotifications.Request,
-                EventGetServiceNotifications.Response
-            >(EventGetServiceNotifications.topic, socket.data.user);
-            socket.emit('notifications', notifications);
+            const hasUnread = await this.rmqService.send<
+                EventGetUnreadServiceNotifications.Request,
+                EventGetUnreadServiceNotifications.Response
+            >(EventGetUnreadServiceNotifications.topic, socket.data.user);
+            socket.emit('hasUnreadNotifications', hasUnread.hasUnreadNotifications);
         } catch (e) {
-            socket.emit('notifications', { message: "Ошибка при получении уведомлений" });
+            socket.emit('hasUnreadNotifications', { message: "Ошибка при получении уведомлений" });
+        }
+    }
+
+    async setUnreadNotifications(dto: EventUpdateAllServiceNotifications.Response) {
+        const key = `${dto.userId}_${dto.userRole}`;
+        const socket = this.clients.get(key);
+        if (socket) {
+            socket.emit('hasUnreadNotifications', 0);
         }
     }
 
@@ -64,19 +72,12 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
 
-    sendNotificationToClient(dto: EventUpdateServiceNotification.Response) {
+    sendNotificationToClient(dto: EventAddServiceNotification.Response) {
         const key = `${dto.notification.userId}_${dto.notification.userRole}`;
         const socket = this.clients.get(key);
         if (socket) {
-            socket.emit('readNotifications', [dto.notification]);
-        }
-    }
-
-    sendNotificationsToClient(dto: EventUpdateAllServiceNotifications.Response) {
-        const key = `${dto.userId}_${dto.userRole}`;
-        const socket = this.clients.get(key);
-        if (socket) {
-            socket.emit('readNotifications', dto.notifications);
+            socket.emit('newNotification', dto.notification);
+            socket.emit('hasUnreadNotifications', 1);
         }
     }
 
@@ -86,6 +87,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
             const socket = this.clients.get(key);
             if (socket) {
                 socket.emit('newNotification', notification);
+                socket.emit('hasUnreadNotifications', 1);
             }
         })
     }

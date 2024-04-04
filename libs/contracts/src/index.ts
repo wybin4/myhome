@@ -65,6 +65,7 @@ export * from './lib/event/notification/house-notification/event.add-house-notif
 export * from './lib/event/notification/service-notification/event.add-service-notification';
 export * from './lib/event/notification/service-notification/event.add-service-notifications';
 export * from './lib/event/notification/service-notification/event.get-service-notifications';
+export * from './lib/event/notification/service-notification/event.get-unread-service-notifications';
 export * from './lib/event/notification/service-notification/event.update-service-notification';
 export * from './lib/event/notification/service-notification/event.update-all-service-notifications';
 

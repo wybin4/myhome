@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ServiceNotificationEntity } from '../entities/service-notification.entity';
-import { UserRole } from '@myhome/interfaces';
+import { IMeta, NotificationStatus, UserRole } from '@myhome/interfaces';
+import { applyMeta } from '@myhome/constants';
 
 @Injectable()
 export class ServiceNotificationRepository {
@@ -25,6 +26,24 @@ export class ServiceNotificationRepository {
 
     async findByUserIdAndRole(userId: number, userRole: UserRole) {
         return await this.serviceNotificationRepository.find({ where: { userId, userRole } });
+    }
+
+    async findByUserIdAndRoleWithMeta(userId: number, userRole: UserRole, meta: IMeta) {
+        let queryBuilder = this.serviceNotificationRepository.createQueryBuilder('notification');
+        queryBuilder = queryBuilder.where('notification.userId = :userId AND notification.userRole = :userRole', { userId, userRole })
+            .orderBy('notification.createdAt', 'DESC');
+        const { queryBuilder: newQueryBuilder, totalCount } = await applyMeta<ServiceNotificationEntity>(queryBuilder, meta);
+        queryBuilder = newQueryBuilder;
+        return { notifications: await queryBuilder.getMany(), totalCount };
+    }
+
+    async findByUserIdAndRoleUnread(userId: number, userRole: UserRole) {
+        return await this.serviceNotificationRepository.count({
+            where: {
+                userId, userRole,
+                status: NotificationStatus.Unread
+            }
+        });
     }
 
     async update(notification: ServiceNotificationEntity) {

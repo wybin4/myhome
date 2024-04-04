@@ -2,7 +2,7 @@ import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ServiceNotificationService } from '../services/service-notification.service';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
-import { EventAddServiceNotification, EventAddServiceNotifications, EventGetServiceNotifications, EventUpdateAllServiceNotifications, EventUpdateServiceNotification } from '@myhome/contracts';
+import { EventAddServiceNotification, EventAddServiceNotifications, EventGetServiceNotifications, EventGetUnreadServiceNotifications, EventUpdateAllServiceNotifications, EventUpdateServiceNotification } from '@myhome/contracts';
 
 @Controller("service-notification")
 export class ServiceNotificationController {
@@ -15,6 +15,16 @@ export class ServiceNotificationController {
     async getServiceNotifications(@Body() dto: EventGetServiceNotifications.Request) {
         try {
             return await this.serviceNotificationService.getServiceNotifications(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
+    }
+
+    @RMQValidate()
+    @RMQRoute(EventGetUnreadServiceNotifications.topic)
+    async getUnreadServiceNotifications(@Body() dto: EventGetUnreadServiceNotifications.Request) {
+        try {
+            return await this.serviceNotificationService.getUnreadServiceNotifications(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

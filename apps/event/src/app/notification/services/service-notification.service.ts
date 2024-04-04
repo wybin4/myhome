@@ -1,6 +1,5 @@
-import { EventGetServiceNotifications, EventAddServiceNotification, EventUpdateServiceNotification, EventAddServiceNotifications, EventUpdateAllServiceNotifications } from "@myhome/contracts";
+import { EventGetUnreadServiceNotifications, EventGetServiceNotifications, EventAddServiceNotification, EventUpdateServiceNotification, EventAddServiceNotifications, EventUpdateAllServiceNotifications } from "@myhome/contracts";
 import { Injectable } from "@nestjs/common";
-import { RMQService } from "nestjs-rmq";
 import { ServiceNotificationRepository } from "../repositories/service-notification.repository";
 import { NOTIFICATIONS_NOT_EXIST, NOTIFICATION_NOT_EXIST, RMQException } from "@myhome/constants";
 import { ServiceNotificationEntity } from "../entities/service-notification.entity";
@@ -11,20 +10,27 @@ import { ServiceNotificationEventEmitter } from "../service-notification.event-e
 export class ServiceNotificationService {
     constructor(
         private readonly serviceNotificationRepository: ServiceNotificationRepository,
-        private readonly rmqService: RMQService,
         private readonly eventEmitter: ServiceNotificationEventEmitter
     ) { }
 
     public async getServiceNotifications(dto: EventGetServiceNotifications.Request):
         Promise<EventGetServiceNotifications.Response> {
-        const notifications = await this.serviceNotificationRepository.findByUserIdAndRole(
+        const { notifications } = await this.serviceNotificationRepository.findByUserIdAndRoleWithMeta(
+            dto.userId, dto.userRole, dto.meta
+        );
+        if (!notifications || !notifications.length) {
+            return { notifications: [] };
+        }
+        return { notifications };
+    }
+
+    public async getUnreadServiceNotifications(dto: EventGetUnreadServiceNotifications.Request):
+        Promise<EventGetUnreadServiceNotifications.Response> {
+        const hasUnreadNotifications = await this.serviceNotificationRepository.findByUserIdAndRoleUnread(
             dto.userId,
             dto.userRole
         );
-        if (!notifications || !notifications.length) {
-            return;
-        }
-        return { notifications };
+        return { hasUnreadNotifications: hasUnreadNotifications > 0 ? 1 : 0 };
     }
 
     public async addServiceNotification(dto: EventAddServiceNotification.Request):

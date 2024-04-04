@@ -3,7 +3,7 @@ import { IsArray, IsOptional, IsString, MaxLength, Validate } from 'class-valida
 import { IsValidEnumValue } from '../../../enum.validator';
 
 export namespace EventAddServiceNotifications {
-    export const topic = 'event.add-service-notification.command';
+    export const topic = 'event.add-service-notifications.command';
 
     export class Request {
         @IsArray({ message: "Id пользователей должны быть массивом чисел" })

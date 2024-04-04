@@ -306,7 +306,7 @@ export class AppealService {
                 return {
                     title: `${typeInText} обращение №${appeal.id}`,
                     description: "Поверка счётчика",
-                    text: meter && typeOfService ? `Прошу ввести ИПУ в эксплуатацию после проведения его поверки. ИПУ на услугу "${typeOfService.name}". Заводской номер - ${meter.factoryNumber}. Дата поверки - ${this.formatDate(new Date(meter.verifiedAt))}.` : ""
+                    text: meter && typeOfService ? `Прошу ввести ИПУ в эксплуатацию после проведения его поверки. ИПУ на услугу "${typeOfService.name}". Заводской номер - ${meter.factoryNumber}. Новая дата поверки - ${this.formatDate(new Date(data.verifiedAt))}.` : ""
                 };
             }
             case AppealType.ProblemOrQuestion:

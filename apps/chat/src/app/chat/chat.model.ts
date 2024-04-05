@@ -21,7 +21,7 @@ export class Message extends Document implements IMessage {
         required: true,
         default: MessageStatus.Unread
     })
-    status?: MessageStatus;
+    status: MessageStatus;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

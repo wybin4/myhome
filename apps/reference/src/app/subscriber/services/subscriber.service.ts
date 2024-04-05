@@ -221,9 +221,10 @@ export class SubscriberService {
 
 	async getReceiversByOwner(ownerId: number): Promise<ReferenceGetReceiversByOwner.Response> {
 		const ownerSubscribers = await this.subscriberRepository.findByOwnerIdAllInfo(ownerId);
-		if (!ownerSubscribers) {
-			throw new RMQException(SUBSCRIBERS_NOT_EXIST.message, SUBSCRIBERS_NOT_EXIST.status);
+		if (!ownerSubscribers || ownerSubscribers.length === 0) {
+			return { receivers: [] };
 		}
+
 		const managementCompanyIds = Array.from(new Set(
 			ownerSubscribers.map(
 				s => s.apartment.house.managementCompanyId

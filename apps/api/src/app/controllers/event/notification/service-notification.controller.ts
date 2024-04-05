@@ -36,8 +36,8 @@ export class ServiceNotificationController {
             const newDto = await this.rmqService.send<
                 EventAddServiceNotification.Request,
                 EventAddServiceNotification.Response
-                >(EventAddServiceNotification.topic, { ...dto, ...req.user });
-            this.socketGateway.sendNotificationToClient(newDto);
+            >(EventAddServiceNotification.topic, { ...dto, ...req.user });
+            this.socketGateway.sendNewNotification(newDto);
         } catch (e) {
             CatchError(e);
         }
@@ -52,7 +52,7 @@ export class ServiceNotificationController {
                 EventUpdateServiceNotification.Request,
                 EventUpdateServiceNotification.Response
             >(EventUpdateServiceNotification.topic, dto);
-            this.socketGateway.sendNotificationToClient(newDto);
+            this.socketGateway.sendNewNotification(newDto);
         } catch (e) {
             CatchError(e);
         }
@@ -66,8 +66,8 @@ export class ServiceNotificationController {
             const newDto = await this.rmqService.send<
                 EventUpdateAllServiceNotifications.Request,
                 EventUpdateAllServiceNotifications.Response
-                >(EventUpdateAllServiceNotifications.topic, { ...dto, ...req.user });
-            this.socketGateway.setUnreadNotifications(newDto);
+            >(EventUpdateAllServiceNotifications.topic, { ...dto, ...req.user });
+            this.socketGateway.setUnreadNotifications(newDto, 0);
         } catch (e) {
             CatchError(e);
         }
@@ -76,7 +76,7 @@ export class ServiceNotificationController {
     @RMQValidate()
     @RMQRoute(ApiEmitServiceNotifications.topic)
     async emitNotifications(@Body() dto: ApiEmitServiceNotifications.Request) {
-        this.socketGateway.sendNotificationsToClients(dto);
+        this.socketGateway.sendNewNotifications(dto);
     }
 
 }

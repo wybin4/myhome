@@ -1,10 +1,11 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { ChatRepository } from "./chat.repository";
-import { AddChat, AddMessage, GetChats, GetReceivers, ReadMessages } from "@myhome/contracts";
-import { CHAT_NOT_EXIST, RMQException, checkUsers, getReceiversByOwner, getSubscribersByMCId } from "@myhome/constants";
-import { IChatUser, IGetChatUser, IMessage, MessageStatus, UserRole } from "@myhome/interfaces";
+import { AddChat, AddMessage, GetChats, GetMessages, GetReceivers, ReadMessage } from "@myhome/contracts";
+import { CHAT_NOT_EXIST, RMQException, USER_NOT_EXIST, checkUser, checkUsers, getReceiversByOwner, getSubscribersByMCId } from "@myhome/constants";
+import { IChatUser, IGetChat, IGetChatUser, IGetMessage, IMessage, IMessageGroupByCreatedAt, MessageStatus, UserRole } from "@myhome/interfaces";
 import { ChatEntity, MessageEntity } from "./chat.entity";
 import { RMQService } from "nestjs-rmq";
+import { Chat, Message } from "./chat.model";
 
 @Injectable()
 export class ChatService {
@@ -13,12 +14,54 @@ export class ChatService {
         private readonly chatRepository: ChatRepository
     ) { }
 
+    private getCountUnread(messages: IMessage[], myId: number, myRole: UserRole): number {
+        return messages.filter(message => this.chatRepository.getUnreadCondition(message, myId, myRole)).length;
+    }
+
+    private mapChatToDTO(
+        chat: Chat, myId: number, myRole: UserRole,
+        users: IGetChatUser[], receiverName?: string,
+        countUnread?: number
+    ): IGetChat {
+        const chatEntity = chat.toObject();
+        if (!receiverName) {
+            receiverName = users.find(us => us.userId !== myId || us.userRole !== myRole).name;
+        }
+
+        let lastMessage;
+        if (chatEntity.messages.length > 0) {
+            const sortedMessages = chatEntity.messages.sort((a, b) => {
+                const createdAtA = a.createdAt.getTime();
+                const createdAtB = b.createdAt.getTime();
+                return createdAtB - createdAtA;
+            });
+            lastMessage = this.mapMessageToDTO(sortedMessages[0]);
+        } else {
+            lastMessage = null;
+        }
+
+        return {
+            id: chatEntity._id.toString(),
+            lastMessage,
+            receiverName,
+            countUnread: countUnread ? countUnread : this.getCountUnread(chatEntity.messages, myId, myRole),
+            createdAt: chatEntity.createdAt
+        };
+    }
+
+    private mapMessageToDTO(message: IMessage): IGetMessage {
+        return {
+            ...message,
+            createdAt: message.createdAt.getTime(),
+            id: message._id.toString()
+        }
+    }
+
     async getChats(dto: GetChats.Request): Promise<GetChats.Response> {
         const chats = await this.chatRepository.findManyByUser(dto);
-        if (!chats) {
-            return;
+        if (!chats || !chats.length) {
+            return { chats: [] };
         }
-        const chatEnitites = chats.map(chat => new ChatEntity(chat));
 
         const allUsers = chats.map((chat) => chat.users).flat();
         const uniqueArray = allUsers.filter((obj, index, self) =>
@@ -26,23 +69,135 @@ export class ChatService {
         );
         const { users } = await this.checkMultiUsers(uniqueArray);
 
-        return {
-            chats: chatEnitites.map(chat => {
-                return {
-                    _id: chat._id,
-                    users: chat.users.map(user => {
-                        const currentUser = users.find(us => us.userId === user.userId && us.userRole === user.userRole);
-                        return {
-                            name: currentUser.name,
-                            userId: currentUser.userId,
-                            userRole: currentUser.userRole
-                        };
-                    }),
-                    messages: chat.messages,
-                    createdAt: chat.createdAt
+        return { chats: chats.map(chat => this.mapChatToDTO(chat, dto.userId, dto.userRole, users)) };
+    }
+
+    async getMessages(dto: GetMessages.Request): Promise<GetMessages.Response> {
+        const chat = await this.chatRepository.findChatAndRead(dto.chatId, dto.userId, dto.userRole);
+        if (!chat) {
+            throw new RMQException(CHAT_NOT_EXIST.message(dto.chatId), CHAT_NOT_EXIST.status);
+        }
+
+        const otherUser = chat.users.find(us => us.userId !== dto.userId || us.userRole !== dto.userRole);
+        const { profile } = await checkUser(this.rmqService, otherUser.userId, otherUser.userRole);
+        if (!profile) {
+            throw new RMQException(USER_NOT_EXIST.message(otherUser.userId), USER_NOT_EXIST.status);
+        }
+
+        const resChat = this.mapChatToDTO(chat, dto.userId, dto.userRole, [], profile.name);
+        const messages = chat.messages.map((m: Message) => m.toObject());
+
+        if (!messages || !messages.length) {
+            return { messages: [], chat: resChat, users: chat.users };
+        }
+
+        const groupedMessages: IMessageGroupByCreatedAt[] = [];
+        messages.reduce((acc, message) => {
+            const messageDate = new Date(message.createdAt);
+            const dateString = messageDate.toISOString().split('T')[0];
+            let messageGroup = acc.find(group => {
+                const groupDate = new Date(group.createdAt);
+                return groupDate.toDateString() === messageDate.toDateString();
+            });
+            if (!messageGroup) {
+                messageGroup = {
+                    messages: [],
+                    createdAt: new Date(dateString),
                 };
-            })
-        };
+                acc.push(messageGroup);
+            }
+            messageGroup.messages.push(this.mapMessageToDTO(message));
+            return acc;
+        }, groupedMessages);
+
+
+        return { messages: groupedMessages, chat: resChat, users: chat.users };
+    }
+
+    async addChat(dto: AddChat.Request): Promise<AddChat.Response> {
+        if (!dto.users.length) {
+            return;
+        }
+        const { users } = await this.checkMultiUsers(dto.users);
+        const otherUser = users.find(us => us.userId !== dto.userId || us.userRole !== dto.userRole);
+
+        const newChat = await this.chatRepository.create(new ChatEntity({
+            users: users.map(u => {
+                return {
+                    userId: u.userId,
+                    userRole: u.userRole,
+                };
+            }),
+            createdAt: new Date()
+        }));
+        const chat = new ChatEntity(newChat);
+
+        return {
+            chat: {
+                id: chat._id.toString(),
+                countUnread: 0,
+                lastMessage: null,
+                receiverName: otherUser.name,
+                createdAt: chat.createdAt
+            },
+            users: users
+        }
+    }
+
+    async addMessage(dto: AddMessage.Request): Promise<AddMessage.Response> {
+        const message = new MessageEntity({
+            sender: {
+                userId: dto.userId,
+                userRole: dto.userRole
+            },
+            text: dto.text,
+            createdAt: new Date(dto.createdAt),
+            status: MessageStatus.Unread
+        });
+
+        try {
+            const { chat, updatedMessages, newMessage } = await this.chatRepository.createMessage(dto.chatId, message);
+            const { profile } = await checkUser(this.rmqService, dto.userId, dto.userRole);
+            const createdMessage = this.mapMessageToDTO(newMessage);
+            
+            return {
+                users: chat.users,
+                chat: {
+                    ...this.mapChatToDTO(
+                        chat, dto.userId, dto.userRole,
+                        [], profile.name
+                    ),
+                    lastMessage: createdMessage
+                },
+                createdMessage,
+                updatedMessages: updatedMessages.map(um => this.mapMessageToDTO(um))
+            };
+        } catch (e) {
+            throw new RMQException(e.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    async readMessage(dto: ReadMessage.Request): Promise<ReadMessage.Response> {
+        try {
+            const { chat, message } = await this.chatRepository.readMessage(
+                dto.chatId, dto.messageId,
+                dto.userId, dto.userRole
+            );
+            const otherUser = chat.users.find(us => us.userId !== dto.userId || us.userRole !== dto.userRole);
+            const { profile } = await checkUser(this.rmqService, otherUser.userId, otherUser.userRole);
+            if (!profile) {
+                throw new RMQException(USER_NOT_EXIST.message(otherUser.userId), USER_NOT_EXIST.status);
+            }
+
+            return {
+                chat: this.mapChatToDTO(chat, dto.userId, dto.userRole, [], profile.name),
+                users: chat.users,
+                updatedMessage: this.mapMessageToDTO(message)
+            };
+        } catch (e) {
+            console.log
+            throw new RMQException(e.message, HttpStatus.BAD_REQUEST);
+        }
     }
 
     async getReceivers(dto: GetReceivers.Request): Promise<GetReceivers.Response> {
@@ -91,38 +246,6 @@ export class ChatService {
         }
     }
 
-    async addChat(dto: AddChat.Request): Promise<AddChat.Response> {
-        if (!dto.users.length) {
-            return;
-        }
-        const { users } = await this.checkMultiUsers(dto.users);
-
-        const newChat = await this.chatRepository.create(new ChatEntity({
-            users: users.map(u => {
-                return {
-                    userId: u.userId,
-                    userRole: u.userRole,
-                };
-            }),
-            createdAt: new Date()
-        }));
-        const chat = new ChatEntity(newChat);
-
-        return {
-            chat: {
-                ...chat,
-                users: chat.users.map(u => {
-                    const currentUser = users.find(us => us.userId === u.userId && us.userRole === u.userRole);
-                    return {
-                        userId: u.userId,
-                        userRole: u.userRole,
-                        name: currentUser.name
-                    };
-                })
-            }
-        }
-    }
-
     private async checkMultiUsers(users: IChatUser[]): Promise<{ users: IGetChatUser[] }> {
         const managementCs = users.filter(u => u.userRole === UserRole.ManagementCompany);
         const owners = users.filter(u => u.userRole === UserRole.Owner);
@@ -157,102 +280,5 @@ export class ChatService {
             }));
         }
         return { users: realUsers };
-    }
-
-    async addMessage(dto: AddMessage.Request): Promise<AddMessage.Response> {
-        const chat = await this.chatRepository.findById(dto.chatId);
-        if (!chat) {
-            throw new RMQException(CHAT_NOT_EXIST.message(dto.chatId), CHAT_NOT_EXIST.status);
-        }
-        const exists = chat.users.some(user => {
-            return user.userId === dto.senderId && user.userRole === dto.senderRole;
-        });
-        if (!exists) {
-            throw new RMQException("Вы не можете писать в этот чат", HttpStatus.BAD_REQUEST);
-        }
-
-        const message = new MessageEntity({
-            sender: {
-                userId: dto.senderId,
-                userRole: dto.senderRole
-            },
-            text: dto.text,
-            createdAt: new Date(),
-            status: MessageStatus.Unread
-        });
-        const updatedMessages: IMessage[] = [];
-        // Обновляем сообщения в массиве chat.messages
-        chat.messages = chat.messages.map(message => {
-            if (
-                message.status !== MessageStatus.Read &&
-                (message.sender.userId !== dto.senderId || message.sender.userRole !== dto.senderRole)
-            ) {
-                const newMessage = {
-                    ...new MessageEntity(message).get(),
-                    status: MessageStatus.Read,
-                    readAt: new Date()
-                };
-                updatedMessages.push(newMessage);
-                return {
-                    ...newMessage
-                };
-            } else {
-                return message;
-            }
-        });
-        chat.messages.push(message);
-        const newChat = await chat.save();
-
-        const lastMessage = new MessageEntity(newChat.messages[newChat.messages.length - 1]);
-
-        return {
-            users: chat.users,
-            createdMessage: {
-                chatId: chat.id,
-                ...lastMessage.get()
-            },
-            updatedMessages: updatedMessages
-        };
-    }
-
-    async readMessages(dto: ReadMessages.Request): Promise<ReadMessages.Response> {
-        const chat = await this.chatRepository.findById(dto.chatId);
-        if (!chat) {
-            throw new RMQException(CHAT_NOT_EXIST.message(dto.chatId), CHAT_NOT_EXIST.status);
-        }
-        const exists = chat.users.some(user => {
-            return user.userId === dto.userId && user.userRole === dto.userRole;
-        });
-        if (!exists) {
-            throw new RMQException("Вы не можете читать этот чат", HttpStatus.BAD_REQUEST);
-        }
-
-        const updatedMessages: IMessage[] = [];
-        // Обновляем сообщения в массиве chat.messages
-        chat.messages = chat.messages.map(message => {
-            if (
-                message.status !== MessageStatus.Read &&
-                (message.sender.userId !== dto.userId || message.sender.userRole !== dto.userRole)
-            ) {
-                const newMessage = {
-                    ...new MessageEntity(message).get(),
-                    status: MessageStatus.Read,
-                    readAt: new Date()
-                };
-                updatedMessages.push(newMessage);
-                return {
-                    ...newMessage
-                };
-            } else {
-                return message;
-            }
-        });
-        await chat.save();
-   
-        return {
-            chatId: chat._id,
-            users: chat.users,
-            messages: updatedMessages
-        };
     }
 }

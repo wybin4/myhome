@@ -29,7 +29,7 @@ export class MessageEntity implements IMessage {
     sender: IChatUser;
     text: string;
     readAt?: Date;
-    status?: MessageStatus;
+    status: MessageStatus;
     createdAt: Date;
 
     constructor(message: IMessage) {

@@ -1,7 +1,7 @@
 import { IUser, UserRole } from "@myhome/interfaces";
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
-import { ADMIN_NOT_EXIST, OWNER_NOT_EXIST, MANAG_COMP_NOT_EXIST, INCORRECT_USER_ROLE, ADMINS_NOT_EXIST, MANAG_COMPS_NOT_EXIST, OWNERS_NOT_EXIST, RMQException, getUserIdsByAnotherRoleId, INCORRECT_ROLE_ACCESS } from "@myhome/constants";
+import { ADMIN_NOT_EXIST, OWNER_NOT_EXIST, MANAG_COMP_NOT_EXIST, INCORRECT_USER_ROLE, RMQException, getUserIdsByAnotherRoleId, INCORRECT_ROLE_ACCESS } from "@myhome/constants";
 import { ManagementCompanyEntity, UserEntity } from "./user.entity";
 import { AccountGetAllUsers, AccountGetUsersByAnotherRole, IGetUserAndSubscriber } from "@myhome/contracts";
 import { AdminRepository, OwnerRepository, ManagementCompanyRepository } from "./user.repository";
@@ -55,7 +55,7 @@ export class UserService {
             case UserRole.Admin: {
                 const users = await this.adminRepository.findByIds(ids);
                 if (!users.length) {
-                    throw new RMQException(ADMINS_NOT_EXIST.message, ADMINS_NOT_EXIST.status);
+                    return { profiles: [] };
                 }
                 for (const user of users) {
                     profiles.push(new UserEntity(user).getPublicProfile());
@@ -65,7 +65,7 @@ export class UserService {
             case UserRole.Owner: {
                 const users = await this.ownerRepository.findByIds(ids);
                 if (!users.length) {
-                    throw new RMQException(OWNERS_NOT_EXIST.message, OWNERS_NOT_EXIST.status);
+                    return { profiles: [] };
                 }
                 for (const user of users) {
                     profiles.push(new UserEntity(user).getPublicProfile());
@@ -75,7 +75,7 @@ export class UserService {
             case UserRole.ManagementCompany: {
                 const users = await this.managementCompanyRepository.findByIds(ids);
                 if (!users.length) {
-                    throw new RMQException(MANAG_COMPS_NOT_EXIST.message, MANAG_COMPS_NOT_EXIST.status);
+                    return { profiles: [] };
                 }
                 for (const user of users) {
                     profiles.push(new ManagementCompanyEntity(user).getWithCheckingAccount());

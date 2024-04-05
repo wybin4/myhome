@@ -1,6 +1,7 @@
-import { IChatUser, IGetMessage, IMessage, UserRole } from '@myhome/interfaces';
+import { IChatUser, IGetChat, IGetMessage, UserRole } from '@myhome/interfaces';
 import { IsNumber, IsString, MaxLength, Validate } from 'class-validator';
 import { IsValidEnumValue } from '../enum.validator';
+import { ParseDate } from '../parse.validator';
 
 export namespace AddMessage {
     export const topic = 'chat.add-message.command';
@@ -14,15 +15,19 @@ export namespace AddMessage {
         text!: string;
 
         @IsNumber({}, { message: "Id отправителя должен быть числом" })
-        senderId!: number;
+        userId!: number;
 
         @Validate(IsValidEnumValue, [UserRole])
-        senderRole!: UserRole;
+        userRole!: UserRole;
+
+        @ParseDate({ message: "Неверная дата создания" })
+        createdAt!: string;
     }
 
     export class Response {
         users!: IChatUser[];
+        chat!: IGetChat;
         createdMessage!: IGetMessage;
-        updatedMessages!: IMessage[];
+        updatedMessages!: IGetMessage[];
     }
 }

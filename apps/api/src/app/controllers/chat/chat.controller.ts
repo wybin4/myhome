@@ -1,10 +1,9 @@
-import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req } from '@nestjs/common';
 import { CatchError } from '../../error.filter';
-import { AddChatDto, AddMessageDto, ReadMessagesDto, GetReceiversDto } from '../../dtos/chat/chat.dto';
+import { AddChatDto, AddMessageDto, GetReceiversDto, GetMessagesDto } from '../../dtos/chat/chat.dto';
 import { SocketGateway } from '../../socket.gateway';
-import { AddChat, AddMessage, ReadMessages, GetReceivers } from '@myhome/contracts';
+import { AddChat, AddMessage, GetReceivers, GetMessages } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
-import { JWTAuthGuard } from '../../guards/jwt.guard';
 import { IJWTPayload } from '@myhome/interfaces';
 
 @Controller('chat')
@@ -14,7 +13,7 @@ export class ChatController {
         private readonly socketGateway: SocketGateway
     ) { }
 
-    @UseGuards(JWTAuthGuard)
+    // @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-receivers')
     async getReceivers(@Req() req: { user: IJWTPayload }, @Body() dto: GetReceiversDto) {
@@ -28,48 +27,64 @@ export class ChatController {
         }
     }
 
-    @UseGuards(JWTAuthGuard)
+    // @UseGuards(JWTAuthGuard)
     @HttpCode(201)
     @Post('add-chat')
-    async addChat(@Body() dto: AddChatDto) {
+    async addChat(@Req() req: { user: IJWTPayload }, @Body() dto: AddChatDto) {
         try {
             const newDto = await this.rmqService.send<
                 AddChat.Request,
                 AddChat.Response
-            >(AddChat.topic, dto);
-            this.socketGateway.sendChatToClients(newDto);
+            >(AddChat.topic, { ...dto, ...req.user });
+            this.socketGateway.sendNewChat(newDto);
             return newDto;
         } catch (e) {
             CatchError(e);
         }
     }
 
-    @UseGuards(JWTAuthGuard)
+    // ДЛЯ ТЕСТОВ, УБРАТЬ
+    // @UseGuards(JWTAuthGuard)
     @HttpCode(201)
     @Post('add-message')
     async addMessage(@Req() req: { user: IJWTPayload }, @Body() dto: AddMessageDto) {
         try {
-            const { userId: senderId, userRole: senderRole } = req.user;
+            const { userId, userRole } = { ...dto, ...req.user }; // исправить
+
             const newDto = await this.rmqService.send<
                 AddMessage.Request,
                 AddMessage.Response
-            >(AddMessage.topic, { ...dto, senderId, senderRole });
-            this.socketGateway.sendMessageToClients(newDto);
+            >(AddMessage.topic, { ...dto, ...req.user });
+
+            this.socketGateway.sendNewMessage(newDto);
+            this.socketGateway.sendUpdateChat(
+                newDto.chat, newDto.users,
+                (user) => userId === user.userId
+                    && userRole === user.userRole
+            );
+            return { ...newDto.createdMessage, chatId: newDto.chat.id };
         } catch (e) {
             CatchError(e);
         }
     }
 
-    @UseGuards(JWTAuthGuard)
+    // @UseGuards(JWTAuthGuard)
     @HttpCode(200)
-    @Post('read-messages')
-    async readMessages(@Req() req: { user: IJWTPayload }, @Body() dto: ReadMessagesDto) {
+    @Post('get-messages')
+    async getMessages(@Req() req: { user: IJWTPayload }, @Body() dto: GetMessagesDto) {
         try {
+            const { userId, userRole } = { ...dto, ...req.user }; // исправить
+
             const newDto = await this.rmqService.send<
-                ReadMessages.Request,
-                ReadMessages.Response
-            >(ReadMessages.topic, { ...dto, ...req.user });
-            this.socketGateway.sendMessagesToClients(newDto);
+                GetMessages.Request,
+                GetMessages.Response
+            >(GetMessages.topic, { ...dto, ...req.user });
+            this.socketGateway.sendUpdateChat(
+                newDto.chat, newDto.users,
+                (user) => userId !== user.userId
+                    || userRole !== user.userRole
+            );
+            return { messages: newDto.messages };
         } catch (e) {
             CatchError(e);
         }

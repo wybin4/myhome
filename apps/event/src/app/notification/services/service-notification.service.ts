@@ -84,7 +84,6 @@ export class ServiceNotificationService {
         );
         await this.serviceNotificationRepository.updateMany(notifications);
         return {
-            notifications: notifications,
             userId: dto.userId,
             userRole: dto.userRole
         };

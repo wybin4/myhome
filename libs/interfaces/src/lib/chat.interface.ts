@@ -14,7 +14,7 @@ export interface IMessage {
     text: string;
     createdAt: Date;
     readAt?: Date;
-    status?: MessageStatus;
+    status: MessageStatus;
 }
 
 export interface IChatUser {
@@ -22,19 +22,30 @@ export interface IChatUser {
     userRole: UserRole;
 }
 
-export interface IGetChats {
-    _id?: Types.ObjectId;
+export interface IGetChat {
+    id: string;
     createdAt: Date;
-    messages?: IMessage[];
-    users: IGetChatUser[];
+    lastMessage: IGetMessage;
+    countUnread: number;
+    receiverName: string;
+}
+
+export interface IGetMessage {
+    id: string;
+    sender: IChatUser;
+    text: string;
+    createdAt: number;
+    readAt?: Date;
+    status: MessageStatus;
+}
+
+export interface IMessageGroupByCreatedAt {
+    messages: IGetMessage[];
+    createdAt: Date;
 }
 
 export interface IGetChatUser extends IChatUser {
     name: string;
-}
-
-export interface IGetMessage extends IMessage {
-    chatId: string;
 }
 
 export enum MessageStatus {

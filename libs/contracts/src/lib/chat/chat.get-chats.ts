@@ -1,4 +1,4 @@
-import { IGetChats, UserRole } from "@myhome/interfaces";
+import { IGetChat, UserRole } from "@myhome/interfaces";
 import { IsNumber, Validate } from "class-validator";
 import { IsValidEnumValue } from "../enum.validator";
 
@@ -14,6 +14,6 @@ export namespace GetChats {
     }
 
     export class Response {
-        chats!: IGetChats[];
+        chats!: IGetChat[];
     }
 }

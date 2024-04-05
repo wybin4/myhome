@@ -58,7 +58,8 @@ export * from './lib/chat/chat.add-chat';
 export * from './lib/chat/chat.get-chats';
 export * from './lib/chat/chat.get-receivers';
 export * from './lib/chat/chat.add-message';
-export * from './lib/chat/chat.read-messages';
+export * from './lib/chat/chat.read-message';
+export * from './lib/chat/chat.get-messages';
 
 export * from './lib/event/notification/house-notification/event.add-house-notification';
 

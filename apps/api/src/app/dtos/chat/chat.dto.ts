@@ -1,16 +1,17 @@
 import { IChatUser } from "@myhome/interfaces";
 
 export class AddChatDto {
-    users!: IChatUser[];
+    users: IChatUser[];
 }
 
 export class AddMessageDto {
-    chatId!: string;
-    text!: string;
+    chatId: string;
+    text: string;
+    createdAt: string;
 }
 
-export class ReadMessagesDto {
-    chatId!: string;
+export class GetMessagesDto {
+    chatId: string;
 }
 
 export class GetReceiversDto { }

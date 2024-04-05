@@ -1,11 +1,13 @@
-import { OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
+/* eslint-disable no-empty */
+import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { RMQService } from "nestjs-rmq";
 import { Injectable } from "@nestjs/common";
-import { GetChats, EventGetUnreadServiceNotifications, AddMessage, ReadMessages, AddChat, EventUpdateAllServiceNotifications, EventAddServiceNotifications, EventAddServiceNotification } from "@myhome/contracts";
+import { GetChats, EventGetUnreadServiceNotifications, AddMessage, AddChat, EventUpdateAllServiceNotifications, EventAddServiceNotifications, EventAddServiceNotification, ReadMessage } from "@myhome/contracts";
 import { Server, Socket } from "socket.io";
 import { WSAuthMiddleware } from "./ws.middleware";
 import { JwtService } from "@nestjs/jwt";
 import { AuthController } from "./controllers/account/auth.controller";
+import { IChatUser, IGetChat } from "@myhome/interfaces";
 
 @Injectable()
 @WebSocketGateway({
@@ -37,7 +39,42 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     async handleConnection(socket: Socket) {
         this.hasUnreadNotifications(socket);
-        this.getChats(socket);
+        this.chats(socket);
+    }
+
+    @SubscribeMessage('addMessage')
+    async handleAddMessage(@MessageBody() dto: string, @ConnectedSocket() socket: Socket) {
+        try {
+            const parsedDto = JSON.parse(dto);
+            const newDto = await this.rmqService.send<
+                AddMessage.Request,
+                AddMessage.Response
+            >(AddMessage.topic, { ...parsedDto, ...socket.data.user });
+            this.sendNewMessage(newDto);
+            this.sendUpdateChat(
+                newDto.chat, newDto.users,
+                (user) => socket.data.userId === user.userId
+                    && socket.data.userRole === user.userRole
+            );
+            return { ...newDto.createdMessage, chatId: newDto.chat.id };
+        } catch (e) { }
+    }
+
+    @SubscribeMessage('readMessage')
+    async handleReadMessage(@MessageBody() dto: string, @ConnectedSocket() socket: Socket) {
+        try {
+            const parsedDto = JSON.parse(dto);
+            const newDto = await this.rmqService.send<
+                ReadMessage.Request,
+                ReadMessage.Response
+            >(ReadMessage.topic, { ...parsedDto, ...socket.data.user });
+            this.sendUpdateChat(
+                newDto.chat, newDto.users,
+                (user) => socket.data.user.userId !== user.userId
+                    || socket.data.user.userRole !== user.userRole
+            );
+            socket.emit('readMessages', [newDto.updatedMessage]);
+        } catch (e) { }
     }
 
     async hasUnreadNotifications(socket: Socket) {
@@ -47,32 +84,42 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
                 EventGetUnreadServiceNotifications.Response
             >(EventGetUnreadServiceNotifications.topic, socket.data.user);
             socket.emit('hasUnreadNotifications', hasUnread.hasUnreadNotifications);
-        } catch (e) {
-            socket.emit('hasUnreadNotifications', { message: "Ошибка при получении уведомлений" });
-        }
+        } catch (e) { }
     }
 
-    async setUnreadNotifications(dto: EventUpdateAllServiceNotifications.Response) {
+    async setUnreadNotifications(dto: EventUpdateAllServiceNotifications.Response, value: number) {
         const key = `${dto.userId}_${dto.userRole}`;
         const socket = this.clients.get(key);
         if (socket) {
-            socket.emit('hasUnreadNotifications', 0);
+            socket.emit('hasUnreadNotifications', value);
         }
     }
 
-    async getChats(socket: Socket) {
+    async chats(socket: Socket) {
         try {
             const chats = await this.rmqService.send<
                 GetChats.Request,
                 GetChats.Response
             >(GetChats.topic, socket.data.user);
-            socket.emit('chats', chats);
-        } catch (e) {
-            socket.emit('chats', { message: "Ошибка при получении чатов" });
-        }
+            socket.emit('chats', chats.chats);
+        } catch (e) { }
     }
 
-    sendNotificationToClient(dto: EventAddServiceNotification.Response) {
+    async sendUpdateChat(chat: IGetChat, users: IChatUser[], condition: (user: IChatUser) => boolean) {
+        users.map(user => {
+            const key = `${user.userId}_${user.userRole}`;
+            const socket = this.clients.get(key);
+            if (socket) {
+                if (condition(user)) {
+                    socket.emit('updateChat', { ...chat, countUnread: -1 });
+                } else {
+                    socket.emit('updateChat', chat);
+                }
+            }
+        })
+    }
+
+    sendNewNotification(dto: EventAddServiceNotification.Response) {
         const key = `${dto.notification.userId}_${dto.notification.userRole}`;
         const socket = this.clients.get(key);
         if (socket) {
@@ -81,7 +128,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
 
-    sendNotificationsToClients(dto: EventAddServiceNotifications.Response) {
+    sendNewNotifications(dto: EventAddServiceNotifications.Response) {
         dto.notifications.map(notification => {
             const key = `${notification.userId}_${notification.userRole}`;
             const socket = this.clients.get(key);
@@ -92,34 +139,30 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
         })
     }
 
-    sendMessageToClients(dto: AddMessage.Response) {
+    sendNewMessage(dto: AddMessage.Response) {
         dto.users.map(user => {
             const key = `${user.userId}_${user.userRole}`;
             const socket = this.clients.get(key);
             if (socket) {
-                socket.emit('newMessage', {
-                    createdMessage: dto.createdMessage,
-                    updatedMessages: dto.updatedMessages
-                });
+                socket.emit('newMessage', { ...dto.createdMessage, chatId: dto.chat.id });
+                socket.emit('readMessages', dto.updatedMessages);
             }
         })
     }
 
-    sendMessagesToClients(dto: ReadMessages.Response) {
+    addNewMessage(dto: AddMessage.Response) {
         dto.users.map(user => {
             const key = `${user.userId}_${user.userRole}`;
             const socket = this.clients.get(key);
             if (socket) {
-                socket.emit('readMessages', {
-                    chatId: dto.chatId,
-                    messages: dto.messages
-                });
+                socket.emit('newMessage', dto.createdMessage);
+                socket.emit('readMessages', dto.updatedMessages);
             }
         })
     }
 
-    sendChatToClients(dto: AddChat.Response) {
-        dto.chat.users.map(user => {
+    sendNewChat(dto: AddChat.Response) {
+        dto.users.map(user => {
             const key = `${user.userId}_${user.userRole}`;
             const socket = this.clients.get(key);
             if (socket) {

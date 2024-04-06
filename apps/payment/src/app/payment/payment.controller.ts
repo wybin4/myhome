@@ -1,7 +1,7 @@
 import { Controller, Body } from "@nestjs/common";
 import { RMQValidate, RMQRoute, RMQError } from "nestjs-rmq";
 import { PaymentService } from "./payment.service";
-import { AcceptPayment, GetPaymentsByUser } from '@myhome/contracts';
+import { AcceptPayment, GetPaymentsBySpd, GetPaymentsByUser } from '@myhome/contracts';
 import { ERROR_TYPE } from "nestjs-rmq/dist/constants";
 
 @Controller('payment')
@@ -12,9 +12,19 @@ export class PaymentController {
 
     @RMQValidate()
     @RMQRoute(GetPaymentsByUser.topic)
-    async getPayment(@Body() dto: GetPaymentsByUser.Request) {
+    async getPaymentsByUser(@Body() dto: GetPaymentsByUser.Request) {
         try {
             return await this.paymentService.getPaymentsByUser(dto);
+        } catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
+    }
+
+    @RMQValidate()
+    @RMQRoute(GetPaymentsBySpd.topic)
+    async getPaymentsBySpdId(@Body() dto: GetPaymentsBySpd.Request) {
+        try {
+            return await this.paymentService.getPaymentsBySpdId(dto);
         } catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
         }

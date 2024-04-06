@@ -1,10 +1,10 @@
 import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
-import { AcceptPayment, GetPaymentsByUser } from '@myhome/contracts';
+import { AcceptPayment, GetPaymentsBySpd, GetPaymentsByUser } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
 import { IJWTPayload } from '@myhome/interfaces';
 import { JWTAuthGuard } from '../../guards/jwt.guard';
-import { AcceptPaymentDto, GetPaymentsByUserDto } from '../../dtos/payment/payment.dto';
+import { AcceptPaymentDto, GetPaymentsBySpdIdDto, GetPaymentsByUserDto } from '../../dtos/payment/payment.dto';
 
 @Controller('payment')
 export class PaymentController {
@@ -15,12 +15,26 @@ export class PaymentController {
   @HttpCode(200)
   @UseGuards(JWTAuthGuard)
   @Post('get-payments-by-user')
-  async register(@Req() req: { user: IJWTPayload }, @Body() dto: GetPaymentsByUserDto) {
+  async getPaymentsByUser(@Req() req: { user: IJWTPayload }, @Body() dto: GetPaymentsByUserDto) {
     try {
       return await this.rmqService.send<
         GetPaymentsByUser.Request,
         GetPaymentsByUser.Response
       >(GetPaymentsByUser.topic, { ...dto, ...req.user });
+    } catch (e) {
+      CatchError(e);
+    }
+  }
+
+  @HttpCode(200)
+  // @UseGuards(JWTAuthGuard)
+  @Post('get-payments')
+  async getPaymentsBySpdId(@Body() dto: GetPaymentsBySpdIdDto) {
+    try {
+      return await this.rmqService.send<
+        GetPaymentsBySpd.Request,
+        GetPaymentsBySpd.Response
+        >(GetPaymentsBySpd.topic, dto);
     } catch (e) {
       CatchError(e);
     }

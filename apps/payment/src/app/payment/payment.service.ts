@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { PaymentRepository } from "./payment.repository";
-import { AcceptPayment, CorrectionUpdateDebt, GetPaymentsByUser, GetSinglePaymentDocumentsByUser } from "@myhome/contracts";
+import { AcceptPayment, CheckSinglePaymentDocument, CorrectionUpdateDebt, GetPaymentsBySpd, GetPaymentsByUser, GetSinglePaymentDocumentsByUser } from "@myhome/contracts";
 import { UserRole } from "@myhome/interfaces";
-import { CANT_GET_SPDS, RMQException } from "@myhome/constants";
+import { CANT_GET_SPD, CANT_GET_SPDS, RMQException } from "@myhome/constants";
 import { RMQService } from "nestjs-rmq";
 import { PaymentEntity } from "./payment.entity";
 
@@ -45,12 +45,32 @@ export class PaymentService {
         return { payments };
     }
 
+    public async getPaymentsBySpdId(dto: GetPaymentsBySpd.Request): Promise<GetPaymentsBySpd.Response> {
+        const { singlePaymentDocument } = await this.checkSpd(dto.singlePaymentDocumentId);
+        if (!singlePaymentDocument) {
+            throw new RMQException(CANT_GET_SPD.message(dto.singlePaymentDocumentId), CANT_GET_SPD.status);
+        }
+        const payments = await this.paymentRepository.findBySPDIds([dto.singlePaymentDocumentId]);
+        return { payments };
+    }
+
     private async getSPDsByUser(userId: number, userRole: UserRole) {
         try {
             return await this.rmqService.send<
                 GetSinglePaymentDocumentsByUser.Request,
                 GetSinglePaymentDocumentsByUser.Response
             >(GetSinglePaymentDocumentsByUser.topic, { userId, userRole });
+        } catch (e) {
+            throw new RMQException(e.message, e.status);
+        }
+    }
+
+    private async checkSpd(id: number) {
+        try {
+            return await this.rmqService.send<
+                CheckSinglePaymentDocument.Request,
+                CheckSinglePaymentDocument.Response
+            >(CheckSinglePaymentDocument.topic, { id });
         } catch (e) {
             throw new RMQException(e.message, e.status);
         }

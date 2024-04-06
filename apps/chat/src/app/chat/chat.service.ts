@@ -20,12 +20,27 @@ export class ChatService {
 
     private mapChatToDTO(
         chat: Chat, myId: number, myRole: UserRole,
-        users: IGetChatUser[], receiverName?: string,
+        users: IGetChatUser[], receiverName?: string, receiverRole?: UserRole,
         countUnread?: number
     ): IGetChat {
         const chatEntity = chat.toObject();
         if (!receiverName) {
-            receiverName = users.find(us => us.userId !== myId || us.userRole !== myRole).name;
+            receiverName = users.map(us => {
+                if (us.userRole === UserRole.Owner) {
+                    const nameWords = us.name.split(' ');
+                    if (nameWords.length > 2) {
+                        return { ...us, name: nameWords.slice(0, 2).join(' ') };
+                    }
+                }
+                return us;
+            }).find(us => us.userId !== myId || us.userRole !== myRole).name;
+        } else {
+            if (receiverRole === UserRole.Owner) {
+                const nameWords = receiverName.split(' ');
+                if (nameWords.length > 2) {
+                    receiverName = nameWords.slice(0, 2).join(' ');
+                }
+            }
         }
 
         let lastMessage;
@@ -84,7 +99,7 @@ export class ChatService {
             throw new RMQException(USER_NOT_EXIST.message(otherUser.userId), USER_NOT_EXIST.status);
         }
 
-        const resChat = this.mapChatToDTO(chat, dto.userId, dto.userRole, [], profile.name);
+        const resChat = this.mapChatToDTO(chat, dto.userId, dto.userRole, [], profile.name, otherUser.userRole);
         const messages = chat.messages.map((m: Message) => m.toObject());
 
         if (!messages || !messages.length) {
@@ -165,7 +180,7 @@ export class ChatService {
                 chat: {
                     ...this.mapChatToDTO(
                         chat, dto.userId, dto.userRole,
-                        [], profile.name
+                        [], profile.name, dto.userRole
                     ),
                     lastMessage: createdMessage
                 },
@@ -190,7 +205,7 @@ export class ChatService {
             }
 
             return {
-                chat: this.mapChatToDTO(chat, dto.userId, dto.userRole, [], profile.name),
+                chat: this.mapChatToDTO(chat, dto.userId, dto.userRole, [], profile.name, otherUser.userRole),
                 users: chat.users,
                 updatedMessage: this.mapMessageToDTO(message)
             };

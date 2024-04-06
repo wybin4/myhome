@@ -97,6 +97,7 @@ export * from './lib/correction/correction.get-correction';
 export * from './lib/correction/cbr/correction.get-key-rate';
 
 export * from './lib/payment/payment.get-payments-by-user';
+export * from './lib/payment/payment.get-payments-by-spd';
 export * from './lib/payment/payment.accept-payment';
 
 export * from './lib/event/voting/event.add-voting';

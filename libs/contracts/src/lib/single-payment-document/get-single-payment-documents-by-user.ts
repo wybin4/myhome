@@ -15,10 +15,10 @@ export namespace GetSinglePaymentDocumentsByUser {
 
         @IsOptional()
         @IsBoolean({ message: "Флаг должен быть правдой или ложью" })
-        withoutAttachments?: boolean;
+        isNotAllInfo?: boolean;
     }
 
-    export class Response extends MetaResponse{
+    export class Response extends MetaResponse {
         singlePaymentDocuments!: IGetSinglePaymentDocumentsByMCId[] | IGetSinglePaymentDocumentsBySId[];
     }
 }
@@ -26,20 +26,17 @@ export namespace GetSinglePaymentDocumentsByUser {
 export interface IGetSinglePaymentDocumentsByMCId {
     id: number;
     houseId: number;
+    houseName: string;
     city: string;
     street: string;
-    houseName: string;
-    fileSize: number;
-    pdfBuffer: string;
     createdAt: Date;
 }
 
 export interface IGetSinglePaymentDocumentsBySId {
     id: number;
-    apartmentName?: string;
+    apartmentName: string;
+    apartmentId?: number;
     mcName?: string;
     mcCheckingAccount?: string;
-    fileSize?: number;
-    pdfBuffer?: string;
     createdAt: Date;
 }

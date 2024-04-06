@@ -4,7 +4,7 @@ import { Model, Types } from 'mongoose';
 import { DebtEntity } from '../entities/debt.entity';
 import { Debt } from '../models/debt.model';
 import { ObjectId } from 'typeorm';
-import { IDebtDetail, IDebtHistory } from '@myhome/interfaces';
+import { IDebtDetail, IDebtForCharge, IDebtHistory } from '@myhome/interfaces';
 
 @Injectable()
 export class DebtRepository {
@@ -42,7 +42,7 @@ export class DebtRepository {
         return await this.debtModel.updateOne({ _id }, { $set: { ...rest } }).exec();
     }
 
-    async findSPDsWithOutstandingDebt(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, outstandingDebt: IDebtDetail[] }[]> {
+    async findSPDsWithOutstandingDebt(spdIds: number[]): Promise<{ singlePaymentDocumentId: number, outstandingDebt: IDebtDetail[] }[]> {
         return await this.debtModel.aggregate([
             {
                 $match: {
@@ -66,7 +66,7 @@ export class DebtRepository {
         ]).exec();
     }
 
-    async findSPDsWithOutstandingDebtAndOriginalDebt(spdIds: number[]): Promise<{ singlePaymentDocumentId: ObjectId, outstandingDebt: IDebtDetail[], originalDebt: IDebtDetail[] }[]> {
+    async findSPDsWithOutstandingDebtAndOriginalDebt(spdIds: number[]): Promise<IDebtForCharge[]> {
         return await this.debtModel.aggregate([
             {
                 $match: {

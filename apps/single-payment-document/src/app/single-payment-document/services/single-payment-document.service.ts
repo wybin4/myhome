@@ -3,7 +3,7 @@ import { HttpStatus, Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { SinglePaymentDocumentEntity } from "../entities/single-payment-document.entity";
 import { CalculationState, ITypeOfService, IUnit, UserRole } from "@myhome/interfaces";
-import { CANT_GET_SPD, CANT_GET_SPDS, INCORRECT_USER_ROLE, RMQException, SUBSCRIBERS_NOT_EXIST, checkUser, getApartmentsAllInfoByUser, getCommon, getHouses, getHousesByMCId, getSubscribersAllInfo } from "@myhome/constants";
+import { CANT_GET_SPD, INCORRECT_USER_ROLE, RMQException, SUBSCRIBERS_NOT_EXIST, checkUser, getApartmentsAllInfoByUser, getCommon, getHouses, getHousesByMCId, getSubscribersAllInfo } from "@myhome/constants";
 import { GetSinglePaymentDocumentSaga } from "../sagas/get-single-payment-document.saga";
 import { PdfService } from "./pdf.service";
 import { ISpdHouse, ISpdManagementCompany, ISpdSubscriber } from "../interfaces/subscriber.interface";
@@ -27,36 +27,28 @@ export class SinglePaymentDocumentService {
             case UserRole.Owner: {
                 const { apartments } = await getApartmentsAllInfoByUser(this.rmqService, dto.userId, dto.userRole);
                 if (dto.meta) {
-                    dto.meta.limit = dto.meta.limit * apartments.length;
+                    dto.meta.limit = (dto.meta.limit + 1) * apartments.length;
                 }
-                const { users } = await this.getMCByOwner(dto.userId);
                 const subscriberIds = apartments.map(apartment => apartment.subscriberId);
                 const { spds, totalCount } = await this.singlePaymentDocumentRepository.findBySIds(subscriberIds, dto.meta);
-                if (!spds) {
-                    throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
+                if (!spds || !spds.length) {
+                    return { singlePaymentDocuments: [], totalCount: 0 };
                 }
-                const files = spds.map(s => {
-                    return {
-                        id: s.id,
-                        fileName: s.path
-                    };
-                });
 
-                const readFiles = await this.pdfService.readFileToBuffer(files, dto.withoutAttachments);
+                if (!dto.isNotAllInfo) {
+                    const { users } = await this.getMCByOwner(dto.userId);
 
-                if (!dto.withoutAttachments) {
                     return {
-                        singlePaymentDocuments: readFiles.map(file => {
+                        singlePaymentDocuments: spds.map(file => {
                             const currentSPD = spds.find(s => s.id === file.id);
                             const currentApartment = apartments.find(s => s.subscriberId === currentSPD.subscriberId);
                             const currentMC = users.find(user => user.subscribers.find(subscriber => subscriber.id === currentApartment.subscriberId));
                             return {
                                 id: currentSPD.id,
                                 apartmentName: currentApartment.address,
+                                apartmentId: currentApartment.id,
                                 mcName: currentMC.user.name,
                                 mcCheckingAccount: currentMC.user.checkingAccount,
-                                fileSize: file.size,
-                                pdfBuffer: (file.buffer).toString('base64'),
                                 createdAt: currentSPD.createdAt,
                             };
                         }),
@@ -65,9 +57,12 @@ export class SinglePaymentDocumentService {
                 } else {
                     return {
                         singlePaymentDocuments: spds.map(spd => {
+                            const currentApartment = apartments.find(s => s.subscriberId === spd.subscriberId);
+
                             return {
                                 id: spd.id,
-                                createdAt: spd.createdAt
+                                createdAt: spd.createdAt,
+                                apartmentName: currentApartment.address
                             };
                         }),
                         totalCount
@@ -77,22 +72,13 @@ export class SinglePaymentDocumentService {
             case UserRole.ManagementCompany: {
                 const { houses } = await getHousesByMCId(this.rmqService, dto.userId);
                 const { spds, totalCount } = await this.totalRepository.findByMCId(dto.userId, dto.meta);
-                if (!spds) {
-                    throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
+                if (!spds || !spds.length) {
+                    return { singlePaymentDocuments: [], totalCount: 0 };
                 }
 
-                const files = spds.map(s => {
+                if (!dto.isNotAllInfo) {
                     return {
-                        id: s.id,
-                        fileName: s.path
-                    };
-                });
-
-                const readFiles = await this.pdfService.readFileToBuffer(files, dto.withoutAttachments);
-
-                if (!dto.withoutAttachments) {
-                    return {
-                        singlePaymentDocuments: readFiles.map(file => {
+                        singlePaymentDocuments: spds.map(file => {
                             const currentSPD = spds.find(s => s.id === file.id);
                             const currentHouse = houses.find(h => h.managementCompanyId === currentSPD.managementCompanyId);
 
@@ -102,8 +88,6 @@ export class SinglePaymentDocumentService {
                                 city: currentHouse.city,
                                 street: currentHouse.street,
                                 houseName: currentHouse.houseNumber,
-                                fileSize: file.size,
-                                pdfBuffer: !dto.withoutAttachments ? (file.buffer).toString('base64') : "",
                                 createdAt: currentSPD.createdAt
                             };
                         }),
@@ -120,8 +104,6 @@ export class SinglePaymentDocumentService {
                                 city: currentHouse.city,
                                 street: currentHouse.street,
                                 houseName: currentHouse.houseNumber,
-                                fileSize: 0,
-                                pdfBuffer: "",
                                 createdAt: spd.createdAt
                             };
                         }),

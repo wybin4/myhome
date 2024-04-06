@@ -195,7 +195,6 @@ export class ChatService {
                 updatedMessage: this.mapMessageToDTO(message)
             };
         } catch (e) {
-            console.log
             throw new RMQException(e.message, HttpStatus.BAD_REQUEST);
         }
     }

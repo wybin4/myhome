@@ -80,7 +80,9 @@ export * from './lib/single-payment-document/get-single-payment-documents-by-use
 export * from './lib/single-payment-document/check-single-payment-document';
 export * from './lib/single-payment-document/get-mcid-by-spd';
 
-export * from './lib/correction/debt/correction.get-debt';
+export * from './lib/correction/debt/correction.get-debts';
+export * from './lib/correction/debt/correction.get-charges';
+export * from './lib/correction/debt/correction.get-charge-chart';
 export * from './lib/correction/debt/correction.add-debts';
 export * from './lib/correction/debt/correction.update-debt';
 export * from './lib/correction/debt/correction.calculate-debts';

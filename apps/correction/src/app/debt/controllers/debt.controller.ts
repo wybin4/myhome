@@ -1,13 +1,15 @@
 import { DebtService } from '../services/debt.service';
-import { CorrectionAddDebts, CorrectionGetDebts, CorrectionCalculateDebts, CorrectionUpdateDebt } from '@myhome/contracts';
+import { CorrectionAddDebts, CorrectionGetDebts, CorrectionCalculateDebts, CorrectionUpdateDebt, CorrectionGetCharges, CorrectionGetChargeChart } from '@myhome/contracts';
 import { Body, Controller } from '@nestjs/common';
 import { RMQError, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { ERROR_TYPE } from 'nestjs-rmq/dist/constants';
+import { ChargeService } from '../services/charge.service';
 
 @Controller('debt')
 export class DebtController {
     constructor(
         private readonly debtService: DebtService,
+        private readonly chargeService: ChargeService,
     ) { }
 
     @RMQValidate()
@@ -26,6 +28,28 @@ export class DebtController {
     async getDebts(@Body() dto: CorrectionGetDebts.Request) {
         try {
             return await this.debtService.getDebts(dto);
+        }
+        catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
+    }
+
+    @RMQValidate()
+    @RMQRoute(CorrectionGetCharges.topic)
+    async getCharges(@Body() dto: CorrectionGetCharges.Request) {
+        try {
+            return await this.chargeService.getCharges(dto);
+        }
+        catch (e) {
+            throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);
+        }
+    }
+
+    @RMQValidate()
+    @RMQRoute(CorrectionGetChargeChart.topic)
+    async getChargeChart(@Body() dto: CorrectionGetChargeChart.Request) {
+        try {
+            return await this.chargeService.getChargeChart(dto);
         }
         catch (e) {
             throw new RMQError(e.message, ERROR_TYPE.RMQ, e.status);

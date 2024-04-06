@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { RMQService } from "nestjs-rmq";
 import { DebtRepository } from "../repositories/debt.repository";
-import { CorrectionAddDebts, CorrectionGetDebts, CorrectionCalculateDebts, CorrectionUpdateDebt, IAddDebt, GetSinglePaymentDocumentsByUser, GetMCIdBySPDId } from "@myhome/contracts";
+import { CorrectionAddDebts, CorrectionGetDebts, CorrectionCalculateDebts, CorrectionUpdateDebt, IAddDebt, GetSinglePaymentDocumentsByUser, GetMCIdBySPDId, IGetSinglePaymentDocumentsBySId } from "@myhome/contracts";
 import { PenaltyRuleRepository } from "../repositories/penalty-rule.repository";
-import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_KEY_RATE, CANT_GET_SPDS, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
+import { CANT_GET_DEBT_BY_THIS_SPD_ID, CANT_GET_KEY_RATE, PENALTY_CALCULATION_RULES_NOT_CONFIGURED, PENALTY_RULES_NOT_EXIST, PRIORITY_NOT_EXIST, RMQException } from "@myhome/constants";
 import { IDebtDetail, IDebtHistory, IGetCorrection, IPenaltyCalculationRule, UserRole } from "@myhome/interfaces";
 import { DebtEntity } from "../entities/debt.entity";
 import { PenaltyService } from "./penalty.service";
@@ -54,32 +54,36 @@ export class DebtService {
     }
 
     public async getDebts(dto: CorrectionGetDebts.Request): Promise<CorrectionGetDebts.Response> {
-        const { singlePaymentDocuments } = await this.getSPDsByOwner(dto.ownerId);
+        const { singlePaymentDocuments } = await this.getSPDsByOwner(dto.userId);
         if (!singlePaymentDocuments && !singlePaymentDocuments.length) {
-            throw new RMQException(CANT_GET_SPDS.message, CANT_GET_SPDS.status);
+            return { debts: [] };
         }
         const spdIds = singlePaymentDocuments.map(s => s.id);
-        const debts = await this.debtRepository.findSPDsWithOutstandingDebtAndOriginalDebt(spdIds);
+        const debts = await this.debtRepository.findSPDsWithOutstandingDebt(spdIds);
 
         return {
             debts: debts.map(debt => {
+                const currentSpd = singlePaymentDocuments.find(
+                    spd => spd.id === debt.singlePaymentDocumentId
+                ) as IGetSinglePaymentDocumentsBySId;
                 return {
-                    singlePaymentDocumentId: parseInt(String(debt.singlePaymentDocumentId)),
-                    originalDebt: debt.originalDebt.map(od => od.amount).reduce((a, b) => a + b, 0),
+                    id: debt.singlePaymentDocumentId,
                     outstandingDebt: debt.outstandingDebt.map(od => od.amount).reduce((a, b) => a + b, 0),
+                    createdAt: currentSpd.createdAt,
+                    apartmentName: currentSpd.apartmentName
                 };
             })
         };
     }
 
-    private async getSPDsByOwner(ownerId: number) {
+    private async getSPDsByOwner(userId: number) {
         try {
             return await this.rmqService.send<
                 GetSinglePaymentDocumentsByUser.Request,
                 GetSinglePaymentDocumentsByUser.Response
             >(GetSinglePaymentDocumentsByUser.topic, {
-                userId: ownerId, userRole: UserRole.Owner,
-                withoutAttachments: true
+                userId, userRole: UserRole.Owner,
+                isNotAllInfo: true
             });
         } catch (e) {
             throw new RMQException(e.message, e.status);
@@ -172,7 +176,7 @@ export class DebtService {
         }
         debt.debtHistory[0].originalPenalty = penalty;
         debt.debtHistory[0].outstandingPenalty = penalty;
-   
+
         // Получить новую сумму долга вычитанием из предыдущей debtHistory пришедшей суммы по приоритету
         const lastDebtState: IDebtDetail[] = JSON.parse(JSON.stringify(debt.debtHistory[0].outstandingDebt));
         let paymentAmount = amount;
@@ -228,7 +232,7 @@ export class DebtService {
 
     private async getPriorityWithId(managementCompanyId: number) {
         const penaltyRuleGroups = await this.penaltyRuleRepository.findAll();
-  
+
         if (!penaltyRuleGroups.length) {
             throw new RMQException(PENALTY_RULES_NOT_EXIST.message, PENALTY_RULES_NOT_EXIST.status);
         }

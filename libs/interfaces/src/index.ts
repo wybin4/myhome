@@ -21,6 +21,7 @@ export * from './lib/single-payment-document/document-detail.interface';
 export * from './lib/single-payment-document/single-payment-document.interface';
 
 export * from './lib/correction/debt.interface';
+export * from './lib/correction/charge.interface';
 export * from './lib/correction/deposit.interface';
 export * from './lib/correction/penalty.interface';
 export * from './lib/correction/correction.interface';

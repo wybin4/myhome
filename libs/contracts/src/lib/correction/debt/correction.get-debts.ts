@@ -4,8 +4,8 @@ export namespace CorrectionGetDebts {
     export const topic = 'correction.get-debts.query';
 
     export class Request {
-        @IsNumber({}, { message: "Id владельца должен быть строкой" })
-        ownerId!: number;
+        @IsNumber({}, { message: "Id владельца должен быть числом" })
+        userId!: number;
     }
 
     export class Response {
@@ -14,7 +14,8 @@ export namespace CorrectionGetDebts {
 }
 
 export interface IGetDebt {
-    singlePaymentDocumentId: number;
-    originalDebt: number;
+    id: number;
     outstandingDebt: number;
+    createdAt: Date;
+    apartmentName: string;
 }

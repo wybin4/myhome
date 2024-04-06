@@ -13,6 +13,7 @@ import { PenaltyRule, PenaltyRuleSchema } from "./models/penalty-rule.model";
 import { PenaltyRuleRepository } from "./repositories/penalty-rule.repository";
 import { CBRController } from "./controllers/cbr.controller";
 import { RedisService } from "./services/redis.service";
+import { ChargeService } from "./services/charge.service";
 
 @Module({
     imports: [
@@ -24,6 +25,7 @@ import { RedisService } from "./services/redis.service";
     providers: [
         DebtService, DebtRepository,
         PenaltyService, PenaltyRuleService, CBRService, PenaltyRuleRepository, PenaltyRuleSeeder,
+        ChargeService,
         RedisService
     ],
     controllers: [DebtController, PenaltyController, CBRController],

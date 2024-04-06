@@ -6,3 +6,5 @@ export class GetSinglePaymentDocumentDto {
 }
 
 export class GetSinglePaymentDocumentsByUserDto { }
+
+export class CheckSinglePaymentDocumentsDto { id: number; }

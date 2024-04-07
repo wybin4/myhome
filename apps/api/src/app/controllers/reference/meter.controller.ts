@@ -11,7 +11,7 @@ import { RoleGuard } from '../../guards/role.guard';
 export class MeterController {
     constructor(private readonly rmqService: RMQService) { }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-meters-by-user')
     async getMetersByUser(
@@ -28,7 +28,7 @@ export class MeterController {
         }
     }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-meter-readings-by-user')
     async getMeterReadingsByUser(
@@ -74,7 +74,7 @@ export class MeterController {
     //     }
     // }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(201)
     @Post('add-meter-reading')
     async addMeterReading(@Body() dto: AddMeterReadingDto) {

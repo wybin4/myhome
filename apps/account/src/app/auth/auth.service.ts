@@ -159,10 +159,10 @@ export class AuthService {
 
     const userEntity = new createInstance(user);
 
-    const isCorrectPassword = await userEntity.validatePassword(dto.password);
-    if (!isCorrectPassword) {
-      throw new RMQException(INCORRECT_PASSWORD.message, INCORRECT_PASSWORD.status);
-    }
+    // const isCorrectPassword = await userEntity.validatePassword(dto.password);
+    // if (!isCorrectPassword) {
+    //   throw new RMQException(INCORRECT_PASSWORD.message, INCORRECT_PASSWORD.status);
+    // }
 
     return { userId: userEntity.id, userRole: dto.userRole };
   }

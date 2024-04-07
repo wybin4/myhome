@@ -68,7 +68,7 @@ export class AuthController {
 
       this.setCookie(res, token, refreshToken, { userId, userRole });
 
-      return { msg: "success" };
+      return { token, refreshToken };
     } catch (e) {
       CatchError(e);
     }

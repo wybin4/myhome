@@ -14,7 +14,7 @@ export class ServiceNotificationController {
         private readonly socketGateway: SocketGateway
     ) { }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-service-notifications')
     async getNotifications(@Req() req: { user: IJWTPayload }, @Body() dto: GetServiceNotificationsDto) {
@@ -28,7 +28,7 @@ export class ServiceNotificationController {
         }
     }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(201)
     @Post('add-service-notification')
     async addNotification(@Req() req: { user: IJWTPayload }, @Body() dto: AddServiceNotificationDto) {
@@ -58,7 +58,7 @@ export class ServiceNotificationController {
         }
     }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('update-all-service-notifications')
     async updateAllNotifications(@Req() req: { user: IJWTPayload }, @Body() dto: UpdateAllServiceNotificationsDto) {

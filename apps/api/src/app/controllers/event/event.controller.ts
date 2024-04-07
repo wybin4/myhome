@@ -10,7 +10,7 @@ import { IJWTPayload } from '@myhome/interfaces';
 export class EventController {
     constructor(private readonly rmqService: RMQService) { }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-events')
     async getEvents(

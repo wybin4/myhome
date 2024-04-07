@@ -53,8 +53,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.sendNewMessage(newDto);
             this.sendUpdateChat(
                 newDto.chat, newDto.users,
-                (user) => socket.data.userId === user.userId
-                    && socket.data.userRole === user.userRole
+                (user) => socket.data.userId !== user.userId
+                    || socket.data.userRole !== user.userRole
             );
             return { ...newDto.createdMessage, chatId: newDto.chat.id };
         } catch (e) { }
@@ -82,7 +82,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
             const hasUnread = await this.rmqService.send<
                 EventGetUnreadServiceNotifications.Request,
                 EventGetUnreadServiceNotifications.Response
-            >(EventGetUnreadServiceNotifications.topic, socket.data.user);
+                >(EventGetUnreadServiceNotifications.topic, socket.data.user);
             socket.emit('hasUnreadNotifications', hasUnread.hasUnreadNotifications);
         } catch (e) { }
     }
@@ -100,7 +100,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
             const chats = await this.rmqService.send<
                 GetChats.Request,
                 GetChats.Response
-            >(GetChats.topic, socket.data.user);
+                >(GetChats.topic, socket.data.user);
             socket.emit('chats', chats.chats);
         } catch (e) { }
     }
@@ -111,7 +111,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
             const socket = this.clients.get(key);
             if (socket) {
                 if (condition(user)) {
-                    socket.emit('updateChat', { ...chat, countUnread: -1 });
+                    socket.emit('updateChat', { ...chat, countUnread: -1, receiverName: "" });
                 } else {
                     socket.emit('updateChat', chat);
                 }

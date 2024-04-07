@@ -11,7 +11,7 @@ import { RoleGuard } from '../../guards/role.guard';
 export class ApartmentController {
     constructor(private readonly rmqService: RMQService) { }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-apartments-by-user')
     async getApartmentsByUser(

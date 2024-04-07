@@ -12,7 +12,7 @@ export class VotingController {
     constructor(private readonly rmqService: RMQService) { }
 
     @SetMetadata('role', UserRole.Owner)
-    // @UseGuards(JWTAuthGuard, RoleGuard)
+    @UseGuards(JWTAuthGuard, RoleGuard)
     @HttpCode(200)
     @Post('update-voting')
     async updateVoting(@Req() req: { user: IJWTPayload }, @Body() dto: UpdateVotingDto) {

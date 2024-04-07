@@ -1,15 +1,16 @@
-import { Body, Controller, HttpCode, Post, Req } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
 import { RMQService } from 'nestjs-rmq';
 import { CatchError } from '../../error.filter';
 import { CorrectionGetChargeChart, CorrectionGetCharges, CorrectionGetDebts } from '@myhome/contracts';
 import { IJWTPayload } from '@myhome/interfaces';
 import { GetChargeChartDto, GetChargesDto, GetDebtsDto } from '../../dtos/correction/debt.dto';
+import { JWTAuthGuard } from '../../guards/jwt.guard';
 
 @Controller('debt')
 export class DebtController {
     constructor(private readonly rmqService: RMQService) { }
 
-    // @UseGuards(JWTAuthGuard, RoleGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-debts')
     async getDebts(@Req() req: { user: IJWTPayload }, @Body() dto: GetDebtsDto) {
@@ -23,7 +24,7 @@ export class DebtController {
         }
     }
 
-    // @UseGuards(JWTAuthGuard, RoleGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-charges')
     async getCharges(@Req() req: { user: IJWTPayload }, @Body() dto: GetChargesDto) {
@@ -37,7 +38,7 @@ export class DebtController {
         }
     }
 
-    // @UseGuards(JWTAuthGuard, RoleGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-charge-chart')
     async getChartData(@Req() req: { user: IJWTPayload }, @Body() dto: GetChargeChartDto) {

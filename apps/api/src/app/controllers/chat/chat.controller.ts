@@ -1,10 +1,11 @@
-import { Body, Controller, HttpCode, Post, Req } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
 import { CatchError } from '../../error.filter';
 import { AddChatDto, AddMessageDto, GetReceiversDto, GetMessagesDto } from '../../dtos/chat/chat.dto';
 import { SocketGateway } from '../../socket.gateway';
 import { AddChat, AddMessage, GetReceivers, GetMessages } from '@myhome/contracts';
 import { RMQService } from 'nestjs-rmq';
 import { IJWTPayload } from '@myhome/interfaces';
+import { JWTAuthGuard } from '../../guards/jwt.guard';
 
 @Controller('chat')
 export class ChatController {
@@ -13,7 +14,7 @@ export class ChatController {
         private readonly socketGateway: SocketGateway
     ) { }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-receivers')
     async getReceivers(@Req() req: { user: IJWTPayload }, @Body() dto: GetReceiversDto) {
@@ -27,7 +28,7 @@ export class ChatController {
         }
     }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(201)
     @Post('add-chat')
     async addChat(@Req() req: { user: IJWTPayload }, @Body() dto: AddChatDto) {
@@ -68,7 +69,7 @@ export class ChatController {
         }
     }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('get-messages')
     async getMessages(@Req() req: { user: IJWTPayload }, @Body() dto: GetMessagesDto) {

@@ -3,7 +3,7 @@ import * as cookie from 'cookie';
 import { Socket } from "socket.io";
 import { RMQService } from "nestjs-rmq";
 import { AccountRefresh } from "@myhome/contracts";
-import { IJWTPayload, UserRole } from "@myhome/interfaces";
+import { IJWTPayload } from "@myhome/interfaces";
 import { AuthController } from "./controllers/account/auth.controller";
 
 export type SocketMiddleware = (socket: Socket, next: (err?: Error) => void) => void
@@ -15,50 +15,65 @@ export const WSAuthMiddleware = (
 ): SocketMiddleware => {
     return async (socket: Socket, next) => {
         try {
-            // const cookies = parseCookies(socket.handshake.headers.cookie);
-            // const token = cookies['token'];
-            // if (token) {
-            //     const jwtPayload = jwtService.verify(
-            //         token ?? '',
-            //     );
-            //     setKey(jwtPayload, socket);
-            //     next();
-            // } else {
-            //     const refresh = cookies["refreshToken"];
-            //     if (refresh) {
-            //         const jwtRefreshPayload = jwtService.verify(
-            //             refresh ?? '',
-            //         );
+            const cookies = parseCookies(socket.handshake.headers.cookie);
+            const tokenFromCookie = cookies['token'];
+            const tokenFromHeader = socket.handshake.headers['authorization'];
 
-            //         const { userId, userRole } = jwtRefreshPayload;
-            //         const { token: newJWT } = await rmqService.send<
-            //             AccountRefresh.Request,
-            //             AccountRefresh.Response
-            //         >(AccountRefresh.topic, { userId, userRole });
+            let token: string | undefined;
 
-            //         setKey(jwtRefreshPayload, socket);
+            if (tokenFromCookie) {
+                token = tokenFromCookie;
+            } else if (tokenFromHeader && tokenFromHeader.startsWith('Bearer ')) {
+                token = tokenFromHeader.split(' ')[1];
+            }
+            if (token) {
+                const jwtPayload = jwtService.verify(
+                    token ?? '',
+                );
+                setKey(jwtPayload, socket);
+                next();
+            } else {
+                const refreshTokenFromCookie = cookies['refreshToken'];
+                const refreshTokenFromHeader = socket.handshake.headers['authorization'];
 
-            //         socket.conn.transport.once('headers', (headers) => {
-            //             const { expiresRefresh } = authController.getExpires();
-            //             const newCookie = cookie.serialize('token', newJWT, {
-            //                 httpOnly: true,
-            //                 expires: expiresRefresh,
-            //             });
+                let refreshToken: string | undefined;
 
-            //             headers['set-cookie'] = newCookie;
-            //             next();
-            //         });
-            //     } else {
-            //         next({
-            //             name: 'Unauthorizaed',
-            //             message: 'Unauthorizaed',
-            //         });
-            //     }
-            // }
-            const key = `1_Owner`;
-            clients.set(key, socket);
-            socket.data.user = { userId: 1, userRole: UserRole.Owner };
-            next();
+                if (refreshTokenFromCookie) {
+                    refreshToken = refreshTokenFromCookie;
+                } else if (refreshTokenFromHeader && refreshTokenFromHeader.startsWith('Bearer ')) {
+                    refreshToken = refreshTokenFromHeader.split(' ')[1];
+                }
+                if (refreshToken) {
+                    const jwtRefreshPayload = jwtService.verify(
+                        refreshToken ?? '',
+                    );
+
+                    const { userId, userRole } = jwtRefreshPayload;
+                    const { token: newJWT } = await rmqService.send<
+                        AccountRefresh.Request,
+                        AccountRefresh.Response
+                    >(AccountRefresh.topic, { userId, userRole });
+
+                    setKey(jwtRefreshPayload, socket);
+
+                    socket.conn.transport.once('headers', (headers) => {
+                        const { expiresRefresh } = authController.getExpires();
+                        const newCookie = cookie.serialize('token', newJWT, {
+                            httpOnly: true,
+                            expires: expiresRefresh,
+                        });
+
+                        headers['set-cookie'] = newCookie;
+                        headers['Authorization'] = `Bearer ${newJWT}`;
+                        next();
+                    });
+                } else {
+                    next({
+                        name: 'Unauthorizaed',
+                        message: 'Unauthorizaed',
+                    });
+                }
+            }
         } catch (error) {
             next({
                 name: 'Unauthorizaed',
@@ -67,14 +82,14 @@ export const WSAuthMiddleware = (
         }
     }
 
-    // function setKey(user: IJWTPayload, socket: Socket) {
-    //     const { userId, userRole } = user;
-    //     socket.data.user = { userId, userRole };
-    //     const key = `${userId}_${userRole}`;
-    //     clients.set(key, socket);
-    // }
+    function setKey(user: IJWTPayload, socket: Socket) {
+        const { userId, userRole } = user;
+        socket.data.user = { userId, userRole };
+        const key = `${userId}_${userRole}`;
+        clients.set(key, socket);
+    }
 
-    // function parseCookies(cookiesString?: string): Record<string, string> {
-    //     return cookie.parse(cookiesString || '');
-    // }
+    function parseCookies(cookiesString?: string): Record<string, string> {
+        return cookie.parse(cookiesString || '');
+    }
 }

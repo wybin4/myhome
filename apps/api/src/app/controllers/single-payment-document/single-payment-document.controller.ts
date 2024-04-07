@@ -48,7 +48,7 @@ export class SinglePaymentDocumentController {
         }
     }
 
-    // @UseGuards(JWTAuthGuard)
+    @UseGuards(JWTAuthGuard)
     @HttpCode(200)
     @Post('check-single-payment-document')
     async checkSinglePaymentDocument(@Body() dto: CheckSinglePaymentDocumentsDto) {

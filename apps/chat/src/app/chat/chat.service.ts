@@ -20,12 +20,18 @@ export class ChatService {
 
     private mapChatToDTO(
         chat: Chat, myId: number, myRole: UserRole,
-        users: IGetChatUser[], receiverName?: string, receiverRole?: UserRole,
+        allUsers: IGetChatUser[],
+        receiverName?: string, receiverRole?: UserRole,
         countUnread?: number
     ): IGetChat {
         const chatEntity = chat.toObject();
         if (!receiverName) {
-            receiverName = users.map(us => {
+            const currUsers = allUsers.filter(user =>
+                chat.users.some(chatUser =>
+                    chatUser.userId === user.userId && chatUser.userRole === user.userRole
+                )
+            );
+            receiverName = currUsers.map(us => {
                 if (us.userRole === UserRole.Owner) {
                     const nameWords = us.name.split(' ');
                     if (nameWords.length > 2) {
@@ -84,7 +90,9 @@ export class ChatService {
         );
         const { users } = await this.checkMultiUsers(uniqueArray);
 
-        return { chats: chats.map(chat => this.mapChatToDTO(chat, dto.userId, dto.userRole, users)) };
+        return {
+            chats: chats.map(chat => this.mapChatToDTO(chat, dto.userId, dto.userRole, users))
+        };
     }
 
     async getMessages(dto: GetMessages.Request): Promise<GetMessages.Response> {
@@ -130,11 +138,20 @@ export class ChatService {
     }
 
     async addChat(dto: AddChat.Request): Promise<AddChat.Response> {
+        dto.users.push({ userId: dto.userId, userRole: dto.userRole });
         if (!dto.users.length) {
             return;
         }
         const { users } = await this.checkMultiUsers(dto.users);
-        const otherUser = users.find(us => us.userId !== dto.userId || us.userRole !== dto.userRole);
+        const receiverName = users.map(us => {
+            if (us.userRole === UserRole.Owner) {
+                const nameWords = us.name.split(' ');
+                if (nameWords.length > 2) {
+                    return { ...us, name: nameWords.slice(0, 2).join(' ') };
+                }
+            }
+            return us;
+        }).find(us => us.userId !== dto.userId || us.userRole !== dto.userRole).name;
 
         const newChat = await this.chatRepository.create(new ChatEntity({
             users: users.map(u => {
@@ -152,7 +169,7 @@ export class ChatService {
                 id: chat._id.toString(),
                 countUnread: 0,
                 lastMessage: null,
-                receiverName: otherUser.name,
+                receiverName,
                 createdAt: chat.createdAt
             },
             users: users
@@ -173,13 +190,15 @@ export class ChatService {
         try {
             const { chat, updatedMessages, newMessage } = await this.chatRepository.createMessage(dto.chatId, message);
             const { profile } = await checkUser(this.rmqService, dto.userId, dto.userRole);
+            const otherUser = chat.users.find(us => us.userId !== dto.userId || us.userRole !== dto.userRole);
+
             const createdMessage = this.mapMessageToDTO(newMessage);
             
             return {
                 users: chat.users,
                 chat: {
                     ...this.mapChatToDTO(
-                        chat, dto.userId, dto.userRole,
+                        chat, otherUser.userId, otherUser.userRole,
                         [], profile.name, dto.userRole
                     ),
                     lastMessage: createdMessage

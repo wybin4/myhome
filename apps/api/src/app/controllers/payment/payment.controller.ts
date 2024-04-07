@@ -27,7 +27,7 @@ export class PaymentController {
   }
 
   @HttpCode(200)
-  // @UseGuards(JWTAuthGuard)
+  @UseGuards(JWTAuthGuard)
   @Post('get-payments')
   async getPaymentsBySpdId(@Body() dto: GetPaymentsBySpdIdDto) {
     try {

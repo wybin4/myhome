@@ -86,7 +86,7 @@ export class AuthController {
 
       this.setCookie(res, token);
 
-      return { msg: "success" };
+      return { token };
     } catch (e) {
       CatchError(e);
     }
